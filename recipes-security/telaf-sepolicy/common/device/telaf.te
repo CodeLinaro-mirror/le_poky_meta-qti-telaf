@@ -27,47 +27,114 @@
 
 policy_module(telaf, 1.0)
 
-type telaf_t;
-type telaf_exec_t;
-type telaf_data_t;
-user_data_files_type(telaf_data_t)
+########################################
+#
+# Declarations
+#
 
-init_vendor_domain(telaf_t, telaf_exec_t)
-
-allow telaf_t self:binder set_context_mgr;
+## <desc>
+## <p>
+## Boolean to determine whether external dependencies should be added here
+## </p>
+## </desc>
+gen_bool(telaf_external_dependencies,true)
 
 gen_require(`
+  type systemd_tmpfiles_t;
   type syslogd_t;
-  type etc_t;
-  type ipacm_diag_t;
-  type ldconfig_tmp_t;
   type mount_t;
-  type kernel_t;
   type ld_so_cache_t;
-  type qcmap_cm_t;
-  type fs_t;
+  type proc_net_t;
 ')
 
-corecmd_exec_shell(telaf_t)
-files_read_etc_files(telaf_t)
-fs_associate(telaf_data_t);
-user_data_files_type(telaf_data_t);
-manage_user_data_files(telaf_t, telaf_data_t)
+## telaf framework policies and definitions
 
-allow telaf_t telaf_data_t:dir create;
+# Define three domain for the system
+attribute telaf_app_domain;
+attribute telaf_core_domain;
+attribute telaf_admin_domain;
 
-allow syslogd_t self:sem { read write create unix_write destroy };
-allow syslogd_t self:shm { unix_read read write create unix_write destroy };
+# Framework definition for telaf
+type telaf_fw_t;
+files_type(telaf_fw_t);
 
-allow initrc_t data_t:dir { write read search create add_name };
-allow telaf_t telaf_data_t:file { create write open };
+# Telaf apps dir/files type definition
+type telaf_app_bundle_t;
+files_type(telaf_app_bundle_t)
 
-allow ipacm_diag_t ldconfig_tmp_t:file { read getattr open };
+# Telaf apps exec type definition
+type telaf_app_exec_t;
+files_type(telaf_app_exec_t)
 
-allow kernel_t data_t:dir search;
-allow kernel_t self:capability2 block_suspend;
+# Telaf sys dir/files type definition
+type telaf_sys_t;
+files_type(telaf_sys_t);
 
-allow mount_t ld_so_cache_t:file mounton;
-allow mount_t ldconfig_tmp_t:file getattr;
+# Telaf bin dir/files type definition
+type telaf_bin_t;
+files_type(telaf_bin_t);
 
-allow qcmap_cm_t ldconfig_tmp_t:file { read getattr open };
+# Telaf lib dir/files type definition
+type telaf_lib_t;
+files_type(telaf_lib_t);
+
+# Telaf app write type defintion
+type telaf_app_rw_t;
+files_type(telaf_app_rw_t);
+
+# Telaf app readonly type definition
+type telaf_app_ro_t;
+files_type(telaf_app_ro_t);
+
+# Telaf modules type definition
+type telaf_mod_t;
+files_type(telaf_mod_t);
+
+# Define the supervisor type
+type telaf_admin_t;
+type telaf_admin_exec_t;
+init_telaf_admin_domain(telaf_admin_t, telaf_admin_exec_t)
+
+# Define the log daemon type
+type telaf_logd_t;
+type telaf_logd_exec_t;
+init_telaf_core_domain(telaf_logd_t, telaf_logd_exec_t)
+
+# Define the service directory type
+type telaf_sdir_t;
+type telaf_sdir_exec_t;
+init_telaf_core_domain(telaf_sdir_t, telaf_sdir_exec_t)
+
+# Define the watchdog type
+type telaf_wdog_t;
+type telaf_wdog_exec_t;
+init_telaf_core_domain(telaf_wdog_t, telaf_wdog_exec_t)
+
+# Define the configTree type
+type telaf_cfgtree_t;
+type telaf_cfgtree_exec_t;
+init_telaf_core_domain(telaf_cfgtree_t, telaf_cfgtree_exec_t)
+
+# Local rules
+########################################
+
+# Setup for tmp directory
+type telaf_apptmp_rw_t;
+files_tmp_file(telaf_apptmp_rw_t)
+files_tmp_filetrans(telaf_admin_t,telaf_apptmp_rw_t, { file dir })
+
+# Rule to allow mounting telaf fwk
+allow mount_t telaf_fw_t:dir mounton;
+
+# External Dependencies
+
+if (telaf_external_dependencies) {
+    allow syslogd_t self:sem { read write create unix_write destroy };
+    allow syslogd_t self:shm { unix_read read write create unix_write destroy };
+    allow mount_t ld_so_cache_t:file mounton;
+
+    #============= systemd_tmpfiles_t ==============
+    allow systemd_tmpfiles_t proc_net_t:file { read getattr open };
+    allow systemd_tmpfiles_t telaf_app_rw_t:lnk_file getattr;
+    allow systemd_tmpfiles_t telaf_apptmp_rw_t:sock_file getattr;
+}

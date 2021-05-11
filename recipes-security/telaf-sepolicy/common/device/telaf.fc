@@ -25,4 +25,21 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-/data/le_fs/resets/expected       --  gen_context(system_u:object_r:telaf_data_t,s0)
+/legato                                                          gen_context(system_u:object_r:telaf_fw_t,s0)
+/legato/apps(/.*)?                                               gen_context(system_u:object_r:telaf_app_bundle_t,s0)
+/legato/systems(/.*)?                                            gen_context(system_u:object_r:telaf_sys_t,s0)
+/legato/systems/current/bin(/.*)?                                gen_context(system_u:object_r:telaf_bin_t,s0)
+/legato/systems/current/bin/supervisor               --          gen_context(system_u:object_r:telaf_admin_exec_t,s0)
+/legato/start                                        --          gen_context(system_u:object_r:telaf_admin_exec_t,s0)
+/legato/systems/current/bin/startSystem              --          gen_context(system_u:object_r:telaf_admin_exec_t,s0)
+
+/legato/systems/current/bin/logCtrlDaemon            --          gen_context(system_u:object_r:telaf_logd_exec_t,s0)
+/legato/systems/current/bin/configTree               --          gen_context(system_u:object_r:telaf_cfgtree_exec_t,s0)
+/legato/systems/current/bin/serviceDirectory         --          gen_context(system_u:object_r:telaf_sdir_exec_t,s0)
+
+/legato/systems/current/lib(/.*)?                                gen_context(system_u:object_r:telaf_lib_t,s0)
+/legato/systems/current/appsWriteable(/.*)?                      gen_context(system_u:object_r:telaf_app_rw_t,s0)
+/legato/systems/current/modules(/.*)?                            gen_context(system_u:object_r:telaf_mod_t,s0)
+
+/data/le_fs                                                      gen_context(system_u:object_r:telaf_sys_t,s0)
+/data/le_fs/resets/expected                          --          gen_context(system_u:object_r:telaf_sys_t,s0)

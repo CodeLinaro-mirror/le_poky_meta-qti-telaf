@@ -33,18 +33,141 @@
 
 ########################################
 ## <summary>
-##      Read Telaf data files
+##              Transition to a new telaf_app_domain. See application_domain
 ## </summary>
 ## <param name="domain">
-##      <summary>
-##      Domain allowed access.
-##      </summary>
+##              <summary>
+##              Type to be used as a daemon domain.
+##              </summary>
+## </param>
+## <param name="entry_point">
+##              <summary>
+##              Type of the program to be used as an entry point to this domain
+##              </summary>
 ## </param>
 #
-interface(`telaf_manage_data',`
-    gen_require(`
-        type telaf_data_t;
-    ')
+interface(`init_telaf_app_domain',`
+        gen_require(`
+                type telaf_fw_t;
+                type telaf_lib_t;
+                type telaf_app_rw_t;
+                type telaf_app_ro_t;
 
-    manage_user_data_files(telaf_t, telaf_data_t)
+                attribute telaf_app_domain;
+        ')
+
+        application_domain($1, $2)
+        typeattribute $1 telaf_app_domain;
+
+        allow telaf_app_domain telaf_fw_t : dir { search };
+        allow telaf_app_domain telaf_lib_t : { file dir } { read execute };
+        allow telaf_app_domain telaf_app_rw_t : { file dir } ~{ execute };
+        allow telaf_app_domain telaf_app_ro_t : { file dir } ~{ write };
+')
+
+
+########################################
+## <summary>
+##              Transition to a new telaf_domain. See init_daemon_domain
+## </summary>
+## <param name="domain">
+##              <summary>
+##              Type to be used as a daemon domain.
+##              </summary>
+## </param>
+## <param name="entry_point">
+##              <summary>
+##              Type of the program to be used as an entry point to this domain
+##              </summary>
+## </param>
+#
+interface(`init_telaf_core_domain',`
+        gen_require(`
+                type telaf_fw_t;
+                type telaf_lib_t;
+                type telaf_app_rw_t;
+                type telaf_app_ro_t;
+                type telaf_sys_t;
+                type telaf_bin_t;
+                type telaf_admin_t;
+
+                attribute telaf_core_domain;
+                attribute telaf_admin_domain;
+        ')
+
+        init_daemon_domain($1, $2)
+        typeattribute $1 telaf_core_domain;
+
+        allow telaf_core_domain telaf_fw_t : dir { search };
+        allow telaf_core_domain telaf_lib_t : { file dir } { read execute };
+        allow telaf_core_domain telaf_app_rw_t : { file dir unix_dgram_socket socket sock_file } *;
+        allow telaf_core_domain telaf_app_ro_t : { file dir } ~{ write };
+        allow telaf_core_domain telaf_sys_t : { file dir } *;
+        allow telaf_core_domain telaf_bin_t : { file dir } ~{ write };
+
+        # File needs to be executable in src domain
+        allow telaf_admin_t $2:file { execute read write open };
+
+        # The executable file needs and entry point into domain
+        allow $1 $2:file entrypoint;
+
+        # Process needs permission to transition to domain
+        allow telaf_admin_t $1:process transition;
+
+        type_transition telaf_admin_t $2:process $1;
+        # TODO make core domains less lenient
+        unconfined_domain($1)
+')
+
+########################################
+## <summary>
+##              Transition to a new telaf_domain. See init_daemon_domain
+## </summary>
+## <param name="domain">
+##              <summary>
+##              Type to be used as a daemon domain.
+##              </summary>
+## </param>
+## <param name="entry_point">
+##              <summary>
+##              Type of the program to be used as an entry point to this domain
+##              </summary>
+## </param>
+#
+interface(`init_telaf_admin_domain',`
+        gen_require(`
+                type telaf_fw_t;
+                type telaf_app_bundle_t;
+                type telaf_sys_t;
+                type telaf_bin_t;
+                type telaf_lib_t;
+                type telaf_app_rw_t;
+                type telaf_app_ro_t;
+                type telaf_mod_t;
+
+                attribute telaf_admin_domain;
+                attribute telaf_app_domain;
+                attribute telaf_core_domain;
+        ')
+
+        init_daemon_domain($1, $2)
+        typeattribute $1 telaf_admin_domain;
+
+        # File/dir access
+        allow telaf_admin_domain telaf_fw_t : dir { search };
+        allow telaf_admin_domain telaf_app_bundle_t : { file dir } *;
+        allow telaf_admin_domain telaf_sys_t : { file dir } *;
+        allow telaf_admin_domain telaf_bin_t : { file dir } ~{ write };
+        allow telaf_admin_domain telaf_lib_t : { file dir } ~{ write };
+        allow telaf_admin_domain telaf_app_rw_t : { file dir } ~{ execute };
+        allow telaf_admin_domain telaf_app_ro_t : { file dir } ~{ write };
+        allow telaf_admin_domain telaf_mod_t : { file dir } { read execute };
+
+        # Process control
+        allow telaf_admin_domain self : process signal;
+        allow telaf_admin_domain telaf_app_domain : process signal;
+        allow telaf_admin_domain telaf_core_domain :  process signal;
+
+        # TODO make core domains less lenient
+        unconfined_domain($1)
 ')
