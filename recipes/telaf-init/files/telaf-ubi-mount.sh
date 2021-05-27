@@ -60,8 +60,6 @@ FindAndMountUBI () {
     device=/dev/ubi${telaf_ubi_num}_0
     block_device=/dev/ubiblock${telaf_ubi_num}_0
 
-    IsTelAfExisted
-
     mtd_block_number=`cat /proc/mtd | grep -iw $partition | sed 's/^mtd//' | awk -F ':' '{print $1}'`
     echo "MTD : Detected block device : $dir for $partition on mtd$mtd_block_number"
     mkdir -p $dir
@@ -89,6 +87,55 @@ FindAndMountUBI () {
     return 0
 }
 
-FindAndMountUBI $telaf_ubi_part $telaf_mount_point
+FindAndMountMTD () {
+    partition=$1
+    dir=$2
+
+    mtd_block_number=`cat /proc/mtd | grep -iw $partition | sed 's/^mtd//' | awk -F ':' '{print $1}'`
+    echo "MTD : Detected block device : mtd_block_number: $mtd_block_number, dir: $dir, for partition
+                                      : $partition" > /dev/kmsg
+    mkdir -p $dir
+    telaf_block=/dev/mtdblock$mtd_block_number
+
+    WaitDevReady "-b" "${telaf_block}"
+    if [ $? -ne 0 ]; then
+       echo "Failed to wait on device, exiting."
+       exit 1
+    fi
+
+    mount -t squashfs $telaf_block $telaf_mount_point -o ro
+    if [ $? -ne 0 ]; then
+       echo "Failed to mount volume $telaf_block." > /dev/kmsg
+       exit 1
+    fi
+
+    return 0
+}
+
+IsTelAfExisted
+
+for ubivol in /sys/class/ubi/ubi[0-99]_*/name; do
+volname=`cat $ubivol`
+#Find telaf volume in A/B and NON A/B
+#telaf_a will tell it is A/B partition
+#Break the loop when telaf is found
+if [ "$volname" == "telaf" ] || [ $volname == "telaf_a"]; then
+    echo "Found telaf Volume: $volname" > /dev/kmsg
+    break
+fi
+done
+
+#Check to find A/B or NON A/B
+#SLOT_SUFFIX is set by set-slotsuffix.service
+if [ "$volname" == "telaf" ]; then
+      echo "Mounting telaf for NON A/B" > /dev/kmsg
+      eval FindAndMountMTD telaf $telaf_mount_point
+elif [ "$volname" == "telaf_a" ]; then
+      echo "Mounting telaf for A/B" > /dev/kmsg
+      eval FindAndMountMTD telaf$SLOT_SUFFIX $telaf_mount_point
+else
+      echo "Mounting telaf for UBI" > /dev/kmsg
+      eval FindAndMountUBI $telaf_ubi_part $telaf_mount_point
+fi
 
 exit 0
