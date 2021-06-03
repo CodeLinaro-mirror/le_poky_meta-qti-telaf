@@ -45,6 +45,8 @@ gen_require(`
   type mount_t;
   type ld_so_cache_t;
   type proc_net_t;
+  type ldconfig_tmp_t;
+  type setfiles_t;
 ')
 
 ## telaf framework policies and definitions
@@ -129,9 +131,16 @@ allow mount_t telaf_fw_t:dir mounton;
 # External Dependencies
 
 if (telaf_external_dependencies) {
+    #============= setfiles_t ==============
+    allow setfiles_t ldconfig_tmp_t:file { read open };
+
+    #============= syslogd_t ==============
     allow syslogd_t self:sem { read write create unix_write destroy };
     allow syslogd_t self:shm { unix_read read write create unix_write destroy };
+
+    #============= mount_t ==============
     allow mount_t ld_so_cache_t:file mounton;
+    allow mount_t ldconfig_tmp_t:file getattr;
 
     #============= systemd_tmpfiles_t ==============
     allow systemd_tmpfiles_t proc_net_t:file { read getattr open };
