@@ -27,11 +27,13 @@
 
 [Unit]
 Description=Mount telaf partition to /mnt/legato mount point
+After=set-slotsuffix.service
 SourcePath=/etc/initscripts/telaf-ubi-mount.sh
 DefaultDependencies=no
 
 [Service]
 Type=oneshot
+PassEnvironment="SLOT_SUFFIX"
 ExecStart=/etc/initscripts/telaf-ubi-mount.sh
 Nice=-20
 

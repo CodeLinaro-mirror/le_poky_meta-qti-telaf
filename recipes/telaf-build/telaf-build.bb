@@ -41,6 +41,7 @@ do_install[noexec] = "1"
 do_deploy() {
     mkdir -p ${DEPLOY_DIR_IMAGE}
     install ${S}/build/${MACHINE}/telaf_ro.squashfs.ubi ${DEPLOY_DIR_IMAGE}
+    install ${S}/build/${MACHINE}/telaf_ro.squashfs ${DEPLOY_DIR_IMAGE}
 }
 do_deploy[dirs] = "${S} ${DEPLOYDIR}"
 addtask deploy before do_build after do_install
