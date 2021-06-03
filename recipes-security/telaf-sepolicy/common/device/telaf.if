@@ -115,8 +115,14 @@ interface(`init_telaf_core_domain',`
         allow telaf_admin_t $1:process transition;
 
         type_transition telaf_admin_t $2:process $1;
+
+        allow telaf_core_domain self:capability2 block_suspend;
+
+        manage_user_data_files($1, data_t)
+
         # TODO make core domains less lenient
         unconfined_domain($1)
+
 ')
 
 ########################################
@@ -167,6 +173,13 @@ interface(`init_telaf_admin_domain',`
         allow telaf_admin_domain self : process signal;
         allow telaf_admin_domain telaf_app_domain : process signal;
         allow telaf_admin_domain telaf_core_domain :  process signal;
+
+        allow telaf_admin_domain self:capability2 block_suspend;
+
+        manage_user_data_files($1, data_t)
+        # Required to write logs to telsdk,
+        # to be moved to other domain when we move services to different domain
+        write_telux_log_file($1)
 
         # TODO make core domains less lenient
         unconfined_domain($1)
