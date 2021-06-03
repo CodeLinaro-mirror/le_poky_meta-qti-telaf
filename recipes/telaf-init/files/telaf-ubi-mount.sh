@@ -119,7 +119,7 @@ volname=`cat $ubivol`
 #Find telaf volume in A/B and NON A/B
 #telaf_a will tell it is A/B partition
 #Break the loop when telaf is found
-if [ "$volname" == "telaf" ] || [ $volname == "telaf_a"]; then
+if [ "$volname" == "telaf" ] || [ "$volname" == "telaf_a" ]; then
     echo "Found telaf Volume: $volname" > /dev/kmsg
     break
 fi
