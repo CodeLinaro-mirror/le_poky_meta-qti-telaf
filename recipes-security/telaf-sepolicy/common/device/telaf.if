@@ -90,6 +90,7 @@ interface(`init_telaf_core_domain',`
                 type telaf_sys_t;
                 type telaf_bin_t;
                 type telaf_admin_t;
+                type telaf_sdir_t;
 
                 attribute telaf_core_domain;
                 attribute telaf_admin_domain;
@@ -99,14 +100,18 @@ interface(`init_telaf_core_domain',`
         typeattribute $1 telaf_core_domain;
 
         allow telaf_core_domain telaf_fw_t : dir { search };
+        #allow telaf_core_domain telaf_fw_t : { file dir } *;
         allow telaf_core_domain telaf_lib_t : { file dir } { read execute };
         allow telaf_core_domain telaf_app_rw_t : { file dir unix_dgram_socket socket sock_file } *;
         allow telaf_core_domain telaf_app_ro_t : { file dir } ~{ write };
         allow telaf_core_domain telaf_sys_t : { file dir } *;
         allow telaf_core_domain telaf_bin_t : { file dir } ~{ write };
 
+        allow telaf_core_domain telaf_admin_t:fd use;
+        allow telaf_core_domain telaf_sdir_t:fd use;
+
         # File needs to be executable in src domain
-        allow telaf_admin_t $2:file { execute read write open };
+        allow telaf_admin_t $2:file { execute read write open getattr };
 
         # The executable file needs and entry point into domain
         allow $1 $2:file entrypoint;
@@ -116,13 +121,49 @@ interface(`init_telaf_core_domain',`
 
         type_transition telaf_admin_t $2:process $1;
 
-        allow telaf_core_domain self:capability2 block_suspend;
+        allow telaf_core_domain self:capability2 { block_suspend wake_alarm };
 
         manage_user_data_files($1, data_t)
 
-        # TODO make core domains less lenient
-        unconfined_domain($1)
+        #============= telaf_logd_t ==============
+        allow telaf_logd_t telaf_admin_t:fifo_file { read write };
+        allow telaf_logd_t telaf_lib_t:dir { getattr search };
+        allow telaf_logd_t telaf_lib_t:file { getattr open };
+        allow telaf_logd_t devlog_t:sock_file write;
+        allow telaf_logd_t tmp_t:dir search;
+        allow telaf_logd_t syslogd_t:unix_dgram_socket sendto;
+        allow telaf_logd_t telaf_apptmp_rw_t:dir search;
+        allow telaf_logd_t telaf_sdir_t:unix_stream_socket { read write connectto };
+        allow telaf_logd_t telaf_apptmp_rw_t:sock_file write;
 
+        #============= telaf_sdir_t ==============
+        allow telaf_sdir_t telaf_lib_t:dir { getattr search };
+        allow telaf_sdir_t telaf_admin_t:fifo_file write;
+        allow telaf_sdir_t telaf_lib_t:file { open getattr };
+        allow telaf_sdir_t devlog_t:sock_file write;
+        allow telaf_sdir_t syslogd_t:unix_dgram_socket sendto;
+        allow telaf_sdir_t etc_t:file { read open lock getattr };
+        allow telaf_sdir_t tmp_t:dir search;
+        allow telaf_sdir_t telaf_apptmp_rw_t:dir { search write add_name };
+        allow telaf_sdir_t telaf_apptmp_rw_t:sock_file { create write };
+        allow telaf_core_domain self:unix_stream_socket { connectto };
+
+        #============= telaf_cfgtree_t ==============
+        allow telaf_cfgtree_t telaf_admin_t:fifo_file write;
+        allow telaf_cfgtree_t telaf_lib_t:dir { search getattr };
+        allow telaf_cfgtree_t telaf_lib_t:file { open getattr };
+        allow telaf_cfgtree_t devlog_t:sock_file write;
+        allow telaf_cfgtree_t tmp_t:dir search;
+        allow telaf_cfgtree_t syslogd_t:unix_dgram_socket sendto;
+        allow telaf_cfgtree_t telaf_apptmp_rw_t:dir search;
+        allow telaf_cfgtree_t telaf_apptmp_rw_t:sock_file write;
+        allow telaf_cfgtree_t etc_t:file read;
+        allow telaf_cfgtree_t telaf_sdir_t:unix_stream_socket { read write connectto getopt };
+        allow telaf_cfgtree_t etc_t:file { open getattr };
+
+        #domain_transition_pattern(telaf_admin_t, $1, $2)
+        #TODO make core domains less lenient
+        #unconfined_domain($1)
 ')
 
 ########################################
@@ -154,6 +195,7 @@ interface(`init_telaf_admin_domain',`
                 attribute telaf_admin_domain;
                 attribute telaf_app_domain;
                 attribute telaf_core_domain;
+
         ')
 
         init_daemon_domain($1, $2)
@@ -168,19 +210,134 @@ interface(`init_telaf_admin_domain',`
         allow telaf_admin_domain telaf_app_rw_t : { file dir } ~{ execute };
         allow telaf_admin_domain telaf_app_ro_t : { file dir } ~{ write };
         allow telaf_admin_domain telaf_mod_t : { file dir } { read execute };
+        allow telaf_admin_domain default_context_t:file { read getattr open };
+        allow telaf_admin_domain default_t:dir search;
+        allow telaf_admin_domain device_t:filesystem getattr;
+        allow telaf_admin_domain devlog_t:sock_file write;
+        allow telaf_admin_domain devpts_t:filesystem getattr;
+        allow telaf_admin_domain diag_device_t:chr_file { read write ioctl open };
+        allow telaf_admin_domain etc_t:file { read getattr open };
+        allow telaf_admin_domain etc_t:lnk_file read;
+        allow telaf_admin_domain fs_t:filesystem { getattr mount };
+        allow telaf_admin_domain ldconfig_tmp_t:file { read getattr open };
+        allow telaf_admin_domain mnt_t:dir search;
+        allow telaf_admin_domain qmux_radio_sock_t:sock_file write;
+        allow telaf_admin_domain rilmuxd_t:unix_stream_socket connectto;
+        allow telaf_admin_domain self:capability { dac_read_search sys_admin sys_ptrace dac_override };
+        allow telaf_admin_domain self:capability2 wake_alarm;
+        allow telaf_admin_domain self:fifo_file { write read getattr };
+        allow telaf_admin_domain self:process setsched;
+        allow telaf_admin_domain self:socket { write read create getattr setopt };
+        allow telaf_admin_domain setfiles_exec_t:file { read getattr open execute execute_no_trans };
+        allow telaf_admin_domain shell_exec_t:file { read execute open execute_no_trans };
+        allow telaf_admin_domain syslogd_t:unix_dgram_socket sendto;
+        allow telaf_admin_domain telaf_admin_exec_t:file execute_no_trans;
+        allow telaf_admin_domain telaf_app_bundle_t:lnk_file read;
+        allow telaf_admin_domain telaf_app_rw_t:lnk_file { read create };
+        allow telaf_admin_domain telaf_apptmp_rw_t:dir { search setattr read create write getattr remove_name open add_name };
+        allow telaf_admin_domain telaf_apptmp_rw_t:file { write lock create open };
+        allow telaf_admin_domain telaf_apptmp_rw_t:sock_file write;
+        allow telaf_admin_domain telaf_fw_t:dir { getattr mounton };
+        allow telaf_admin_domain telaf_lib_t:lnk_file read;
+        allow telaf_admin_domain telaf_sdir_t:fd use;
+        allow telaf_admin_domain telaf_sdir_t:unix_stream_socket { connectto getopt write read };
+        allow telaf_admin_domain telsdk_etc_t:file { read open };
+        allow telaf_admin_domain tracefs_t:filesystem getattr;
+
+        #============ Telaf PRLimit =============
+        allow telaf_admin_domain self:file *;
+        allow telaf_admin_t etc_t:file lock;
+        allow telaf_admin_t telaf_apptmp_rw_t:sock_file create;
+        allow telaf_admin_t self:capability sys_resource;
+        allow telaf_admin_t telaf_sys_t:lnk_file read;
+        allow telaf_admin_t urandom_device_t:chr_file getattr;
+        allow telaf_admin_t devlog_t:sock_file getattr;
+        allow telaf_admin_t telaf_app_rw_t:file execute;
+        allow telaf_admin_t $2: { file dir} *;
+        can_exec(telaf_admin_t, $2)
+
+        #============ Set PRLimit ==============
+        allow telaf_admin_t self:capability sys_nice;
+        allow telaf_admin_t self:process { sigkill setrlimit };
+        allow telaf_admin_t syslogd_t:shm associate;
 
         # Process control
         allow telaf_admin_domain self : process signal;
         allow telaf_admin_domain telaf_app_domain : process signal;
         allow telaf_admin_domain telaf_core_domain :  process signal;
-
         allow telaf_admin_domain self:capability2 block_suspend;
 
         manage_user_data_files($1, data_t)
         # Required to write logs to telsdk,
         # to be moved to other domain when we move services to different domain
         write_telux_log_file($1)
+        allow telaf_admin_domain telaf_core_domain:{ file dir } *;
+')
 
-        # TODO make core domains less lenient
-        unconfined_domain($1)
+########################################
+## <summary>
+##              File operations for Telaf admin domain.
+## </summary>
+## <param name="source_domain">
+##              <summary>
+##              Type to be used as a source domain
+##              </summary>
+## </param>
+## <param name="target_domain">
+##              <summary>
+##              Type to be used as a target domain
+##              </summary>
+## </param>
+#
+interface(`telaf_admin_lnk_file_perms',`
+
+        allow $1 $2:dir { search add_name write };
+        allow $1 $2:file { read open write create };
+        allow $1 $2:lnk_file read;
+
+')
+
+
+########################################
+## <summary>
+##              File operations for telaf admin domain
+## </summary>
+## <param name="source_domain">
+##              <summary>
+##              Type to be used as a source domain.
+##              </summary>
+## </param>
+## <param name="target_domain">
+##              <summary>
+##              Type to be used as a target domain
+##              </summary>
+## </param>
+#
+interface(`telaf_admin_file_perms',`
+
+        allow $1 $2:dir { read write search };
+        allow $1 $2:file { read open write getattr };
+
+')
+
+########################################
+## <summary>
+##              File operations for telaf admin domain
+## </summary>
+## <param name="source_domain">
+##              <summary>
+##              Type to be used as a source domain.
+##              </summary>
+## </param>
+## <param name="target_domain">
+##              <summary>
+##              Type to be used as a target domain
+##              </summary>
+## </param>
+#
+interface(`telaf_admin_mount_perms',`
+
+        allow $1 $2:dir { write create add_name mounton search };
+        allow $1 $2:filesystem { getattr mount remount };
+
 ')

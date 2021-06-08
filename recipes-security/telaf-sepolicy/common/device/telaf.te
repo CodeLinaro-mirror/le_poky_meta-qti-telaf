@@ -40,13 +40,59 @@ policy_module(telaf, 1.0)
 gen_bool(telaf_external_dependencies,true)
 
 gen_require(`
-  type systemd_tmpfiles_t;
-  type syslogd_t;
-  type mount_t;
+  type adbd_t;
+  type alogd_t;
+  type cgroup_t;
+  type debugfs_t;
+  type default_context_t;
+  type default_t;
+  type devlog_t;
+  type diag_device_t;
+  type dnsmasq_t;
+  type etc_t;
+  type file_context_t;
+  type fs_t;
+  type ipacm_t;
   type ld_so_cache_t;
-  type proc_net_t;
   type ldconfig_tmp_t;
+  type loc_hald_t;
+  type loc_t;
+  type mnt_t;
+  type mount_t;
+  type mss_t;
+  type proc_net_t;
+  type proc_t;
+  type qcmap_cm_t;
+  type qmux_radio_sock_t;
+  type qnetmgrd_t;
+  type qrtr_ns_t;
+  type qseecomd_t;
+  type qseecomd_t;
+  type qtether_t;
+  type qtether_t;
+  type qwesd_t;
+  type rilmuxd_t;
+  type setfiles_exec_t;
   type setfiles_t;
+  type shell_exec_t;
+  type slim_daemon_t;
+  type ssreq_server_t;
+  type sysctl_t;
+  type sysfs_t;
+  type syslogd_t;
+  type system_dbusd_t;
+  type systemd_tmpfiles_t;
+  type telaf_fw_t;
+  type telsdk_etc_t;
+  type tftp_server_t;
+  type tmpfs_t;
+  type tracefs_t;
+  type udev_t;
+  type unconfined_t;
+  type var_lock_t;
+  type initrc_tmp_t;
+  type urandom_device_t;
+  type socket_device_t;
 ')
 
 ## telaf framework policies and definitions
@@ -95,26 +141,31 @@ files_type(telaf_mod_t);
 # Define the supervisor type
 type telaf_admin_t;
 type telaf_admin_exec_t;
+files_type(telaf_admin_exec_t);
 init_telaf_admin_domain(telaf_admin_t, telaf_admin_exec_t)
 
 # Define the log daemon type
 type telaf_logd_t;
 type telaf_logd_exec_t;
+files_type(telaf_logd_exec_t);
 init_telaf_core_domain(telaf_logd_t, telaf_logd_exec_t)
 
 # Define the service directory type
 type telaf_sdir_t;
 type telaf_sdir_exec_t;
+files_type(telaf_sdir_exec_t);
 init_telaf_core_domain(telaf_sdir_t, telaf_sdir_exec_t)
 
 # Define the watchdog type
 type telaf_wdog_t;
 type telaf_wdog_exec_t;
+files_type(telaf_wdog_exec_t);
 init_telaf_core_domain(telaf_wdog_t, telaf_wdog_exec_t)
 
 # Define the configTree type
 type telaf_cfgtree_t;
 type telaf_cfgtree_exec_t;
+files_type(telaf_cfgtree_exec_t);
 init_telaf_core_domain(telaf_cfgtree_t, telaf_cfgtree_exec_t)
 
 # Local rules
@@ -146,4 +197,63 @@ if (telaf_external_dependencies) {
     allow systemd_tmpfiles_t proc_net_t:file { read getattr open };
     allow systemd_tmpfiles_t telaf_app_rw_t:lnk_file getattr;
     allow systemd_tmpfiles_t telaf_apptmp_rw_t:sock_file getattr;
+
+    #=============== telaf_admin_t ==============
+    allow telaf_admin_t devlog_t:sock_file write;
+    allow telaf_admin_t self:capability2 wake_alarm;
+    allow telaf_admin_t self:process setsched;
+    allow telaf_admin_t shell_exec_t:file { read execute open execute_no_trans };
+    allow telaf_admin_t sysfs_t:file { read write open };
+    allow telaf_admin_t syslogd_t:unix_dgram_socket sendto;
+    allow telaf_admin_t telaf_admin_exec_t:file execute_no_trans;
+    allow telaf_admin_t telaf_app_bundle_t:lnk_file read;
+    allow telaf_admin_t telaf_app_rw_t:lnk_file create;
+    allow telaf_admin_t telaf_apptmp_rw_t:dir { write remove_name add_name };
+    allow telaf_admin_t telaf_apptmp_rw_t:sock_file write;
+    allow telaf_admin_t telaf_fw_t:dir getattr;
+    allow telaf_admin_t telaf_sdir_t:fd use;
+    telaf_admin_lnk_file_perms(telaf_admin_t, adbd_t)
+    telaf_admin_lnk_file_perms(telaf_admin_t, alogd_t)
+    telaf_admin_lnk_file_perms(telaf_admin_t, init_t)
+    telaf_admin_lnk_file_perms(telaf_admin_t, ipacm_t)
+    telaf_admin_lnk_file_perms(telaf_admin_t, kernel_t)
+    telaf_admin_lnk_file_perms(telaf_admin_t, mss_t)
+    telaf_admin_lnk_file_perms(telaf_admin_t, qcmap_cm_t)
+    telaf_admin_lnk_file_perms(telaf_admin_t, qnetmgrd_t)
+    telaf_admin_lnk_file_perms(telaf_admin_t, qrtr_ns_t)
+    telaf_admin_lnk_file_perms(telaf_admin_t, qtether_t)
+    telaf_admin_lnk_file_perms(telaf_admin_t, ssreq_server_t)
+    telaf_admin_lnk_file_perms(telaf_admin_t, system_dbusd_t)
+    telaf_admin_lnk_file_perms(telaf_admin_t, tftp_server_t)
+    telaf_admin_lnk_file_perms(telaf_admin_t, udev_t)
+    telaf_admin_lnk_file_perms(telaf_admin_t, unconfined_t)
+    telaf_admin_lnk_file_perms(telaf_admin_t, var_lock_t)
+    telaf_admin_lnk_file_perms(telaf_admin_t, cgroup_t)
+    telaf_admin_file_perms(telaf_admin_t, dnsmasq_t)
+    telaf_admin_file_perms(telaf_admin_t, file_context_t)
+    telaf_admin_file_perms(telaf_admin_t, loc_hald_t)
+    telaf_admin_file_perms(telaf_admin_t, loc_t)
+    telaf_admin_file_perms(telaf_admin_t, proc_t)
+    telaf_admin_file_perms(telaf_admin_t, qseecomd_t)
+    telaf_admin_file_perms(telaf_admin_t, qwesd_t)
+    telaf_admin_file_perms(telaf_admin_t, slim_daemon_t)
+    telaf_admin_file_perms(telaf_admin_t, sysctl_t)
+    telaf_admin_file_perms(telaf_admin_t, sysfs_t)
+    telaf_admin_mount_perms(telaf_admin_t, cgroup_t)
+    telaf_admin_mount_perms(telaf_admin_t, debugfs_t)
+    telaf_admin_mount_perms(telaf_admin_t, tmpfs_t)
+
+    #============= kernel_t ==============
+    allow kernel_t data_t:dir { read write };
+    allow kernel_t self:capability2 block_suspend;
+
+    #============ tafservices =============
+    allow telaf_admin_t socket_device_t:dir search;
+    allow telaf_admin_t qmux_radio_sock_t:dir search;
+    allow telaf_admin_t self:fifo_file ioctl;
+
+    #=========== TelSDK DEBUG =============
+    allow telaf_admin_t syslogd_t:sem { read write associate unix_write };
+    allow telaf_admin_t syslogd_t:shm { read unix_read };
+    allow telaf_admin_t telaf_apptmp_rw_t:file { getattr setattr unlink };
 }
