@@ -76,7 +76,6 @@ gen_require(`
   type setfiles_t;
   type shell_exec_t;
   type slim_daemon_t;
-  type ssreq_server_t;
   type sysctl_t;
   type sysfs_t;
   type syslogd_t;
@@ -222,7 +221,6 @@ if (telaf_external_dependencies) {
     telaf_admin_lnk_file_perms(telaf_admin_t, qnetmgrd_t)
     telaf_admin_lnk_file_perms(telaf_admin_t, qrtr_ns_t)
     telaf_admin_lnk_file_perms(telaf_admin_t, qtether_t)
-    telaf_admin_lnk_file_perms(telaf_admin_t, ssreq_server_t)
     telaf_admin_lnk_file_perms(telaf_admin_t, system_dbusd_t)
     telaf_admin_lnk_file_perms(telaf_admin_t, tftp_server_t)
     telaf_admin_lnk_file_perms(telaf_admin_t, udev_t)
