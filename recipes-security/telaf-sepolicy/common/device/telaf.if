@@ -272,6 +272,8 @@ interface(`init_telaf_admin_domain',`
         # to be moved to other domain when we move services to different domain
         write_telux_log_file($1)
         allow telaf_admin_domain telaf_core_domain:{ file dir } *;
+        unconfined_domain($1)
+        selinux_load_policy(telaf_admin_t)
 ')
 
 ########################################
