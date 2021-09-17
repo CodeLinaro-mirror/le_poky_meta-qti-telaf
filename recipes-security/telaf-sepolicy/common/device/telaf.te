@@ -57,6 +57,7 @@ gen_require(`
   type ldconfig_tmp_t;
   type loc_hald_t;
   type loc_t;
+  type loc_etc_t;
   type mnt_t;
   type mount_t;
   type mss_t;
@@ -76,6 +77,7 @@ gen_require(`
   type setfiles_t;
   type shell_exec_t;
   type slim_daemon_t;
+  type loc_socket_t;
   type sysctl_t;
   type sysfs_t;
   type syslogd_t;
@@ -286,4 +288,14 @@ if (telaf_external_dependencies) {
     allow telaf_admin_t net_conf_t:file read_file_perms;
     allow telaf_admin_t home_root_t:dir search_dir_perms;
     allow telaf_admin_t user_home_dir_t:dir search_dir_perms;
+
+    #=========== Location Service =============
+    allow telaf_admin_t debugfs_t:file rw_file_perms;
+    allow telaf_admin_t loc_etc_t:file rw_file_perms;
+    allow telaf_admin_t loc_hald_t:unix_dgram_socket sendto;
+    allow telaf_admin_t loc_socket_t:dir rw_dir_perms;
+    allow telaf_admin_t loc_socket_t:sock_file { setattr unlink rw_file_perms create_file_perms };
+    allow telaf_admin_t self:capability chown;
+    allow telaf_admin_t urandom_device_t:chr_file rw_file_perms;
+    allow loc_hald_t telaf_admin_t:unix_dgram_socket sendto;
 }
