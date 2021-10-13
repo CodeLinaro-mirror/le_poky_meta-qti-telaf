@@ -26,10 +26,15 @@ SRC_URI += "file://telaf/"
 SRC_URI += "file://legato/"
 
 S = "${WORKDIR}/telaf"
+S_L = "${WORKDIR}/legato"
 
 PARALLEL_MAKE = ""
 
-do_configure[noexec] = "1"
+do_configure() {
+    # Make relative link to access stubs
+    cd ${S}
+    ln -sf "./stub" "./components/tafSMSSvc/taf_pa_sms"
+}
 
 do_compile() {
     oe_runmake distclean
@@ -38,10 +43,10 @@ do_compile() {
 
 do_install[noexec] = "1"
 
-do_deploy() {
-    mkdir -p ${DEPLOY_DIR_IMAGE}
-    install ${S}/build/${MACHINE}/telaf_ro.squashfs.ubi ${DEPLOY_DIR_IMAGE}
-    install ${S}/build/${MACHINE}/telaf_ro.squashfs ${DEPLOY_DIR_IMAGE}
+SYSROOT_PREPROCESS_FUNCS += "telaf_populate_sysroot"
+telaf_populate_sysroot() {
+    sysroot_stage_dir ${S_L} ${SYSROOT_DESTDIR}/telaf/legato/
+    sysroot_stage_dir ${S} ${SYSROOT_DESTDIR}/telaf/telaf/
+
 }
-do_deploy[dirs] = "${S} ${DEPLOYDIR}"
-addtask deploy before do_build after do_install
+
