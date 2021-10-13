@@ -27,13 +27,11 @@
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Mount TelAf partition
-telaf_ubi_num=3
-telaf_ubi_part=oem1
 telaf_mount_point=/mnt/legato
 
 IsTelAfExisted () {
     if [ -e "${telaf_mount_point}/start" ]; then
-        echo "telaf partition has already been mounted"
+        echo "telaf partition has already been mounted" > /dev/kmsg
         exit 0;
     fi
 }
@@ -54,59 +52,45 @@ WaitDevReady()
     return ${ret}
 }
 
-FindAndMountUBI () {
-    partition=$1
-    dir=$2
-    device=/dev/ubi${telaf_ubi_num}_0
-    block_device=/dev/ubiblock${telaf_ubi_num}_0
+GetTelAfVolumeID () {
+    act_slot=`cat /proc/cmdline | sed 's/.*SLOT_SUFFIX=//' | awk '{print $1}'`
+    telaf_ab_name=telaf$act_slot
+    volcount=`cat /sys/class/ubi/ubi0/volumes_count`
 
-    mtd_block_number=`cat /proc/mtd | grep -iw $partition | sed 's/^mtd//' | awk -F ':' '{print $1}'`
-    echo "MTD : Detected block device : $dir for $partition on mtd$mtd_block_number"
-    mkdir -p $dir
+    for vid in `seq 0 $volcount`; do
+        name=`cat /sys/class/ubi/ubi0_$vid/name`
+        if [ "$name" == "telaf" ] || [ "$name" == "$telaf_ab_name" ]; then
+            echo $vid
+            break
+        fi
+    done
+}
 
-    ubiattach -m $mtd_block_number -d ${telaf_ubi_num} /dev/ubi_ctrl
-    WaitDevReady "-c" "${device}"
-    if [ $? -ne 0 ]; then
-        echo "Failed to wait on device, exiting."
-        exit 1
+FindAndMountUBI() {
+    dir=$1
+    volid=$(GetTelAfVolumeID)
+    if [ "$volid" == "" ]; then
+        echo "Cannot get TelAF volume." > /dev/kmsg
+        return 1
     fi
 
+    telaf_vol_name=`cat /sys/class/ubi/ubi0_$volid/name`
+    echo "Get TelAF volume: $volid, name: $telaf_vol_name." > /dev/kmsg
+    device=/dev/ubi0_$volid
+    block_device=/dev/ubiblock0_$volid
+
+    mkdir -p $dir
     ubiblock --create $device
     WaitDevReady "-b" "${block_device}"
     if [ $? -ne 0 ]; then
-        echo "Failed to wait ubi $block_device."
-        exit 1
+       echo "Failed to wait on ${block_device}, exiting." > /dev/kmsg
+       return 1
     fi
 
     mount -t squashfs $block_device $dir -o ro
     if [ $? -ne 0 ] ; then
-        echo "Unable to mount squashfs onto ubiblock${TELAF_UBI_NUM}."
-        exit 1
-    fi
-
-    return 0
-}
-
-FindAndMountMTD () {
-    partition=$1
-    dir=$2
-
-    mtd_block_number=`cat /proc/mtd | grep -iw $partition | sed 's/^mtd//' | awk -F ':' '{print $1}'`
-    echo "MTD : Detected block device : mtd_block_number: $mtd_block_number, dir: $dir, for partition
-                                      : $partition" > /dev/kmsg
-    mkdir -p $dir
-    telaf_block=/dev/mtdblock$mtd_block_number
-
-    WaitDevReady "-b" "${telaf_block}"
-    if [ $? -ne 0 ]; then
-       echo "Failed to wait on device, exiting."
-       exit 1
-    fi
-
-    mount -t squashfs $telaf_block $telaf_mount_point -o ro
-    if [ $? -ne 0 ]; then
-       echo "Failed to mount volume $telaf_block." > /dev/kmsg
-       exit 1
+        echo "Unable to mount squashfs onto $block_device." > /dev/kmsg
+        return 1
     fi
 
     return 0
@@ -114,28 +98,12 @@ FindAndMountMTD () {
 
 IsTelAfExisted
 
-for ubivol in /sys/class/ubi/ubi[0-99]_*/name; do
-volname=`cat $ubivol`
-#Find telaf volume in A/B and NON A/B
-#telaf_a will tell it is A/B partition
-#Break the loop when telaf is found
-if [ "$volname" == "telaf" ] || [ "$volname" == "telaf_a" ]; then
-    echo "Found telaf Volume: $volname" > /dev/kmsg
-    break
-fi
-done
-
-#Check to find A/B or NON A/B
-#SLOT_SUFFIX is set by set-slotsuffix.service
-if [ "$volname" == "telaf" ]; then
-      echo "Mounting telaf for NON A/B" > /dev/kmsg
-      eval FindAndMountMTD telaf $telaf_mount_point
-elif [ "$volname" == "telaf_a" ]; then
-      echo "Mounting telaf for A/B" > /dev/kmsg
-      eval FindAndMountMTD telaf$SLOT_SUFFIX $telaf_mount_point
-else
-      echo "Mounting telaf for UBI" > /dev/kmsg
-      eval FindAndMountUBI $telaf_ubi_part $telaf_mount_point
+# Find correct TelAF volume and mount it
+eval FindAndMountUBI "$telaf_mount_point"
+if [ $? -ne 0 ] ; then
+    echo "Unable to mount TelAF onto $telaf_mount_point" > /dev/kmsg
+    exit -1
 fi
 
+echo "Success to mount TelAF onto $telaf_mount_point" > /dev/kmsg
 exit 0
