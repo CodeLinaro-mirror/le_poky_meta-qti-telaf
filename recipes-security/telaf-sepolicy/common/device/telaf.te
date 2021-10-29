@@ -52,6 +52,7 @@ gen_require(`
   type etc_t;
   type file_context_t;
   type fs_t;
+  type http_cache_port_t;
   type ipacm_t;
   type ld_so_cache_t;
   type ldconfig_tmp_t;
@@ -61,6 +62,7 @@ gen_require(`
   type mnt_t;
   type mount_t;
   type mss_t;
+  type node_t;
   type proc_net_t;
   type proc_t;
   type qcmap_cm_t;
@@ -307,6 +309,11 @@ if (telaf_external_dependencies) {
     allow telaf_admin_t net_conf_t:file read_file_perms;
     allow telaf_admin_t home_root_t:dir search_dir_perms;
     allow telaf_admin_t user_home_dir_t:dir search_dir_perms;
+
+    #=========== Sample app =============
+    allow telaf_admin_t http_cache_port_t:tcp_socket { name_bind name_connect };
+    allow telaf_admin_t node_t:tcp_socket node_bind;
+    allow telaf_admin_t self:tcp_socket { accept listen };
 
     #=========== Location Service =============
     allow telaf_admin_t debugfs_t:file rw_file_perms;
