@@ -37,6 +37,7 @@ do_configure() {
 }
 
 do_compile() {
+    export WORK_ROOT=${WORKDIR}
     oe_runmake distclean
     oe_runmake ${MACHINE}
 }

@@ -39,6 +39,7 @@ do_compile() {
     export LEGATO_ROOT=${S}/legato/legato-af
     export TELAF_ROOT=${S}/telaf
     export TELAF_PROP=${S}/telaf-prop
+    export WORK_ROOT=${WORKDIR}
     export SELINUX_FILE_CONTEXTS=${TELAF_ROOT}/security/selinux/sepolicy/files/file_contexts
     export TARGET=${MACHINE}
     export OUTPUT=${S}
