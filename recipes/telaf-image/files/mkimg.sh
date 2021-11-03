@@ -47,6 +47,15 @@ do
     fi
 done
 
+for full_name_internal in `find ${TELAF_INTERNAL} -type f -name "*.so"`
+do
+    base_name=`basename ${full_name_internal}`
+    full_name_telaf=`find ${TARGET_STAGE_DIR} -type f -name ${base_name}`
+    if [ -n "${full_name_telaf}" ]; then
+        cp -rf ${full_name_internal} ${full_name_telaf}
+    fi
+done
+
 mklegatoimg -t "${TARGET}" \
             -d "${TARGET_STAGE_DIR}/" \
             -o "${OUTPUT}"

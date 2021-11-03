@@ -25,6 +25,40 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Changes from Qualcomm Innovation Center are provided under the following license:
+
+# Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
+
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted (subject to the limitations in the
+# disclaimer below) provided that the following conditions are met:
+#
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#
+#     * Redistributions in binary form must reproduce the above
+#       copyright notice, this list of conditions and the following
+#       disclaimer in the documentation and/or other materials provided
+#       with the distribution.
+#
+#     * Neither the name of Qualcomm Innovation Center, Inc. nor the names of its
+#       contributors may be used to endorse or promote products derived
+#       from this software without specific prior written permission.
+#
+# NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE
+# GRANTED BY THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT
+# HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+# IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+# GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 policy_module(telaf, 1.0)
 
 ########################################
@@ -119,6 +153,15 @@ gen_require(`
   type kmsg_device_t;
   type mount_exec_t;
   type mount_runtime_t;
+  type unreserved_port_t;
+  type kmsg_device_t;
+  type leprop_sock_t;
+  type leprop_t;
+  type cache_t;
+  type cache_recovery_t;
+  type ota_master_da_data_t;
+  type fixed_disk_device_t;
+  type user_tmp_t;
 ')
 
 ## telaf framework policies and definitions
@@ -213,6 +256,9 @@ allow mount_t telaf_fw_t:dir mounton;
 
 # External Dependencies
 
+# unconfined_domain for recovery update (allow telaf_admin_t fixed_disk_device_t:blk_file)
+unconfined_domain(telaf_admin_t)
+
 if (telaf_external_dependencies) {
     #============= setfiles_t ==============
     allow setfiles_t ldconfig_tmp_t:file { read open };
@@ -286,7 +332,7 @@ if (telaf_external_dependencies) {
     #=========== TelSDK DEBUG =============
     allow telaf_admin_t syslogd_t:sem { read write associate unix_write };
     allow telaf_admin_t syslogd_t:shm { read unix_read };
-    allow telaf_admin_t telaf_apptmp_rw_t:file { getattr setattr unlink };
+    allow telaf_admin_t telaf_apptmp_rw_t:file { manage_file_perms};
 
     #=========== CM Data Command =============
     allow telaf_admin_t var_log_t:lnk_file { rw_file_perms create_file_perms };
@@ -374,4 +420,24 @@ if (telaf_external_dependencies) {
     allow telaf_overlay_t semanage_store_t:file { rename write getattr setattr read create unlink };
     allow telaf_overlay_t semanage_trans_lock_t:file read;
     allow telaf_overlay_t policy_config_t:dir { search read getattr };
+
+    #=========== Update Service Command =============
+    allow telaf_admin_t unreserved_port_t:tcp_socket { name_connect create_socket_perms rw_socket_perms };
+    allow telaf_admin_t default_t:file { open read append write create getattr unlink };
+    allow telaf_admin_t kmsg_device_t:chr_file { open write };
+    allow telaf_admin_t leprop_t:unix_stream_socket { connectto };
+    allow telaf_admin_t ota_master_da_data_t:dir { search write add_name remove_name };
+    allow telaf_admin_t ota_master_da_data_t:file { open read append write create getattr unlink };
+    allow telaf_admin_t device_t:dir { rw_dir_perms create_dir_perms };
+    allow telaf_admin_t leprop_sock_t:sock_file { open write };
+    allow telaf_admin_t cache_t:dir { search_dir_perms };
+    allow telaf_admin_t sysfs_t:lnk_file { read };
+    allow telaf_admin_t cache_recovery_t:dir { manage_dir_perms };
+    allow telaf_admin_t cache_recovery_t:file { manage_file_perms };
+
+    allow telaf_admin_t self:capability2 { syslog };
+    allow telaf_admin_t self:capability { chown fowner fsetid };
+    allow telaf_admin_t kernel_t:system { syslog_read };
+    allow telaf_admin_t qcmap_etc_data_t:dir { manage_dir_perms };
+    allow telaf_sdir_t user_tmp_t:file { manage_file_perms };
 }

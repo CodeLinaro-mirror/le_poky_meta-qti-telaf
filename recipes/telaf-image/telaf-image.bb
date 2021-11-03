@@ -12,12 +12,19 @@ DEPENDS += "squashfs-tools-native"
 DEPENDS += "mtd-utils-native"
 
 DEPENDS += "telaf-build"
-def get_depends(d):
+def get_depends_prop(d):
     if d.getVar('HAS_TELAF_PROP', True) == 'true':
         return "telaf-prop-build"
     else:
         return ""
-DEPENDS += "${@get_depends(d)}"
+DEPENDS += "${@get_depends_prop(d)}"
+
+def get_depends_internal(d):
+    if d.getVar('HAS_TELAF_INTERNAL', True) == 'true':
+        return "telaf-internal-build"
+    else:
+        return ""
+DEPENDS += "${@get_depends_internal(d)}"
 
 DEPENDS += "openssl"
 DEPENDS += "libxml2"
@@ -39,6 +46,7 @@ do_compile() {
     export LEGATO_ROOT=${S}/legato/legato-af
     export TELAF_ROOT=${S}/telaf
     export TELAF_PROP=${S}/telaf-prop
+    export TELAF_INTERNAL=${S}/telaf-internal
     export WORK_ROOT=${WORKDIR}
     export SELINUX_FILE_CONTEXTS=${TELAF_ROOT}/security/selinux/sepolicy/files/file_contexts
     export TARGET=${MACHINE}

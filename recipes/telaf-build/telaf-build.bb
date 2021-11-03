@@ -34,6 +34,7 @@ do_configure() {
     # Make relative link to access stubs
     cd ${S}
     ln -sf "./stub" "./components/tafSMSSvc/taf_pa_sms"
+    ln -sf "./stub" "./components/tafUpdateSvc/taf_update_pa"
 }
 
 do_compile() {
