@@ -159,7 +159,6 @@ gen_require(`
   type leprop_t;
   type cache_t;
   type cache_recovery_t;
-  type ota_master_da_data_t;
   type fixed_disk_device_t;
   type user_tmp_t;
 ')
@@ -426,8 +425,6 @@ if (telaf_external_dependencies) {
     allow telaf_admin_t default_t:file { open read append write create getattr unlink };
     allow telaf_admin_t kmsg_device_t:chr_file { open write };
     allow telaf_admin_t leprop_t:unix_stream_socket { connectto };
-    allow telaf_admin_t ota_master_da_data_t:dir { search write add_name remove_name };
-    allow telaf_admin_t ota_master_da_data_t:file { open read append write create getattr unlink };
     allow telaf_admin_t device_t:dir { rw_dir_perms create_dir_perms };
     allow telaf_admin_t leprop_sock_t:sock_file { open write };
     allow telaf_admin_t cache_t:dir { search_dir_perms };
