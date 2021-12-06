@@ -26,8 +26,43 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Changes from Qualcomm Innovation Center are provided under the following license:
+#
+# Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted (subject to the limitations in the
+# disclaimer below) provided that the following conditions are met:
+#
+#    * Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#
+#    * Redistributions in binary form must reproduce the above
+#      copyright notice, this list of conditions and the following
+#      disclaimer in the documentation and/or other materials provided
+#      with the distribution.
+#
+#    * Neither the name of Qualcomm Innovation Center, Inc. nor the names of its
+#      contributors may be used to endorse or promote products derived
+#      from this software without specific prior written permission.
+#
+# NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE
+# GRANTED BY THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT
+# HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+# IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+# GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 # Mount TelAf partition
 telaf_mount_point=/mnt/legato
+telaf_app_mount_point=/app
 
 IsTelAfExisted () {
     if [ -e "${telaf_mount_point}/start" ]; then
@@ -96,14 +131,54 @@ FindAndMountUBI() {
     return 0
 }
 
+GetTelAfAppVolumeID () {
+    volcount=`cat /sys/class/ubi/ubi0/volumes_count`
+
+    for vid in `seq 0 $volcount`; do
+        name=`cat /sys/class/ubi/ubi0_$vid/name`
+        if [ "$name" == "telaf_app" ]; then
+            echo $vid
+            break
+        fi
+    done
+}
+
+FindAndMountApp() {
+    dir=$1
+    volid=$(GetTelAfAppVolumeID)
+    if [ "$volid" == "" ]; then
+        echo "Cannot get TelAF volume." > /dev/kmsg
+        return 1
+    fi
+
+    telaf_vol_name=`cat /sys/class/ubi/ubi0_$volid/name`
+    echo "Get TelAF volume: $volid, name: $telaf_vol_name." > /dev/kmsg
+    device=/dev/ubi0_$volid
+
+    mount -t ubifs $device $dir -o rw
+    if [ $? -ne 0 ] ; then
+        echo "Unable to mount ubifs onto TelAF $dir." > /dev/kmsg
+        return 1
+    fi
+
+    return 0
+}
+
 IsTelAfExisted
 
 # Find correct TelAF volume and mount it
 eval FindAndMountUBI "$telaf_mount_point"
 if [ $? -ne 0 ] ; then
-    echo "Unable to mount TelAF onto $telaf_mount_point" > /dev/kmsg
+    echo "Unable to mount TelAF_ro onto $telaf_mount_point" > /dev/kmsg
     exit -1
 fi
 
-echo "Success to mount TelAF onto $telaf_mount_point" > /dev/kmsg
+# Find correct TelAF App volume and mount it
+eval FindAndMountApp "$telaf_app_mount_point"
+if [ $? -ne 0 ] ; then
+    echo "Unable to mount TelAF_rw onto $telaf_app_mount_point" > /dev/kmsg
+    exit -1
+fi
+
+echo "Success to mount TelAF onto $telaf_mount_point and $telaf_app_mount_point" > /dev/kmsg
 exit 0

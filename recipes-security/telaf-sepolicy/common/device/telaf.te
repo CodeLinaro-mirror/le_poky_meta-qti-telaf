@@ -437,4 +437,8 @@ if (telaf_external_dependencies) {
     allow telaf_admin_t kernel_t:system { syslog_read };
     allow telaf_admin_t qcmap_etc_data_t:dir { manage_dir_perms };
     allow telaf_sdir_t user_tmp_t:file { manage_file_perms };
+
+    allow telaf_cfgtree_t telaf_app_bundle_t:file { manage_file_perms };
+    allow telaf_cfgtree_t telaf_app_bundle_t:dir { rw_dir_perms };
+
 }

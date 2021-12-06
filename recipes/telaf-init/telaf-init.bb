@@ -18,7 +18,7 @@ S = "${WORKDIR}"
 INITSCRIPT_NAME = "start_telaf.sh"
 INITSCRIPT_PARAMS = "start 99 2 3 4 5 . stop 1 0 1 6 ."
 
-dirs755_append = " /legato /mnt/legato"
+dirs755_append = " /legato /mnt/legato /telaf_app"
 
 do_install() {
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
@@ -43,11 +43,14 @@ do_install() {
         install -m 0755 -d ${D}/legato
         install -m 0755 -d ${D}/mnt/legato
         touch ${D}${sysconfdir}/ld.so.cache
+
+        # create the directories which are used by telaf app installation
+        install -m 0755 -d ${D}/app
     fi
 
 }
 
-FILES_${PN} += "${systemd_unitdir}/system/* /legato /mnt/legato"
+FILES_${PN} += "${systemd_unitdir}/system/* /legato /mnt/legato /app"
 
 # Add default telaf users
 inherit useradd
@@ -57,4 +60,5 @@ USERADD_PARAM_${PN} += "-M -U apptafsimcardsvc;"
 USERADD_PARAM_${PN} += "-M -U apptafsmssvc;"
 USERADD_PARAM_${PN} += "-M -U apptools;"
 USERADD_PARAM_${PN} += "-M -U appdefault;"
+USERADD_PARAM_${PN} += "-M -g root securityunpack;"
 

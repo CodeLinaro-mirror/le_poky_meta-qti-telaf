@@ -52,17 +52,71 @@ interface(`init_telaf_app_domain',`
                 type telaf_lib_t;
                 type telaf_app_rw_t;
                 type telaf_app_ro_t;
+                type telaf_admin_t;
+                type telaf_sys_t;
+                type telaf_bin_t;
+                type telaf_admin_t;
+                type telaf_sdir_t;
 
                 attribute telaf_app_domain;
+                attribute telaf_core_domain;
+                attribute telaf_admin_domain;
         ')
 
-        application_domain($1, $2)
+        #application_domain($1, $2)
+        init_daemon_domain($1, $2)
         typeattribute $1 telaf_app_domain;
 
+        # File needs to be executable in src domain
+        allow telaf_admin_t $2:file { execute read write open getattr };
+
+        # The executable file needs and entry point into domain
+        allow $1 $2:file entrypoint;
+
+        # Process needs permission to transition to domain
+        allow telaf_admin_t $1:process transition;
+
+        type_transition telaf_admin_t $2:process $1;
+
         allow telaf_app_domain telaf_fw_t : dir { search };
-        allow telaf_app_domain telaf_lib_t : { file dir } { read execute };
+        allow telaf_app_domain telaf_lib_t : { file dir } { read execute getattr open};
         allow telaf_app_domain telaf_app_rw_t : { file dir } ~{ execute };
         allow telaf_app_domain telaf_app_ro_t : { file dir } ~{ write };
+        allow telaf_app_domain telaf_sys_t : { file dir } *;
+        allow telaf_app_domain telaf_bin_t : { file dir } ~{ write };
+        allow telaf_app_domain data_t:dir { read write };
+
+        allow telaf_app_domain $1 : { file dir } ~{ execute };
+        allow telaf_app_domain self:unix_stream_socket { connectto };
+        allow telaf_app_domain self:socket { write read create getattr setopt };
+        allow telaf_admin_t $1:sock_file create;
+
+        allow telaf_app_domain telaf_core_domain:{ file dir unix_dgram_socket unix_stream_socket socket sock_file } *;
+        allow telaf_app_domain telaf_admin_domain:{ file dir unix_dgram_socket unix_stream_socket socket sock_file } *;
+        allow telaf_app_domain tmpfs_t:filesystem getattr;
+        allow telaf_app_domain tmpfs_t:file { read write open getattr };
+
+        allow telaf_app_domain syslogd_t:unix_dgram_socket sendto;
+        allow telaf_app_domain telaf_admin_t:fd use;
+        allow telaf_app_domain telaf_sdir_t:unix_stream_socket connectto;
+        allow telaf_app_domain diag_device_t:chr_file { read write open ioctl };
+        allow telaf_app_domain devlog_t:sock_file write;
+        allow telaf_app_domain telaf_admin_t:fifo_file getattr;
+        allow telaf_app_domain tmp_t:dir search;
+
+        # Process control
+        allow telaf_app_domain self : process signal;
+        allow telaf_app_domain self:capability2 { block_suspend wake_alarm };
+
+        #=============Common rules to support domain transition of telaf apps===========
+        allow unconfined_t $1:dir getattr;
+        allow unconfined_t $1:file { read open };
+        allow unconfined_t $1:process getattr;
+
+        allow $1 self:capability dac_override;
+        allow $1 self:process signal;
+        allow $1 self:fifo_file { write read };
+        allow $1 self:socket { write read getattr setopt };
 ')
 
 
@@ -92,6 +146,7 @@ interface(`init_telaf_core_domain',`
                 type telaf_admin_t;
                 type telaf_sdir_t;
 
+                attribute telaf_app_domain;
                 attribute telaf_core_domain;
                 attribute telaf_admin_domain;
         ')
@@ -164,6 +219,8 @@ interface(`init_telaf_core_domain',`
         #domain_transition_pattern(telaf_admin_t, $1, $2)
         #TODO make core domains less lenient
         #unconfined_domain($1)
+        allow telaf_core_domain telaf_admin_domain:{ file dir unix_dgram_socket unix_stream_socket socket sock_file } *;
+        allow telaf_core_domain telaf_app_domain:{ file dir unix_dgram_socket unix_stream_socket socket sock_file } *;
 ')
 
 ########################################
@@ -195,7 +252,6 @@ interface(`init_telaf_admin_domain',`
                 attribute telaf_admin_domain;
                 attribute telaf_app_domain;
                 attribute telaf_core_domain;
-
         ')
 
         init_daemon_domain($1, $2)
@@ -274,6 +330,9 @@ interface(`init_telaf_admin_domain',`
         allow telaf_admin_domain telaf_core_domain:{ file dir } *;
         unconfined_domain($1)
         selinux_load_policy(telaf_admin_t)
+
+        allow telaf_admin_domain telaf_core_domain:{ file dir unix_dgram_socket unix_stream_socket socket sock_file } *;
+        allow telaf_admin_domain telaf_app_domain:{ file dir unix_dgram_socket unix_stream_socket socket sock_file } *;
 ')
 
 ########################################
