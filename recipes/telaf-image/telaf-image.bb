@@ -18,13 +18,12 @@ def get_depends_prop(d):
     else:
         return ""
 DEPENDS += "${@get_depends_prop(d)}"
-
-def get_depends_internal(d):
-    if d.getVar('HAS_TELAF_INTERNAL', True) == 'true':
-        return "telaf-internal-build"
+def get_depends_noship(d):
+    if d.getVar('HAS_TELAF_NOSHIP', True) == 'true':
+        return "telaf-noship-build"
     else:
         return ""
-DEPENDS += "${@get_depends_internal(d)}"
+DEPENDS += "${@get_depends_noship(d)}"
 
 DEPENDS += "openssl"
 DEPENDS += "libxml2"
@@ -46,7 +45,7 @@ do_compile() {
     export LEGATO_ROOT=${S}/legato/legato-af
     export TELAF_ROOT=${S}/telaf
     export TELAF_PROP=${S}/telaf-prop
-    export TELAF_INTERNAL=${S}/telaf-internal
+    export TELAF_NOSHIP=${S}/telaf-noship
     export WORK_ROOT=${WORKDIR}
     export SELINUX_FILE_CONTEXTS=${TELAF_ROOT}/security/selinux/sepolicy/files/file_contexts
     export TARGET=${MACHINE}

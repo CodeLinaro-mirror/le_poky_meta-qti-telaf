@@ -47,12 +47,12 @@ do
     fi
 done
 
-for full_name_internal in `find ${TELAF_INTERNAL} -type f -name "*.so"`
+for full_name_noship in `find ${TELAF_NOSHIP} -type f -name "*.so"`
 do
-    base_name=`basename ${full_name_internal}`
+    base_name=`basename ${full_name_noship}`
     full_name_telaf=`find ${TARGET_STAGE_DIR} -type f -name ${base_name}`
     if [ -n "${full_name_telaf}" ]; then
-        cp -rf ${full_name_internal} ${full_name_telaf}
+        cp -rf ${full_name_noship} ${full_name_telaf}
     fi
 done
 
