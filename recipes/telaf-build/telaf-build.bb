@@ -43,7 +43,10 @@ do_compile() {
     oe_runmake ${MACHINE}
 }
 
-do_install[noexec] = "1"
+do_install_append() {
+    install -d ${D}/${libdir}/pkgconfig
+    install -m 0644 ${S}/telaf.pc ${D}/${libdir}/pkgconfig/
+}
 
 SYSROOT_PREPROCESS_FUNCS += "telaf_populate_sysroot"
 telaf_populate_sysroot() {
