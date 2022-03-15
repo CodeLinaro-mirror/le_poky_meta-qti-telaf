@@ -272,7 +272,7 @@ if (telaf_external_dependencies) {
 
     #============= systemd_tmpfiles_t ==============
     allow systemd_tmpfiles_t proc_net_t:file { read getattr open };
-    allow systemd_tmpfiles_t telaf_app_rw_t:lnk_file getattr;
+    allow systemd_tmpfiles_t telaf_app_rw_t:lnk_file { getattr unlink };
     allow systemd_tmpfiles_t telaf_apptmp_rw_t:sock_file getattr;
 
     #=============== telaf_admin_t ==============

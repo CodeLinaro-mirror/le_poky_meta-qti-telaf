@@ -41,6 +41,6 @@
 /legato/systems/current/appsWriteable(/.*)?                      gen_context(system_u:object_r:telaf_app_rw_t,s0)
 /legato/systems/current/modules(/.*)?                            gen_context(system_u:object_r:telaf_mod_t,s0)
 
-/data/le_fs                                                      gen_context(system_u:object_r:telaf_sys_t,s0)
+/data/le_fs(/.*)?                                                gen_context(system_u:object_r:telaf_sys_t,s0)
 /data/le_fs/resets/expected                          --          gen_context(system_u:object_r:telaf_sys_t,s0)
 /etc/initscripts/overlay_selinuxrw-workdir.sh        --          gen_context(system_u:object_r:telaf_overlay_exec_t,s0)
