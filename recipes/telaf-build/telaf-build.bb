@@ -35,6 +35,7 @@ do_configure() {
     cd ${S}
     ln -sf "./stub" "./components/tafSMSSvc/taf_pa_sms"
     ln -sf "./stub" "./components/tafUpdateSvc/taf_update_pa"
+    ln -sf "./stub" "./components/tafKeyStoreSvc/taf_pa_keystore"
 }
 
 do_compile() {
