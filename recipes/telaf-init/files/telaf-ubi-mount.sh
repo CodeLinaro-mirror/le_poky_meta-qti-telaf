@@ -87,14 +87,14 @@ WaitDevReady()
     return ${ret}
 }
 
-GetTelAfVolumeID () {
+GetVolumeID () {
     act_slot=`cat /proc/cmdline | sed 's/.*SLOT_SUFFIX=//' | awk '{print $1}'`
-    telaf_ab_name=telaf$act_slot
+    fs_ab_name=${1}$act_slot
     volcount=`cat /sys/class/ubi/ubi0/volumes_count`
 
     for vid in `seq 0 $volcount`; do
         name=`cat /sys/class/ubi/ubi0_$vid/name`
-        if [ "$name" == "telaf" ] || [ "$name" == "$telaf_ab_name" ]; then
+        if [ "$name" == "${1}" ] || [ "$name" == "$fs_ab_name" ]; then
             echo $vid
             break
         fi
@@ -103,7 +103,7 @@ GetTelAfVolumeID () {
 
 FindAndMountUBI() {
     dir=$1
-    volid=$(GetTelAfVolumeID)
+    volid=$(GetVolumeID telaf)
     if [ "$volid" == "" ]; then
         echo "Cannot get TelAF volume." > /dev/kmsg
         return 1
@@ -120,6 +120,30 @@ FindAndMountUBI() {
     if [ $? -ne 0 ]; then
        echo "Failed to wait on ${block_device}, exiting." > /dev/kmsg
        return 1
+    fi
+
+    if grep 'nad_avb=1' /proc/cmdline > /dev/null; then
+        # The system certificate CA is in the system volume, verified-boot utility
+        # need to use this CA to verify the user certificate.
+        volid=$(GetVolumeID system)
+        if [ "$volid" == "" ]; then
+            echo "Cannot get system volume." > /dev/kmsg
+            return 1
+        fi
+        CERT_CA_PATH=/dev/ubiblock0_$volid
+        dm_verity_name=telaf
+        dm_verity_device=/dev/mapper/${dm_verity_name}
+        verified-boot -n ${dm_verity_name} -d $block_device -p ${CERT_CA_PATH}
+        if [ $? -ne 0 ] ; then
+            echo "Created dm-verity device ${dm_verity_device} failed." > /dev/kmsg
+            return 1
+        fi
+        WaitDevReady "-b" "${dm_verity_device}"
+        if [ $? -ne 0 ]; then
+           echo "Failed to wait on ${dm_verity_device}, exiting." > /dev/kmsg
+           return 1
+        fi
+        block_device=${dm_verity_device}
     fi
 
     mount -t squashfs $block_device $dir -o ro
