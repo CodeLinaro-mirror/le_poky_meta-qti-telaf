@@ -179,7 +179,7 @@ FindAndMountApp() {
     echo "Get TelAF volume: $volid, name: $telaf_vol_name." > /dev/kmsg
     device=/dev/ubi0_$volid
 
-    mount -t ubifs $device $dir -o rw
+    mount -t ubifs $device $dir -o rw,rootcontext=system_u:object_r:telaf_fw_t:s0
     if [ $? -ne 0 ] ; then
         echo "Unable to mount ubifs onto TelAF $dir." > /dev/kmsg
         return 1

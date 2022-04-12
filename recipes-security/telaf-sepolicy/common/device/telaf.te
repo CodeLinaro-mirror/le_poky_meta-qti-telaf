@@ -104,8 +104,6 @@ gen_require(`
   type qnetmgrd_t;
   type qrtr_ns_t;
   type qseecomd_t;
-  type qseecomd_t;
-  type qtether_t;
   type qtether_t;
   type qwesd_t;
   type rilmuxd_t;
@@ -161,6 +159,47 @@ gen_require(`
   type cache_recovery_t;
   type fixed_disk_device_t;
   type user_tmp_t;
+  type wifi_system_data_t;
+  type firmware_t;
+  type ion_device_t;
+  type persist_t;
+  type qseecom_device_t;
+  type unlabeled_t;
+  type atfwd_t;
+  type chronyd_t;
+  type dataadpl_t;
+  type pdmappersvc_t;
+  type port_bridge_t;
+  type qmi_shutdown_modem_t;
+  type system_dbusd_var_run_t;
+  type initctl_t;
+  type rebootd_t;
+  type initrc_t;
+  type rild_t;
+  type chrony_sock_t;
+  type softsku_manager_t;
+  type softsku_t;
+  type systemd_logind_var_run_t;
+  type vendor_qdmastatsd_t;
+  type xtra_daemon_t;
+  type getty_t;
+  type csd_server_t;
+  type diagrebootapp_t;
+  type dm_manager_t;
+  type ipacm_diag_t;
+  type kmod_t;
+  type power_manager_daemon_t;
+  type servicemanager_t;
+  type systemd_logind_t;
+  type telux_audio_server_t;
+  type thermal-engine_t;
+  type time_daemon_t;
+  type tsens_t;
+  type vendor_qdma_t;
+  type smqlnx_t;
+  type c2c_hub_t;
+  type null_device_t;
+  type zero_device_t;
 ')
 
 ## telaf framework policies and definitions
@@ -242,6 +281,173 @@ type telaf_overlay_exec_t;
 init_script_domain(telaf_overlay_t, telaf_overlay_exec_t)
 unconfined_domain(telaf_overlay_t)
 
+# Define admin domain
+
+# admin has full file access of TelAF file contexts
+admin_pattern(telaf_admin_domain, telaf_fw_t)
+admin_pattern(telaf_admin_domain, telaf_app_rw_t)
+admin_pattern(telaf_admin_domain, telaf_app_bundle_t)
+admin_pattern(telaf_admin_domain, telaf_sys_t)
+admin_pattern(telaf_admin_domain, telaf_bin_t)
+admin_pattern(telaf_admin_domain, telaf_lib_t)
+admin_pattern(telaf_admin_domain, telaf_mod_t)
+admin_pattern(telaf_admin_domain, telaf_app_ro_t)
+admin_pattern(telaf_admin_domain, telaf_apptmp_rw_t)
+
+
+admin_pattern(telaf_admin_domain, telaf_sdir_t)
+admin_pattern(telaf_admin_domain, telaf_logd_t)
+admin_pattern(telaf_admin_domain, telaf_cfgtree_t)
+
+# should have execute permission
+exec_files_pattern(telaf_admin_domain, telaf_lib_t, telaf_lib_t)
+exec_files_pattern(telaf_admin_domain, telaf_bin_t, telaf_bin_t)
+exec_files_pattern(telaf_admin_domain, telaf_app_rw_t, telaf_app_rw_t)
+exec_files_pattern(telaf_admin_domain, telaf_app_bundle_t, telaf_app_bundle_t)
+
+# allow to mount /legato/systems/current to ubiblock0_4
+allow telaf_admin_domain telaf_sys_t:dir { search_dir_perms mounton };
+
+# allow to mount /legato/apps to ubiblock0_4
+allow telaf_admin_domain telaf_app_bundle_t:dir { search_dir_perms mounton };
+
+# allow to mount /legato/systems/current/appsWriteable to ubiblock0_4 and
+# allow to mount bind /legato/systems/current/appsWriteable/app/dev/log with /dev/log
+allow telaf_admin_domain telaf_app_rw_t:dir { search_dir_perms mounton };
+allow telaf_admin_domain telaf_app_rw_t:file { getattr mounton };
+
+# support relabel and manage access for chr device
+manage_chr_files_pattern(telaf_admin_domain, telaf_fw_t, telaf_fw_t)
+relabel_chr_files_pattern(telaf_admin_domain, telaf_fw_t, telaf_fw_t)
+
+# allow manage access for chr device (/legato/systems/current/appsWriteable/app/dev/null)
+manage_chr_files_pattern(telaf_admin_domain, telaf_app_rw_t, telaf_app_rw_t)
+
+# allow IPC connection
+allow telaf_admin_domain telaf_sdir_t:unix_stream_socket { connectto read write getopt };
+allow telaf_admin_domain telaf_logd_t:unix_stream_socket { connectto read write getopt };
+allow telaf_admin_domain telaf_cfgtree_t:unix_stream_socket { connectto read write getopt };
+
+# allow to read etc files
+files_read_etc_files(telaf_admin_domain)
+
+# allow logging to syslog
+logging_send_syslog_msg(telaf_admin_domain)
+
+# allow supervisor to send signal to telaf app
+allow telaf_admin_domain telaf_app_domain:process signal;
+allow telaf_admin_domain telaf_core_domain:process signal;
+
+# fs related permission used by supervisor
+dev_getattr_fs(telaf_admin_domain)
+term_getattr_pty_fs(telaf_admin_domain)
+files_rw_etc_files(telaf_admin_domain)
+allow telaf_admin_domain tracefs_t:filesystem getattr;
+allow telaf_admin_domain fs_t:filesystem { getattr mount };
+
+# should have the permission of tmpfs
+files_mounton_non_security(telaf_admin_domain)
+files_relabel_all_tmp_dirs(telaf_admin_domain)
+files_relabel_all_tmp_files(telaf_admin_domain)
+files_manage_generic_tmp_dirs(telaf_admin_domain)
+files_manage_generic_tmp_files(telaf_admin_domain)
+
+# user ability and sandbox support
+allow telaf_admin_domain self:capability { dac_read_search sys_admin sys_resource sys_nice setgid kill setuid net_admin sys_boot mknod sys_chroot sys_ptrace dac_override };
+allow telaf_admin_domain self:capability2 { block_suspend mac_admin wake_alarm };
+allow telaf_admin_domain self:process { setsched setrlimit sigkill signal };
+allow telaf_admin_domain wifi_system_data_t:dir { search };
+
+
+
+allow telaf_admin_domain { system_dbusd_var_run_t c2c_hub_t kmod_t ipacm_diag_t telux_audio_server_t csd_server_t tsens_t thermal-engine_t diagrebootapp_t chrony_sock_t vendor_qdma_t smqlnx_t time_daemon_t power_manager_daemon_t leprop_t dm_manager_t slim_daemon_t loc_hald_t loc_t qwesd_t qseecomd_t dnsmasq_t firmware_t softsku_manager_t servicemanager_t xtra_daemon_t softsku_manager_t pdmappersvc_t rilmuxd_t rild_t softsku_t rebootd_t port_bridge_t atfwd_t persist_t dataadpl_t initrc_t getty_t qmi_shutdown_modem_t vendor_qdmastatsd_t syslogd_t systemd_logind_t chronyd_t unlabeled_t }:dir search_dir_perms;
+allow telaf_admin_domain { system_dbusd_var_run_t c2c_hub_t kmod_t ipacm_diag_t telux_audio_server_t csd_server_t tsens_t thermal-engine_t diagrebootapp_t chrony_sock_t vendor_qdma_t smqlnx_t time_daemon_t power_manager_daemon_t leprop_t dm_manager_t slim_daemon_t loc_hald_t loc_t qwesd_t qseecomd_t dnsmasq_t firmware_t softsku_manager_t servicemanager_t xtra_daemon_t softsku_manager_t pdmappersvc_t rilmuxd_t rild_t softsku_t rebootd_t port_bridge_t atfwd_t persist_t dataadpl_t initrc_t getty_t qmi_shutdown_modem_t vendor_qdmastatsd_t syslogd_t systemd_logind_t chronyd_t unlabeled_t }:file read_file_perms;
+allow telaf_admin_domain { system_dbusd_var_run_t c2c_hub_t kmod_t ipacm_diag_t telux_audio_server_t csd_server_t tsens_t thermal-engine_t diagrebootapp_t chrony_sock_t vendor_qdma_t smqlnx_t time_daemon_t power_manager_daemon_t leprop_t dm_manager_t slim_daemon_t loc_hald_t loc_t qwesd_t qseecomd_t dnsmasq_t firmware_t softsku_manager_t servicemanager_t xtra_daemon_t softsku_manager_t pdmappersvc_t rilmuxd_t rild_t softsku_t rebootd_t port_bridge_t atfwd_t persist_t dataadpl_t initrc_t getty_t qmi_shutdown_modem_t vendor_qdmastatsd_t syslogd_t systemd_logind_t chronyd_t unlabeled_t }:lnk_file read;
+
+# keystore service
+allow telaf_admin_domain { qseecom_device_t ion_device_t }:chr_file { rw_file_perms };
+# update daemon
+allow telaf_admin_domain cgroup_t:dir { manage_dir_perms };
+allow telaf_admin_domain { fs_t tmpfs_t }:filesystem { unmount };
+allow telaf_admin_domain device_t:chr_file { manage_file_perms relabelfrom relabelto };
+allow telaf_admin_domain device_t:dir { manage_dir_perms relabelfrom relabelto };
+allow telaf_admin_domain { devlog_t device_t }:sock_file { getattr relabelto relabelfrom write open };
+# update daemon need to remove files during app uninstallation
+allow telaf_admin_domain { null_device_t urandom_device_t zero_device_t }:chr_file { unlink };
+# relabel /dev/log, /dev/null, /dev/zero, /dev/urandom
+allow telaf_app_rw_t { device_t }:filesystem { associate };
+
+# support system reboot
+allow telaf_admin_domain init_t:file { exec_file_perms };
+allow telaf_admin_domain init_t:unix_stream_socket { connectto };
+allow telaf_admin_domain systemd_logind_var_run_t:sock_file { open write };
+allow telaf_admin_domain init_var_run_t:sock_file { open write };
+allow telaf_admin_domain initctl_t:fifo_file { open write };
+
+# Define App domain rules
+allow telaf_app_domain telaf_fw_t : dir { manage_dir_perms };
+allow telaf_app_domain telaf_lib_t : { file } { read execute getattr open };
+allow telaf_app_domain telaf_lib_t : { dir } { read execute getattr open search };
+allow telaf_app_domain telaf_app_rw_t : { file dir } *;
+allow telaf_app_domain telaf_app_rw_t : sock_file { create write };
+allow telaf_app_domain telaf_app_ro_t : { file dir } ~{ write };
+allow telaf_app_domain telaf_sys_t : { file dir } *;
+allow telaf_app_domain telaf_bin_t : { file dir } ~{ write };
+allow telaf_app_domain data_t:dir { read write };
+allow telaf_app_domain telaf_app_rw_t : { file dir } *;
+allow telaf_app_domain self : { file dir } ~{ execute };
+allow telaf_app_domain self:unix_stream_socket { connectto };
+allow telaf_app_domain self:socket { write read create getattr setopt };
+allow telaf_app_domain telaf_core_domain:{ file dir unix_dgram_socket unix_stream_socket socket sock_file } *;
+allow telaf_app_domain telaf_admin_domain:{ file dir unix_dgram_socket unix_stream_socket socket sock_file } *;
+allow telaf_app_domain tmpfs_t:filesystem getattr;
+allow telaf_app_domain tmpfs_t:file { read write open getattr mounton };
+allow telaf_app_domain tmpfs_t:dir { manage_dir_perms };
+allow telaf_app_domain telaf_apptmp_rw_t:sock_file { create write };
+allow telaf_app_domain telaf_apptmp_rw_t:dir { search };
+allow telaf_app_domain syslogd_t:unix_dgram_socket sendto;
+allow telaf_app_domain telaf_admin_t:fd use;
+allow telaf_app_domain telaf_sdir_t:unix_stream_socket connectto;
+allow telaf_app_domain telaf_sdir_t:fd use;
+allow telaf_app_domain diag_device_t:chr_file { read write open ioctl };
+allow telaf_app_domain devlog_t:sock_file write;
+allow telaf_app_domain telaf_admin_t:fifo_file { read getattr write };
+allow telaf_app_domain tmp_t:dir search;
+allow telaf_app_domain telaf_app_bundle_t : { file dir } *;
+allow telaf_app_domain device_t:sock_file { write };
+allow telaf_app_domain self : process signal;
+allow telaf_app_domain self:capability2 { block_suspend wake_alarm };
+allow telaf_app_domain self:capability dac_override;
+allow telaf_app_domain self:process signal;
+allow telaf_app_domain self:fifo_file { write read };
+
+# Define core domain
+allow telaf_core_domain telaf_fw_t : dir { manage_dir_perms };
+allow telaf_core_domain telaf_lib_t : { file dir } { read execute getattr };
+allow telaf_core_domain telaf_app_rw_t : { file dir unix_dgram_socket socket sock_file } *;
+allow telaf_core_domain telaf_app_ro_t : { file dir } ~{ write };
+allow telaf_core_domain telaf_sys_t : { file dir } *;
+allow telaf_core_domain telaf_bin_t : { file dir } ~{ write };
+allow telaf_core_domain telaf_admin_t:fd use;
+allow telaf_core_domain telaf_sdir_t:fd use;
+allow telaf_core_domain telaf_admin_domain:{ file dir unix_dgram_socket unix_stream_socket socket sock_file } *;
+allow telaf_core_domain telaf_app_domain:{ file dir unix_dgram_socket unix_stream_socket socket sock_file } *;
+allow telaf_core_domain telaf_admin_t:fifo_file { read write };
+allow telaf_core_domain telaf_lib_t:dir { search };
+allow telaf_core_domain telaf_lib_t:file { open  };
+allow telaf_core_domain devlog_t:sock_file write;
+allow telaf_core_domain etc_t:file { read open lock getattr };
+allow telaf_core_domain tmp_t:dir search;
+allow telaf_core_domain syslogd_t:unix_dgram_socket sendto;
+allow telaf_core_domain telaf_apptmp_rw_t:dir { search write add_name };
+allow telaf_core_domain telaf_sdir_t:unix_stream_socket { read write connectto getopt };
+allow telaf_core_domain telaf_apptmp_rw_t:sock_file { create write };
+allow telaf_core_domain telaf_admin_t:process { sigchld };
+allow telaf_core_domain self:capability2 { block_suspend wake_alarm };
+allow telaf_core_domain self:unix_stream_socket { connectto };
+#allow telaf_core_domain unlabeled_t:dir { search_dir_perms };
+#allow telaf_core_domain unlabeled_t:file { read_file_perms };
+
 # Local rules
 ########################################
 
@@ -256,11 +462,23 @@ allow mount_t telaf_fw_t:dir mounton;
 # External Dependencies
 
 # unconfined_domain for recovery update (allow telaf_admin_t fixed_disk_device_t:blk_file)
-unconfined_domain(telaf_admin_t)
+# unconfined_domain(telaf_admin_t)
 
 if (telaf_external_dependencies) {
     #============= setfiles_t ==============
     allow setfiles_t ldconfig_tmp_t:file { read open };
+    allow setfiles_t { telaf_admin_t telaf_sdir_t }:unix_stream_socket { connectto read write };
+    allow setfiles_t { telaf_admin_t telaf_sdir_t }:unix_dgram_socket { read write };
+    allow setfiles_t { telaf_admin_t telaf_sdir_t }:fd { use };
+    allow setfiles_t { telaf_apptmp_rw_t telaf_app_rw_t }:file { rw_file_perms };
+    allow setfiles_t self:capability2 { mac_admin };
+
+    #============= load_policy_t ==============
+    allow load_policy_t telaf_apptmp_rw_t:file { rw_file_perms };
+    allow load_policy_t { telaf_admin_t telaf_sdir_t }:unix_stream_socket { connectto read write };
+    allow load_policy_t { telaf_admin_t telaf_sdir_t }:unix_dgram_socket { read write };
+    allow load_policy_t { telaf_admin_t telaf_sdir_t }:fd { use };
+    allow load_policy_t { telaf_app_rw_t telaf_app_bundle_t }:file { rw_file_perms };
 
     #============= syslogd_t ==============
     allow syslogd_t self:sem { read write create unix_write destroy };
@@ -284,7 +502,7 @@ if (telaf_external_dependencies) {
     allow telaf_admin_t syslogd_t:unix_dgram_socket sendto;
     allow telaf_admin_t telaf_admin_exec_t:file execute_no_trans;
     allow telaf_admin_t telaf_app_bundle_t:lnk_file read;
-    allow telaf_admin_t telaf_app_rw_t:lnk_file create;
+    allow telaf_admin_t telaf_app_rw_t:lnk_file { getattr create };
     allow telaf_admin_t telaf_apptmp_rw_t:dir { write remove_name add_name };
     allow telaf_admin_t telaf_apptmp_rw_t:sock_file write;
     allow telaf_admin_t telaf_fw_t:dir getattr;
@@ -330,7 +548,7 @@ if (telaf_external_dependencies) {
 
     #=========== TelSDK DEBUG =============
     allow telaf_admin_t syslogd_t:sem { read write associate unix_write };
-    allow telaf_admin_t syslogd_t:shm { read unix_read };
+    allow telaf_admin_t syslogd_t:shm { read unix_read associate };
     allow telaf_admin_t telaf_apptmp_rw_t:file { manage_file_perms};
 
     #=========== CM Data Command =============
