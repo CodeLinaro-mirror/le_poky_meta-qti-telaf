@@ -133,7 +133,7 @@ FindAndMountUBI() {
         CERT_CA_PATH=/dev/ubiblock0_$volid
         dm_verity_name=telaf
         dm_verity_device=/dev/mapper/${dm_verity_name}
-        verified-boot -n ${dm_verity_name} -d $block_device -p ${CERT_CA_PATH}
+        verified-boot -n ${dm_verity_name} -d $block_device -p ${CERT_CA_PATH} > /dev/kmsg
         if [ $? -ne 0 ] ; then
             echo "Created dm-verity device ${dm_verity_device} failed." > /dev/kmsg
             return 1
