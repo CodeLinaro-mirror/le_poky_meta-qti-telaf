@@ -25,12 +25,32 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Changes from Qualcomm Innovation Center are provided under the following license:
+# Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+
+
  ## Target specific sepolicy rules for telaf.
 
 gen_require(`
   type ssreq_server_t;
+  type softsku_manager_t;
+  type softsku_t;
+  type dm_manager_t;
+  type ipacm_diag_t;
+  type c2c_hub_t;
+  type smqlnx_t;
+  type ota_manager_exec_t;
+  type telaf_tafUpdateSvc_t;
   ')
 
 allow telaf_admin_t ssreq_server_t:dir { search add_name write };
 allow telaf_admin_t ssreq_server_t:file { read open write create };
 allow telaf_admin_t ssreq_server_t:lnk_file read;
+
+allow telaf_admin_domain { c2c_hub_t ipacm_diag_t dm_manager_t softsku_manager_t softsku_t smqlnx_t }:dir search_dir_perms;
+allow telaf_admin_domain { c2c_hub_t ipacm_diag_t dm_manager_t softsku_manager_t softsku_t smqlnx_t }:file read_file_perms;
+allow telaf_admin_domain { c2c_hub_t ipacm_diag_t dm_manager_t softsku_manager_t softsku_t smqlnx_t }:lnk_file read;
+
+# workaround to make sa515m work
+allow telaf_tafUpdateSvc_t ota_manager_exec_t:file { exec_file_perms };

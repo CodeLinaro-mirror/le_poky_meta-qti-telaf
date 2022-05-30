@@ -25,6 +25,10 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Changes from Qualcomm Innovation Center are provided under the following license:
+# Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+
 ########################################
 ## <summary>
 ##    Telaf interface
@@ -70,9 +74,17 @@ interface(`init_telaf_app_domain',`
 
         manage_user_data_files($1, data_t)
 
+        # access telsdk files
+        manage_user_data_files($1, data_t)
+        write_telux_log_file($1)
+        telux_allow_tel($1)
+
         allow telaf_admin_domain $1:fd { use };
         allow telaf_admin_domain { $1 $2 }:file { all_file_perms };
         allow telaf_admin_domain { $1 $2 }:dir { all_dir_perms };
+
+        allow telaf_admin_domain { $1 }:process { setsched setrlimit sigkill signal getattr };
+        allow $1 { telaf_admin_domain }:process { setsched setrlimit sigkill signal getattr };
 ')
 
 
@@ -153,35 +165,8 @@ interface(`init_telaf_admin_domain',`
         manage_user_data_files($1, data_t)
         write_telux_log_file($1)
         telux_allow_tel($1)
-
-        selinux_load_policy($1)
-        userdom_security_admin_template($1,system_r)
-        seutil_manage_config($1)
-
 ')
 
- ########################################
-## <summary>
-##              Add all file permissions for TelAF admin domain
-## </summary>
-## <param name="file context">
-##              <summary>
-##              Context of the files which allow TelAF admin domain to access
-##              </summary>
-## </param>
-#
-interface(`telaf_admin_manage_all_files_perms',`
-        gen_require(`
-                attribute telaf_admin_domain;
-        ')
-
-        manage_files_pattern(telaf_admin_domain, $1, $1)
-        manage_lnk_files_pattern(telaf_admin_domain, $1, $1)
-        manage_blk_files_pattern(telaf_admin_domain, $1, $1)
-        manage_sock_files_pattern(telaf_admin_domain, $1, $1)
-        manage_fifo_files_pattern(telaf_admin_domain, $1, $1)
-
-')
 
 ########################################
 ## <summary>
@@ -231,6 +216,36 @@ interface(`telaf_admin_file_perms',`
 
 ########################################
 ## <summary>
+##              Allow TelAF Admin to have all permissions for specified files.
+## </summary>
+## <param name="source_domain">
+##              <summary>
+##              Type to be used as a source domain
+##              </summary>
+## </param>
+## <param name="target_domain">
+##              <summary>
+##              Type to be used as a target domain
+##              </summary>
+## </param>
+#
+interface(`telaf_admin_manage_all_files_perms',`
+        gen_require(`
+                type telaf_update_t;
+                type telaf_admin_t;
+        ')
+
+        allow { telaf_admin_domain } $1:dir { manage_dir_perms };
+        manage_files_pattern(telaf_admin_domain, $1, $1)
+        manage_lnk_files_pattern(telaf_admin_domain, $1, $1)
+        manage_blk_files_pattern(telaf_admin_domain, $1, $1)
+        manage_sock_files_pattern(telaf_admin_domain, $1, $1)
+        manage_fifo_files_pattern(telaf_admin_domain, $1, $1)
+
+')
+
+########################################
+## <summary>
 ##              File operations for telaf admin domain
 ## </summary>
 ## <param name="source_domain">
@@ -250,3 +265,4 @@ interface(`telaf_admin_mount_perms',`
         allow $1 $2:filesystem { getattr mount remount };
 
 ')
+
