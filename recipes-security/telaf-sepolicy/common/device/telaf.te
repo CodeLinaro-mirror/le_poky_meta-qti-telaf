@@ -355,9 +355,8 @@ files_manage_generic_tmp_files(telaf_admin_domain)
 # user ability and sandbox support
 allow telaf_admin_domain self:capability { dac_read_search sys_admin sys_resource sys_nice setgid kill setuid net_admin sys_boot mknod sys_chroot sys_ptrace dac_override };
 allow telaf_admin_domain self:capability2 { block_suspend mac_admin wake_alarm };
-allow telaf_admin_domain self:process { setsched setrlimit sigkill signal };
+allow telaf_admin_domain self:process { setsched setrlimit sigkill signal getattr };
 allow telaf_admin_domain wifi_system_data_t:dir { search };
-
 
 
 allow telaf_admin_domain { system_dbusd_var_run_t c2c_hub_t kmod_t ipacm_diag_t telux_audio_server_t csd_server_t tsens_t thermal-engine_t diagrebootapp_t chrony_sock_t vendor_qdma_t smqlnx_t time_daemon_t power_manager_daemon_t leprop_t dm_manager_t slim_daemon_t loc_hald_t loc_t qwesd_t qseecomd_t dnsmasq_t firmware_t softsku_manager_t servicemanager_t xtra_daemon_t softsku_manager_t pdmappersvc_t rilmuxd_t rild_t softsku_t rebootd_t port_bridge_t atfwd_t persist_t dataadpl_t initrc_t getty_t qmi_shutdown_modem_t vendor_qdmastatsd_t syslogd_t systemd_logind_t chronyd_t unlabeled_t }:dir search_dir_perms;
@@ -366,6 +365,9 @@ allow telaf_admin_domain { system_dbusd_var_run_t c2c_hub_t kmod_t ipacm_diag_t 
 
 # keystore service
 allow telaf_admin_domain { qseecom_device_t ion_device_t }:chr_file { rw_file_perms };
+allow telaf_admin_domain persist_t:dir { manage_dir_perms };
+allow telaf_admin_domain persist_t:file { manage_file_perms };
+
 # update daemon
 allow telaf_admin_domain cgroup_t:dir { manage_dir_perms };
 allow telaf_admin_domain { fs_t tmpfs_t }:filesystem { unmount };
