@@ -200,6 +200,7 @@ gen_require(`
   type c2c_hub_t;
   type null_device_t;
   type zero_device_t;
+  type user_tty_device_t;
 ')
 
 ## telaf framework policies and definitions
@@ -385,6 +386,10 @@ allow telaf_admin_domain init_t:unix_stream_socket { connectto };
 allow telaf_admin_domain systemd_logind_var_run_t:sock_file { open write };
 allow telaf_admin_domain init_var_run_t:sock_file { open write };
 allow telaf_admin_domain initctl_t:fifo_file { open write };
+
+# allow serial console to TelAF tools
+allow telaf_admin_domain getty_t:fd use;
+allow telaf_admin_domain user_tty_device_t:chr_file read;
 
 # Define App domain rules
 allow telaf_app_domain telaf_fw_t : dir { manage_dir_perms };
