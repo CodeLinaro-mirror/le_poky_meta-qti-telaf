@@ -100,42 +100,24 @@ gen_require(`
   type proc_net_t;
   type proc_t;
   type qcmap_cm_t;
-  type qmux_radio_sock_t;
-  type qnetmgrd_t;
-  type qrtr_ns_t;
-  type qseecomd_t;
-  type qtether_t;
-  type qwesd_t;
-  type rilmuxd_t;
-  type setfiles_exec_t;
   type setfiles_t;
   type shell_exec_t;
-  type slim_daemon_t;
   type loc_socket_t;
   type sysctl_t;
   type sysfs_t;
   type syslogd_t;
   type system_dbusd_t;
   type systemd_tmpfiles_t;
-  type telaf_fw_t;
-  type telsdk_etc_t;
   type tftp_server_t;
   type tmpfs_t;
   type tracefs_t;
   type udev_t;
-  type unconfined_t;
   type var_lock_t;
-  type initrc_tmp_t;
   type urandom_device_t;
-  type socket_device_t;
   type var_log_t;
   type var_run_t;
-  type ifconfig_exec_t;
   type init_var_run_t;
-  type net_conf_t;
-  type home_root_t;
   type systemd_resolved_var_run_t;
-  type user_home_dir_t;
   type http_port_t;
   type cert_t;
   type semanage_store_t;
@@ -145,57 +127,20 @@ gen_require(`
   type selinux_config_t;
   type semanage_read_lock_t;
   type security_t;
-  type sysctl_kernel_t;
   type policy_config_t;
   type qcmap_etc_data_t;
-  type kmsg_device_t;
   type mount_exec_t;
   type mount_runtime_t;
-  type unreserved_port_t;
   type kmsg_device_t;
-  type leprop_sock_t;
-  type leprop_t;
-  type cache_t;
-  type cache_recovery_t;
-  type fixed_disk_device_t;
   type user_tmp_t;
-  type wifi_system_data_t;
-  type firmware_t;
-  type ion_device_t;
-  type persist_t;
-  type qseecom_device_t;
-  type unlabeled_t;
-  type atfwd_t;
-  type chronyd_t;
-  type dataadpl_t;
-  type pdmappersvc_t;
-  type port_bridge_t;
-  type qmi_shutdown_modem_t;
-  type system_dbusd_var_run_t;
   type initctl_t;
-  type rebootd_t;
-  type initrc_t;
-  type rild_t;
-  type chrony_sock_t;
   type systemd_logind_var_run_t;
-  type vendor_qdmastatsd_t;
-  type xtra_daemon_t;
   type getty_t;
-  type csd_server_t;
-  type diagrebootapp_t;
-  type kmod_t;
-  type power_manager_daemon_t;
-  type servicemanager_t;
-  type systemd_logind_t;
-  type telux_audio_server_t;
-  type thermal-engine_t;
-  type time_daemon_t;
-  type tsens_t;
-  type vendor_qdma_t;
   type null_device_t;
   type zero_device_t;
   type user_tty_device_t;
-  type ssreq_server_t;
+  type watchdog_device_t;
+  type socket_device_t;
 ')
 
 ## telaf framework policies and definitions
@@ -264,6 +209,7 @@ type telaf_wdog_t;
 type telaf_wdog_exec_t;
 files_type(telaf_wdog_exec_t);
 init_telaf_core_domain(telaf_wdog_t, telaf_wdog_exec_t)
+allow telaf_wdog_t watchdog_device_t:chr_file rw_file_perms;
 
 # Define the configTree type
 type telaf_cfgtree_t;
@@ -336,41 +282,17 @@ allow telaf_admin_t telaf_sdir_t:fd use;
 telaf_admin_lnk_file_perms(telaf_admin_t, adbd_t)
 telaf_admin_lnk_file_perms(telaf_admin_t, alogd_t)
 telaf_admin_lnk_file_perms(telaf_admin_t, init_t)
-telaf_admin_lnk_file_perms(telaf_admin_t, ipacm_t)
 telaf_admin_lnk_file_perms(telaf_admin_t, kernel_t)
-telaf_admin_lnk_file_perms(telaf_admin_t, mss_t)
-telaf_admin_lnk_file_perms(telaf_admin_t, qcmap_cm_t)
-telaf_admin_lnk_file_perms(telaf_admin_t, qnetmgrd_t)
-telaf_admin_lnk_file_perms(telaf_admin_t, qrtr_ns_t)
-telaf_admin_lnk_file_perms(telaf_admin_t, qtether_t)
-telaf_admin_lnk_file_perms(telaf_admin_t, system_dbusd_t)
-telaf_admin_lnk_file_perms(telaf_admin_t, tftp_server_t)
 telaf_admin_lnk_file_perms(telaf_admin_t, udev_t)
-telaf_admin_lnk_file_perms(telaf_admin_t, unconfined_t)
 telaf_admin_lnk_file_perms(telaf_admin_t, var_lock_t)
 telaf_admin_lnk_file_perms(telaf_admin_t, cgroup_t)
-telaf_admin_file_perms(telaf_admin_t, dnsmasq_t)
-telaf_admin_file_perms(telaf_admin_t, file_context_t)
-telaf_admin_file_perms(telaf_admin_t, loc_hald_t)
-telaf_admin_file_perms(telaf_admin_t, loc_t)
 telaf_admin_file_perms(telaf_admin_t, proc_t)
-telaf_admin_file_perms(telaf_admin_t, qseecomd_t)
-telaf_admin_file_perms(telaf_admin_t, qwesd_t)
-telaf_admin_file_perms(telaf_admin_t, slim_daemon_t)
 telaf_admin_file_perms(telaf_admin_t, sysctl_t)
 telaf_admin_file_perms(telaf_admin_t, sysfs_t)
 telaf_admin_mount_perms(telaf_admin_t, cgroup_t)
 telaf_admin_mount_perms(telaf_admin_t, debugfs_t)
 telaf_admin_mount_perms(telaf_admin_t, tmpfs_t)
 
-# allow to mount /legato/systems/current to ubiblock0_4
-#allow telaf_admin_domain telaf_sys_t:dir { search_dir_perms mounton };
-
-# allow to mount /legato/apps to ubiblock0_4
-#allow telaf_admin_domain telaf_app_bundle_t:dir { search_dir_perms mounton };
-
-# allow to mount /legato/systems/current/appsWriteable to ubiblock0_4 and
-# allow to mount bind /legato/systems/current/appsWriteable/app/dev/log with /dev/log
 allow telaf_admin_domain telaf_app_rw_t:dir { search_dir_perms mounton };
 allow telaf_admin_domain telaf_app_rw_t:file { getattr mounton };
 
@@ -385,6 +307,8 @@ manage_chr_files_pattern(telaf_admin_domain, telaf_app_rw_t, telaf_app_rw_t)
 allow telaf_admin_domain telaf_sdir_t:unix_stream_socket { connectto read write getopt };
 allow telaf_admin_domain telaf_logd_t:unix_stream_socket { connectto read write getopt };
 allow telaf_admin_domain telaf_cfgtree_t:unix_stream_socket { connectto read write getopt };
+
+allow telaf_admin_domain telaf_overlay_t:dir { search };
 
 # allow to read etc files
 files_read_etc_files(telaf_admin_domain)
@@ -417,11 +341,10 @@ allow telaf_admin_domain self:capability2 { block_suspend mac_admin wake_alarm }
 allow telaf_admin_domain self:capability2 { syslog };
 
 allow telaf_admin_domain self:process { setsched setrlimit sigkill signal getattr };
-allow telaf_admin_domain wifi_system_data_t:dir { search };
 
-allow telaf_admin_domain ssreq_server_t:dir { search_dir_perms };
-allow telaf_admin_domain ssreq_server_t:file { read_file_perms };
-allow telaf_admin_domain ssreq_server_t:lnk_file { read_file_perms };
+# support killall command
+domain_read_all_domains_state(telaf_admin_domain);
+domain_kill_all_domains(telaf_admin_domain);
 
 # allow to load sepolicy module
 selinux_load_policy(telaf_admin_t)
@@ -429,10 +352,6 @@ userdom_security_admin_template(telaf_admin_t, system_r)
 seutil_manage_config(telaf_admin_t)
 allow telaf_admin_t semanage_trans_lock_t:file { getattr read lock open };
 allow telaf_admin_t semanage_read_lock_t:file { getattr read lock open };
-
-allow telaf_admin_domain { system_dbusd_var_run_t kmod_t telux_audio_server_t csd_server_t tsens_t thermal-engine_t diagrebootapp_t chrony_sock_t vendor_qdma_t time_daemon_t power_manager_daemon_t leprop_t slim_daemon_t loc_hald_t loc_t qwesd_t qseecomd_t dnsmasq_t firmware_t servicemanager_t xtra_daemon_t pdmappersvc_t rilmuxd_t rild_t rebootd_t port_bridge_t atfwd_t persist_t dataadpl_t initrc_t getty_t qmi_shutdown_modem_t vendor_qdmastatsd_t syslogd_t systemd_logind_t chronyd_t unlabeled_t }:dir search_dir_perms;
-allow telaf_admin_domain { system_dbusd_var_run_t kmod_t telux_audio_server_t csd_server_t tsens_t thermal-engine_t diagrebootapp_t chrony_sock_t vendor_qdma_t time_daemon_t power_manager_daemon_t leprop_t slim_daemon_t loc_hald_t loc_t qwesd_t qseecomd_t dnsmasq_t firmware_t servicemanager_t xtra_daemon_t pdmappersvc_t rilmuxd_t rild_t rebootd_t port_bridge_t atfwd_t persist_t dataadpl_t initrc_t getty_t qmi_shutdown_modem_t vendor_qdmastatsd_t syslogd_t systemd_logind_t chronyd_t unlabeled_t }:file read_file_perms;
-allow telaf_admin_domain { system_dbusd_var_run_t kmod_t telux_audio_server_t csd_server_t tsens_t thermal-engine_t diagrebootapp_t chrony_sock_t vendor_qdma_t time_daemon_t power_manager_daemon_t leprop_t slim_daemon_t loc_hald_t loc_t qwesd_t qseecomd_t dnsmasq_t firmware_t servicemanager_t xtra_daemon_t pdmappersvc_t rilmuxd_t rild_t rebootd_t port_bridge_t atfwd_t persist_t dataadpl_t initrc_t getty_t qmi_shutdown_modem_t vendor_qdmastatsd_t syslogd_t systemd_logind_t chronyd_t unlabeled_t }:lnk_file read;
 
 # support system reboot
 allow telaf_admin_domain init_t:file { exec_file_perms };
@@ -564,7 +483,6 @@ if (telaf_external_dependencies) {
 
     #============ tafservices =============
     allow telaf_admin_domain socket_device_t:dir search;
-    allow telaf_admin_domain qmux_radio_sock_t:dir search;
     allow telaf_admin_domain self:fifo_file *;
 
     #=========== TelSDK DEBUG =============
@@ -573,7 +491,6 @@ if (telaf_external_dependencies) {
     allow telaf_admin_t telaf_apptmp_rw_t:file { manage_file_perms};
 
     #=========== CM Data Command =============
-    #allow telaf_admin_t var_log_t:lnk_file { rw_file_perms create_file_perms };
     # Allow log to /var/log
     allow telaf_admin_t var_log_t:dir { rw_dir_perms };
     allow telaf_admin_t var_log_t:file { manage_file_perms };
@@ -613,7 +530,6 @@ if (telaf_external_dependencies) {
 
     #=========== Semodule Dynamic Loading  =============
     allow telaf_admin_t var_lib_t:dir { search getattr };
-    allow telaf_admin_t qcmap_etc_data_t:dir search;
 
     #============= telaf_overlay_t ==============
     allow telaf_overlay_t data_t:dir { read remove_name rmdir relabelfrom write create add_name setattr };
