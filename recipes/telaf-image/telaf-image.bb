@@ -33,8 +33,6 @@ DEPENDS += "telux-lib"
 
 PR = "r1"
 
-SRC_URI += "file://mkimg.sh"
-
 S = "${WORKDIR}/telaf-image/stage"
 
 do_configure() {
@@ -47,16 +45,13 @@ do_compile() {
     export TELAF_PROP=${S}/telaf-prop
     export TELAF_NOSHIP=${S}/telaf-noship
     export WORK_ROOT=${WORKDIR}
-    export SELINUX_FILE_CONTEXTS=${TELAF_ROOT}/security/selinux/sepolicy/files/file_contexts
-    export TARGET=${MACHINE}
-    export OUTPUT=${S}
-    ${WORKDIR}/mkimg.sh
+    ${TELAF_ROOT}/mkimg.sh ${MACHINE} ${S}
 }
 
 do_deploy() {
     mkdir -p ${DEPLOY_DIR_IMAGE}
-    install ${S}/telaf.squashfs.ubi ${DEPLOY_DIR_IMAGE}/telaf_ro.squashfs.ubi
-    install ${S}/telaf.squashfs ${DEPLOY_DIR_IMAGE}/telaf_ro.squashfs
+    install ${S}/telaf_ro.squashfs.ubi ${DEPLOY_DIR_IMAGE}/
+    install ${S}/telaf_ro.squashfs ${DEPLOY_DIR_IMAGE}/
 }
 do_deploy[dirs] = "${S} ${DEPLOYDIR}"
 addtask deploy before do_build after do_install

@@ -30,14 +30,6 @@ S_L = "${WORKDIR}/legato"
 
 PARALLEL_MAKE = ""
 
-do_configure() {
-    # Make relative link to access stubs
-    cd ${S}
-    ln -sf "./stub" "./components/tafSMSSvc/taf_pa_sms"
-    ln -sf "./stub" "./components/tafUpdateSvc/taf_update_pa"
-    ln -sf "./stub" "./components/tafKeyStoreSvc/taf_pa_keystore"
-}
-
 do_compile() {
     export WORK_ROOT=${WORKDIR}
     oe_runmake distclean
