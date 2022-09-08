@@ -141,6 +141,7 @@ gen_require(`
   type user_tty_device_t;
   type watchdog_device_t;
   type socket_device_t;
+  type persist_t;
 ')
 
 ## telaf framework policies and definitions
@@ -492,10 +493,10 @@ if (telaf_external_dependencies) {
 
     #=========== CM Data Command =============
     # Allow log to /var/log
-    allow telaf_admin_t var_log_t:dir { rw_dir_perms };
+    allow telaf_admin_t var_log_t:dir { rw_dir_perms setattr };
     allow telaf_admin_t var_log_t:file { manage_file_perms };
     # allow tools/scripts/cm to create files in /var/run/
-    allow telaf_admin_t var_run_t:dir { create_dir_perms rw_dir_perms };
+    allow telaf_admin_t var_run_t:dir { create_dir_perms rw_dir_perms setattr };
     allow telaf_admin_t var_run_t:file { manage_file_perms };
     # allow tools/scripts/cm to run ifconfig
     sysnet_exec_ifconfig(telaf_admin_t)
@@ -561,4 +562,7 @@ if (telaf_external_dependencies) {
 
     #=========== Update Service Command =============
     allow telaf_sdir_t user_tmp_t:file { manage_file_perms };
+
+    #============ persist path ==================
+    allow telaf_admin_t persist_t:dir { write add_name create setattr getattr};
 }

@@ -46,19 +46,21 @@ do_install() {
 
         # create the directories which are used by telaf app installation
         install -m 0755 -d ${D}/app
+
+        # create directories with DAC permission for non root users
+        install -m 0777 -d ${D}${userfsdatadir}/le_fs
+        install -m 0777 -d ${D}${userfsdatadir}/persist/tafKeyStoreSvc
+        install -m 0777 -d ${D}${userfsdatadir}/persist/tafKeyStoreSvc/internalKey
     fi
 
 }
 
-FILES_${PN} += "${systemd_unitdir}/system/* /legato /mnt/legato /app"
+FILES_${PN} += "${systemd_unitdir}/system/* /legato /mnt/legato /app ${userfsdatadir}/persist/* ${userfsdatadir}/le_fs "
 
 # Add default telaf users
 inherit useradd
 USERADD_PACKAGES = "${PN}"
-USERADD_PARAM_${PN} += "-M -U apptafvoicecallsvc;"
-USERADD_PARAM_${PN} += "-M -U apptafsimcardsvc;"
-USERADD_PARAM_${PN} += "-M -U apptafsmssvc;"
-USERADD_PARAM_${PN} += "-M -U apptools;"
+USERADD_PARAM_${PN} += "-M -U telaf;"
 USERADD_PARAM_${PN} += "-M -U appdefault;"
 USERADD_PARAM_${PN} += "-M -g root securityunpack;"
 
