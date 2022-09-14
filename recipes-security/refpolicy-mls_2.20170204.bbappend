@@ -19,7 +19,8 @@ do_compile_prepend() {
     SDEF_FILE=${RECIPE_SYSROOT}/telaf/telaf/modules/TelSdk/${MACHINE}.sdef
     COMPS=$(cat ${SDEF_FILE} | awk '{print $1}' | grep "^\$TELAF_ROOT" | awk -F "/" '{print $NF}')
     for COMP in ${COMPS}; do
-        SRC_DIR=${TELAF_ROOT}/components/${COMP}/selinux
+        COMP_DIR=`find ${TELAF_ROOT} -type d -name ${COMP}`
+        SRC_DIR=${COMP_DIR}/selinux
         if [ -d ${SRC_DIR} ]; then
             cp -fr ${SRC_DIR}/* ${DST_DIR}/
         fi
