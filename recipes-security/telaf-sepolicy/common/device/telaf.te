@@ -377,7 +377,7 @@ allow telaf_app_domain telaf_app_ro_t : { file dir } ~{ write };
 allow telaf_app_domain telaf_sys_t : { file dir lnk_file } *;
 allow telaf_app_domain telaf_bin_t : { file dir } ~{ write };
 allow telaf_app_domain data_t:dir { read write };
-allow telaf_app_domain telaf_app_rw_t : { file dir } *;
+allow telaf_app_domain telaf_app_rw_t : { file dir lnk_file } *;
 allow telaf_app_domain self : { file dir } ~{ execute };
 allow telaf_app_domain self:unix_stream_socket { connectto };
 allow telaf_app_domain self:socket { write read create getattr setopt };

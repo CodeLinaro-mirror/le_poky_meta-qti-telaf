@@ -5,4 +5,5 @@ IMAGE_INSTALL += "${@bb.utils.contains('DISTRO_FEATURES', 'nad-telaf', 'telaf-im
 IMAGE_INSTALL += "${@bb.utils.contains('DISTRO_FEATURES', 'nad-telaf', 'telaf-test-build', '', d)}"
 IMAGE_INSTALL += "${@bb.utils.contains('DISTRO_FEATURES', 'nad-telaf', 'boost', '', d)}"
 IMAGE_INSTALL += "${@bb.utils.contains('DISTRO_FEATURES', 'nad-telaf', 'vsomeip', '', d)}"
-
+IMAGE_INSTALL += "${@bb.utils.contains('DISTRO_FEATURES', 'nad-telaf', 'libgpiod', '', d)}"
+IMAGE_INSTALL += "${@bb.utils.contains('DISTRO_FEATURES', 'nad-telaf', 'telaf-mod-build', '', d)}"
