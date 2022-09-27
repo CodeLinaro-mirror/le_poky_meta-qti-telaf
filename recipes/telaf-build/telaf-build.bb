@@ -32,6 +32,9 @@ PARALLEL_MAKE = ""
 
 do_compile() {
     export WORK_ROOT=${WORKDIR}
+    if [ -f ${S}/VERSION ]; then
+        export LEGATO_VERSION=`cat ${S}/VERSION 2>/dev/null`
+    fi
     oe_runmake distclean
     oe_runmake ${MACHINE}
 }
