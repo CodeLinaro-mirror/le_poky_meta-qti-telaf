@@ -565,4 +565,7 @@ if (telaf_external_dependencies) {
 
     #============ persist path ==================
     allow telaf_admin_t persist_t:dir { write add_name create setattr getattr};
+
+    #============ allow supervisor to access libcap API ===========
+    allow telaf_admin_t self:process { getcap setcap };
 }
