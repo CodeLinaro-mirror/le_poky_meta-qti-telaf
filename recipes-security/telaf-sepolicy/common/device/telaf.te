@@ -408,6 +408,7 @@ allow telaf_app_domain default_t:dir { search_dir_perms };
 allow telaf_app_domain self:capability { sys_nice };
 allow telaf_app_domain null_device_t:chr_file { read_file_perms };
 allow telaf_app_domain self:fd use;
+allow telaf_app_domain telaf_fw_t:file { manage_file_perms };
 
 # Define core domain
 allow telaf_core_domain telaf_fw_t : dir { manage_dir_perms };
