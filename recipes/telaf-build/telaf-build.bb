@@ -19,6 +19,8 @@ DEPENDS += "xmllib"
 DEPENDS += "telux"
 DEPENDS += "telux-lib"
 
+DEPENDS += "vsomeip"
+
 PR = "r1"
 DEBUG_BUILD="1"
 FILESPATH =+ "${WORKSPACE}:"
