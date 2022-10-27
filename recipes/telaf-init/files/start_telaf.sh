@@ -51,6 +51,30 @@ else
     exit ${TELAF_ERR}
 fi
 
+# Remove /app if telaf is updated
+FOTA_STATE_FILE="/data/le_fs/fotaState"
+NAD_OTA_STATUS_FILE="/cache/recovery/nad_ota_status"
+fota_success=6
+
+if [ -e ${FOTA_STATE_FILE} ]; then
+    echo "fota state file exists."
+    state=$(od -An -j 0 -N 4 -t d ${FOTA_STATE_FILE})
+    if [ $state -eq $fota_success ]; then
+        if [ -e ${NAD_OTA_STATUS_FILE} ]; then
+            echo "nad ota status file exists."
+            for update_images in `cat ${NAD_OTA_STATUS_FILE}`
+            do
+                telaf_updated=$(echo $update_images | grep "telaf")
+                if [ "$telaf_updated" != "" ]; then
+                    echo "firmware update success withe telaf, clean up app volume."  > /dev/kmsg
+                    rm -fr /app/*
+                    break
+                fi
+            done
+        fi
+    fi
+fi
+
 case "$1" in
     start)
         echo "TelAf start sequence"

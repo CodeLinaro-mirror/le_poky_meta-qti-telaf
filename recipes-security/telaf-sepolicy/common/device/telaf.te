@@ -436,6 +436,7 @@ allow telaf_core_domain telaf_apptmp_rw_t:sock_file { create write };
 allow telaf_core_domain telaf_admin_t:process { sigchld };
 allow telaf_core_domain self:capability2 { block_suspend wake_alarm };
 allow telaf_core_domain self:unix_stream_socket { connectto };
+allow telaf_core_domain self:capability { dac_override dac_read_search };
 
 # Local rules
 ########################################
