@@ -32,11 +32,3 @@
 
  ## Target specific sepolicy rules for telaf.
 
-gen_require(`
-  type ssreq_server_t;
-  type ota_manager_exec_t;
-  type telaf_tafUpdateSvc_t;
-  ')
-
-# workaround to make sa515m work
-allow telaf_tafUpdateSvc_t ota_manager_exec_t:file { exec_file_perms };
