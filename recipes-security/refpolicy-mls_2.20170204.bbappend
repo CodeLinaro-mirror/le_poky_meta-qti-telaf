@@ -15,14 +15,13 @@ do_patch_append() {
 
 do_compile_prepend() {
     DST_DIR=${S}/policy/modules/device
-    TELAF_ROOT=${RECIPE_SYSROOT}/telaf/telaf
+    POLICY_ROOT=${RECIPE_SYSROOT}/telaf/telaf/security/selinux/sepolicy
     SDEF_FILE=${RECIPE_SYSROOT}/telaf/telaf/modules/TelSdk/${MACHINE}.sdef
-    COMPS=$(cat ${SDEF_FILE} | awk '{print $1}' | grep "^\$TELAF_ROOT" | awk -F "/" '{print $NF}')
-    for COMP in ${COMPS}; do
-        COMP_DIR=`find ${TELAF_ROOT} -type d -name ${COMP} | tail -n 1`
-        SRC_DIR=${COMP_DIR}/selinux
-        if [ -d ${SRC_DIR} ]; then
-            cp -fr ${SRC_DIR}/* ${DST_DIR}/
+    APPS=$(cat ${SDEF_FILE} | awk '{print $1}' | grep "^\$TELAF_ROOT" | awk -F "/" '{print $NF}')
+    for APP in ${APPS}; do
+        APP_DIR=`find ${POLICY_ROOT} -type d -name ${APP} | tail -n 1`
+        if [ "$(ls -A ${APP_DIR}/*.te)" ]; then
+            cp -fr ${APP_DIR}/* ${DST_DIR}/
         fi
     done
 }
