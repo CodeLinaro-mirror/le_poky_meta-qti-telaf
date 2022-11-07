@@ -367,6 +367,9 @@ allow telaf_admin_domain fs_t:filesystem { unmount };
 allow telaf_admin_domain getty_t:fd use;
 allow telaf_admin_domain user_tty_device_t:chr_file read;
 
+# access tmpfs_t, e.g sandboxed app appsWriteable/tafDataCallIntTest/tmp/legato/serviceDirectoryServer
+allow telaf_admin_domain tmpfs_t:file { create_file_perms read_file_perms write_file_perms };
+
 # Define App domain rules
 allow telaf_app_domain telaf_fw_t : dir { manage_dir_perms };
 allow telaf_app_domain telaf_lib_t : { file lnk_file } { read execute getattr open };
