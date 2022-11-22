@@ -36,6 +36,9 @@ PR = "r1"
 S = "${WORKDIR}/telaf-image/stage"
 
 do_configure() {
+    if [ -d "${S}" ]; then
+        rm -fr ${S}/*
+    fi
     cp -rf ${RECIPE_SYSROOT}/telaf/* ${S}
 }
 
