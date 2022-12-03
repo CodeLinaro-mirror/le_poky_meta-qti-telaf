@@ -25,3 +25,5 @@ do_compile_prepend() {
         fi
     done
 }
+
+POLICY_CUSTOM_BUILDOPT_append = ""nad-telaf ""
