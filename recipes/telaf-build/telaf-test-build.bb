@@ -33,6 +33,7 @@ do_compile() {
     export TARGET=${MACHINE}
     export LEGATO_ROOT=${RECIPE_SYSROOT}/telaf/legato/legato-af
     export TELAF_ROOT=${RECIPE_SYSROOT}/telaf/telaf
+    export OECORE_TARGET_SYSROOT=${RECIPE_SYSROOT}
     cmake -DLEGATO_TARGET=${MACHINE} -DLEGATO_ROOT=${S_L} -H${S}/testapp_build/ -B${S}/testapp_build/build
     cmake -E env CFLAGS=" -O " cmake -E env CC="${CC} -O " cmake -E env CXX="${CXX} -O " cmake --build ${S}/testapp_build/build
 }

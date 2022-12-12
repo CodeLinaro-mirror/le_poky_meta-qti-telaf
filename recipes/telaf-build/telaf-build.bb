@@ -21,6 +21,8 @@ DEPENDS += "telux-lib"
 
 DEPENDS += "vsomeip"
 
+DEPENDS += "refpolicy-mls"
+
 PR = "r1"
 DEBUG_BUILD="1"
 FILESPATH =+ "${WORKSPACE}:"
@@ -34,6 +36,7 @@ PARALLEL_MAKE = ""
 
 do_compile() {
     export WORK_ROOT=${WORKDIR}
+    export OECORE_TARGET_SYSROOT=${RECIPE_SYSROOT}
     if [ -f ${S}/VERSION ]; then
         export LEGATO_VERSION=`cat ${S}/VERSION 2>/dev/null`
     fi

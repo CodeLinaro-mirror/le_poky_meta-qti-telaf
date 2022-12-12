@@ -270,3 +270,42 @@ interface(`telaf_admin_mount_perms',`
 
 ')
 
+########################################
+## <summary>
+##              Allow to read TelAF library in
+##              /legato/systems/current/lib/
+## </summary>
+## <param name="source_domain">
+##              <summary>
+##              The source domain who need to access TelAF library
+##              </summary>
+## </param>
+#
+interface(`telaf_read_lib_files',`
+        gen_require(`
+                type telaf_fw_t;
+                type telaf_sys_t;
+                type telaf_app_rw_t;
+                type telaf_lib_t;
+                type telaf_app_bundle_t;
+                type telaf_apptmp_rw_t;
+                type telaf_sdir_t;
+        ')
+
+        allow $1 telaf_fw_t:dir { search_dir_perms };
+        allow $1 telaf_sys_t:dir { search_dir_perms };
+        allow $1 telaf_sys_t:lnk_file { read_file_perms };
+        allow $1 telaf_app_rw_t:dir { search_dir_perms };
+        allow $1 telaf_app_bundle_t:dir { search_dir_perms };
+        allow $1 telaf_lib_t:dir { search_dir_perms };
+        allow $1 telaf_lib_t:file { read_file_perms exec_file_perms };
+        allow $1 telaf_lib_t:lnk_file { read_file_perms };
+        allow $1 telaf_apptmp_rw_t:dir { search_dir_perms };
+        # support IPC
+        allow $1 telaf_apptmp_rw_t:sock_file { rw_file_perms };
+        allow $1 telaf_sdir_t:unix_stream_socket { connectto read write };
+        # support creating le_fs folder in fs_Init()
+        allow $1 telaf_sys_t:dir { rw_dir_perms };
+')
+
+

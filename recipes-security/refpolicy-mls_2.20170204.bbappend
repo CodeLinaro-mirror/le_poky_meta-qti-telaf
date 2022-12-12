@@ -1,8 +1,11 @@
+LICENSE += "& BSD-3-Clause & BSD-3-Clause-Clear"
+
 FILESEXTRAPATHS_append := "${THISDIR}:"
 SRC_URI += "file://telaf-sepolicy/common/ \
             file://telaf-sepolicy/${BASEMACHINE}/ "
 
-DEPENDS += "telaf-build"
+FILESPATH =+ "${WORKSPACE}:"
+SRC_URI += "file://telaf/"
 
 do_patch_append() {
     # import common TelAF framework policies
@@ -15,13 +18,13 @@ do_patch_append() {
 
 do_compile_prepend() {
     DST_DIR=${S}/policy/modules/device
-    POLICY_ROOT=${RECIPE_SYSROOT}/telaf/telaf/security/selinux/sepolicy
-    SDEF_FILE=${RECIPE_SYSROOT}/telaf/telaf/modules/TelSdk/${MACHINE}.sdef
+    POLICY_ROOT=${WORKDIR}/telaf/security/selinux/sepolicy
+    SDEF_FILE=${WORKDIR}/telaf/modules/TelSdk/${MACHINE}.sdef
     APPS=$(cat ${SDEF_FILE} | awk '{print $1}' | grep "^\$TELAF_ROOT" | awk -F "/" '{print $NF}')
     for APP in ${APPS}; do
         APP_DIR=`find ${POLICY_ROOT} -type d -name ${APP} | tail -n 1`
-        if [ "$(ls -A ${APP_DIR}/*.te)" ]; then
-            cp -fr ${APP_DIR}/* ${DST_DIR}/
+        if [ "$(ls -A ${APP_DIR}/component/*.te)" ]; then
+            cp -fr ${APP_DIR}/component/* ${DST_DIR}/
         fi
     done
 }

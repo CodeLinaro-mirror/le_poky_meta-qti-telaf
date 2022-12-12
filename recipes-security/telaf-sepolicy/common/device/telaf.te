@@ -440,6 +440,8 @@ allow telaf_core_domain telaf_admin_t:process { sigchld };
 allow telaf_core_domain self:capability2 { block_suspend wake_alarm };
 allow telaf_core_domain self:unix_stream_socket { connectto };
 allow telaf_core_domain self:capability { dac_override dac_read_search };
+allow telaf_core_domain telaf_core_domain:dir { search_dir_perms };
+allow telaf_core_domain telaf_core_domain:file { read_file_perms };
 
 # Local rules
 ########################################
