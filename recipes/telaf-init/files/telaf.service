@@ -28,9 +28,11 @@
 [Unit]
 Description=Bringup TelAf
 After=telaf.mount.service
+Before=mrc-daemon.service
+DefaultDependencies=no
 
 [Service]
-Nice=-20
+Nice=10
 GuessMainPID=no
 Type=forking
 User=root
