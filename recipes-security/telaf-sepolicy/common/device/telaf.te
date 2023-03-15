@@ -575,4 +575,8 @@ if (telaf_external_dependencies) {
 
     #============ allow supervisor to access libcap API ===========
     allow telaf_admin_t self:process { getcap setcap };
+
+    #============ To support telaf restart ===================
+    allow telaf_sdir_t telaf_apptmp_rw_t:dir { remove_name };
+    allow telaf_sdir_t telaf_apptmp_rw_t:sock_file { unlink };
 }
