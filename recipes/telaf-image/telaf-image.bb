@@ -52,7 +52,7 @@ do_compile() {
     export TELAF_NOSHIP=${S}/telaf-noship
     export WORK_ROOT=${WORKDIR}
     ${TELAF_ROOT}/mkimg.sh ${MACHINE} ${S}
-    #${TELAF_ROOT}/bin/createsdk ${MACHINE} ${S}
+    ${TELAF_ROOT}/bin/createsdk ${MACHINE} ${S}
 }
 
 do_deploy() {
@@ -62,7 +62,7 @@ do_deploy() {
     cp -rf   ${TELAF_SELINUX_FILE_CONTEXTS} ${DEPLOY_DIR_IMAGE}/telaf-images/security/selinux/sepolicy/files/
 
     # Deploy the telaf-sdk-[telaf-version].tar.bz2 to $DEPLOY_DIR_IMAGE directory
-    #install ${S}/telaf/build/${MACHINE}/telaf-sdk* ${DEPLOY_DIR_IMAGE}/
+    install ${S}/telaf/build/${MACHINE}/telaf-sdk* ${DEPLOY_DIR_IMAGE}/
 }
 do_deploy[dirs] = "${S} ${DEPLOYDIR}"
 addtask deploy before do_build after do_install
