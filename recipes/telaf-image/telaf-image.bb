@@ -49,12 +49,15 @@ do_compile() {
     export TELAF_NOSHIP=${S}/telaf-noship
     export WORK_ROOT=${WORKDIR}
     ${TELAF_ROOT}/mkimg.sh ${MACHINE} ${S}
+    ${TELAF_ROOT}/bin/createsdk ${MACHINE} ${S}
 }
 
 do_deploy() {
     mkdir -p ${DEPLOY_DIR_IMAGE}
     install ${S}/telaf_ro.squashfs.ubi ${DEPLOY_DIR_IMAGE}/
     install ${S}/telaf_ro.squashfs ${DEPLOY_DIR_IMAGE}/
+    # Deploy the telaf-sdk-[telaf-version].tar.bz2 to $DEPLOY_DIR_IMAGE directory
+    install ${S}/telaf/build/${MACHINE}/telaf-sdk* ${DEPLOY_DIR_IMAGE}/
 }
 do_deploy[dirs] = "${S} ${DEPLOYDIR}"
 addtask deploy before do_build after do_install
