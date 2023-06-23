@@ -88,8 +88,10 @@ WaitDevReady()
 }
 
 GetVolumeID () {
-    act_slot=`cat /proc/cmdline | sed 's/.*SLOT_SUFFIX=//' | awk '{print $1}'`
-    fs_ab_name=${1}$act_slot
+    #act_slot=`cat /proc/cmdline | sed 's/.*SLOT_SUFFIX=//' | awk '{print $1}'`
+    #fs_ab_name=${1}$act_slot
+    # hardcode to slot a as dual system is not supported currently
+    fs_ab_name=${1}_a
     volcount=`cat /sys/class/ubi/ubi0/volumes_count`
 
     for vid in `seq 0 $volcount`; do

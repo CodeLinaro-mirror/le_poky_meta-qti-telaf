@@ -41,8 +41,10 @@ do_compile() {
 do_install() {
     mkdir -p ${DEPLOY_DIR_IMAGE}/Testapps/Unit_testapp
     mkdir -p ${DEPLOY_DIR_IMAGE}/Testapps/Integration_testapp
+    mkdir -p ${DEPLOY_DIR_IMAGE}/Testapps/Console_testapp
     install -m  0644  ${S}/testapp_build/build/TestApps/Unit_testapp/* -D ${DEPLOY_DIR_IMAGE}/Testapps/Unit_testapp
     install -m  0644  ${S}/testapp_build/build/TestApps/Integration_testapp/* -D ${DEPLOY_DIR_IMAGE}/Testapps/Integration_testapp
+    install -m  0644  ${S}/testapp_build/build/TestApps/Console_testapp/* -D ${DEPLOY_DIR_IMAGE}/Testapps/Console_testapp
 
 }
 

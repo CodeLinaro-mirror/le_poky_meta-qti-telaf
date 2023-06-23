@@ -31,9 +31,12 @@ DEPENDS += "xmllib"
 DEPENDS += "telux"
 DEPENDS += "telux-lib"
 
-PR = "r1"
 
 S = "${WORKDIR}/telaf-image/stage"
+LEGATO_ROOT = "${S}/legato/legato-af"
+TELAF_ROOT = "${S}/telaf"
+TELAF_TARGET_STAGE_DIR = "${LEGATO_ROOT}/build/${MACHINE}/_staging_system.${MACHINE}.update_ro"
+TELAF_SELINUX_FILE_CONTEXTS = "${TELAF_ROOT}/security/selinux/sepolicy/files/file_contexts"
 
 do_configure() {
     if [ -d "${S}" ]; then
@@ -43,18 +46,23 @@ do_configure() {
 }
 
 do_compile() {
-    export LEGATO_ROOT=${S}/legato/legato-af
-    export TELAF_ROOT=${S}/telaf
+    export LEGATO_ROOT=${LEGATO_ROOT}
+    export TELAF_ROOT=${TELAF_ROOT}
     export TELAF_PROP=${S}/telaf-prop
     export TELAF_NOSHIP=${S}/telaf-noship
     export WORK_ROOT=${WORKDIR}
     ${TELAF_ROOT}/mkimg.sh ${MACHINE} ${S}
+    ${TELAF_ROOT}/bin/createsdk ${MACHINE} ${S}
 }
 
 do_deploy() {
-    mkdir -p ${DEPLOY_DIR_IMAGE}
-    install ${S}/telaf_ro.squashfs.ubi ${DEPLOY_DIR_IMAGE}/
-    install ${S}/telaf_ro.squashfs ${DEPLOY_DIR_IMAGE}/
+    rm -rf   ${DEPLOY_DIR_IMAGE}/telaf-images
+    mkdir -p ${DEPLOY_DIR_IMAGE}/telaf-images/security/selinux/sepolicy/files
+    cp -rf   ${TELAF_TARGET_STAGE_DIR} ${DEPLOY_DIR_IMAGE}/telaf-images/telaf_ro
+    cp -rf   ${TELAF_SELINUX_FILE_CONTEXTS} ${DEPLOY_DIR_IMAGE}/telaf-images/security/selinux/sepolicy/files/
+
+    # Deploy the telaf-sdk-[telaf-version].tar.bz2 to $DEPLOY_DIR_IMAGE directory
+    install ${S}/telaf/build/${MACHINE}/telaf-sdk* ${DEPLOY_DIR_IMAGE}/
 }
 do_deploy[dirs] = "${S} ${DEPLOYDIR}"
 addtask deploy before do_build after do_install

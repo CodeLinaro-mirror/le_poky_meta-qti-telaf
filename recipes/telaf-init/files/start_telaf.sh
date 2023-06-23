@@ -26,6 +26,10 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Changes from Qualcomm Innovation Center are provided under the following license:
+# Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+
 # Mount TelAf partition and run it
 if [ -e "/etc/telaf.env" ]; then
     source /etc/telaf.env
@@ -77,14 +81,14 @@ fi
 
 case "$1" in
     start)
-        echo "TelAf start sequence"
+        echo "TelAf start sequence" > /dev/kmsg
         umount /legato 2>/dev/null
         mount -o bind $MOUNTPOINT_TELAF /legato
         test -x $TELAF_START && $TELAF_START
         ;;
 
     stop)
-        echo "TelAf shutdown sequence"
+        echo "TelAf shutdown sequence" > /dev/kmsg
         test -x $TELAF_START && $TELAF_START stop
         umount /legato
         umount_all
