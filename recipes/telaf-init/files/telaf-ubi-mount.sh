@@ -91,10 +91,11 @@ WaitDevReady()
 }
 
 GetVolumeID () {
-    #act_slot=`cat /proc/cmdline | sed 's/.*SLOT_SUFFIX=//' | awk '{print $1}'`
-    #fs_ab_name=${1}$act_slot
-    # hardcode to slot a as dual system is not supported currently
-    fs_ab_name=${1}_a
+    if [ "x${SLOT_SUFFIX}" == "x" ]; then
+       SLOT_SUFFIX="_a"
+    fi
+
+    fs_ab_name=${1}${SLOT_SUFFIX}
     volcount=`cat /sys/class/ubi/ubi0/volumes_count`
 
     for vid in `seq 0 $volcount`; do
@@ -104,6 +105,73 @@ GetVolumeID () {
             break
         fi
     done
+}
+
+SlotSwitchReboot () {
+    local abctl_cmd="/usr/bin/nad-abctl"
+    # Set image_set_status fields in recoveryinfo struct
+    #  'A &B' Usable     :  SET_AB_USABLE(0)
+    #  'A' corrupted     :  DONT_USE_SET_A(1)
+    #  'B' corrupted     :  DONT_USE_SET_B(2)
+    #  'A &B' corrupted  :  DONT_USE_SET_AB(3)
+
+    # Set owner fields in recoveryinfo struct
+    #  OWNER_XBL         :  1
+    #  OWNER_HLOS        :  2
+    local owner_hlos=2
+    local dont_use_set_a=1
+    local dont_use_set_b=2
+    local dont_use_set_ab=3
+    local current_image_set_status=0
+    local telaf_a="telaf_a"
+    local telaf_b="telaf_b"
+
+    # TODO GPIO needs to be handled
+    if [ ! -e ${abctl_cmd} ]; then
+        echo "${abctl_cmd} not found, reboot to edl " > /dev/kmsg
+        /bin/sh -c 'reboot edl'
+        exit 0
+    fi
+
+    # Permission set to recoveryinfo which is used in nad-abctl
+    mtd_device=`cat /proc/mtd | grep recoveryinfo | awk -F ':' '{print $1}'`
+    if [ -z "${mtd_device}" ]; then
+        echo " recoveryinfo part not found, reboot to edl " > /dev/kmsg
+        /bin/sh -c 'reboot edl'
+        exit 0
+    fi
+    chmod 666 /dev/${mtd_device}
+
+    telaf_ab_name=$(cat /sys/class/ubi/ubi0_${volid}/name)
+    if [ "$telaf_ab_name" == "$telaf_a" ] || [ "$telaf_ab_name" == "$telaf_b" ] ; then
+        if [ "x${SLOT_SUFFIX}" == "x" ]; then
+            echo "SLOT_SUFFIX not present or invalid, reboot to edl" > /dev/kmsg
+            /bin/sh -c 'reboot edl'
+            exit 0
+        fi
+
+        #Get current image set status
+        current_image_set_status=`${abctl_cmd} --get_image_set_status`
+        current_image_set_status=`echo $current_image_set_status | cut -d " " -f1`
+
+        if [ "$SLOT_SUFFIX" = "_a" ] && [ "$current_image_set_status" != "$dont_use_set_b" ]; then
+            echo "telaf A volume corrupted " > /dev/kmsg
+            ${abctl_cmd} --set_image_set_status ${dont_use_set_a}
+        elif [ "$SLOT_SUFFIX" = "_b" ] && [ "$current_image_set_status" != "$dont_use_set_a" ]; then
+            echo "telaf B volume corrupted " > /dev/kmsg
+            ${abctl_cmd} --set_image_set_status ${dont_use_set_b}
+        else
+            echo "telaf A and B volume corrupted" > /dev/kmsg
+            ${abctl_cmd} --set_image_set_status ${dont_use_set_ab}
+        fi
+        ${abctl_cmd} --set_owner ${owner_hlos}
+        echo "Reboot for switching slots or EDL mode" > /dev/kmsg
+        /bin/sh -c 'reboot'
+    else
+        echo "non a/b volumes , reboot to edl " > /dev/kmsg
+        /bin/sh -c 'reboot edl'
+        exit 0
+    fi
 }
 
 FindAndMountUBI() {
@@ -208,6 +276,7 @@ IsTelAfExisted
 eval FindAndMountUBI "$telaf_mount_point"
 if [ $? -ne 0 ] ; then
     echo "Unable to mount TelAF_ro onto $telaf_mount_point" > /dev/kmsg
+    SlotSwitchReboot
     exit -1
 fi
 
