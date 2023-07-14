@@ -64,6 +64,9 @@
 telaf_mount_point=/mnt/legato
 telaf_app_mount_point=/app
 
+# verity feature status for telaf
+VERITY_ENV="/etc/verity.env"
+
 IsTelAfExisted () {
     if [ -e "${telaf_mount_point}/start" ]; then
         echo "telaf partition has already been mounted" > /dev/kmsg
@@ -124,10 +127,14 @@ FindAndMountUBI() {
        return 1
     fi
 
-    if grep 'nad_avb=1' /proc/cmdline > /dev/null; then
+    if [ ! -e "${VERITY_ENV}" ]; then
+        VERITY_ENV="/proc/cmdline"
+    fi
+
+    if grep 'nad_avb=1' ${VERITY_ENV} > /dev/null; then
         # The system certificate CA is in the system volume, verified-boot utility
         # need to use this CA to verify the user certificate.
-        volid=$(GetVolumeID system)
+        volid=$(GetVolumeID rootfs)
         if [ "$volid" == "" ]; then
             echo "Cannot get system volume." > /dev/kmsg
             return 1
