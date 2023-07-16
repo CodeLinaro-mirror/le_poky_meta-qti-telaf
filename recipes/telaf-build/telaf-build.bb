@@ -21,7 +21,7 @@ DEPENDS += "telux-lib"
 
 DEPENDS += "vsomeip"
 
-#DEPENDS += "refpolicy-mls"
+DEPENDS += "refpolicy-mls"
 
 FILESPATH =+ "${WORKSPACE}:"
 SRC_URI += "file://telaf/"

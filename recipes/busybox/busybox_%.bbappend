@@ -2,6 +2,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
 SRC_URI += "\
             file://syslog-startup.conf \
+            file://0001-Support-both-buffer-mode-and-file-mode.patch \
 "
 
 # enable shared memory for logread, which is used by TelAf logs

@@ -1,0 +1,57 @@
+From 6c617a1498b6f65f5558082ec669e5eae3688f1e Mon Sep 17 00:00:00 2001
+From: Yan Kong <quic_xiankong@quicinc.com>
+Date: Thu, 29 Jun 2023 13:47:00 +0800
+Subject: [PATCH] Support both buffer mode and file mode simultaneously
+
+---
+ sysklogd/syslogd.c | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/sysklogd/syslogd.c b/sysklogd/syslogd.c
+index d0dd1bd..b833750 100644
+--- a/sysklogd/syslogd.c
++++ b/sysklogd/syslogd.c
+@@ -284,7 +284,7 @@ struct globals {
+ 
+ static const struct init_globals init_data = {
+ 	.logFile = {
+-		.path = "/var/log/messages",
++		.path = NULL,
+ 		.fd = -1,
+ 	},
+ #ifdef SYSLOGD_MARK
+@@ -874,10 +874,12 @@ static void timestamp_and_log(int pri, char *msg, int len)
+ #if ENABLE_FEATURE_IPC_SYSLOG
+ 		if ((option_mask32 & OPT_circularlog) && G.shbuf) {
+ 			log_to_shmem(G.printbuf);
+-			return;
+ 		}
+ #endif
+-		log_locally(now, G.printbuf, &G.logFile);
++        if (G.logFile.path != NULL)
++        {
++            log_locally(now, G.printbuf, &G.logFile);
++        }
+ 	}
+ }
+ 
+@@ -1129,6 +1131,16 @@ int syslogd_main(int argc UNUSED_PARAM, char **argv)
+ 	}
+ #endif
+ 
++    /* this is not buffer mode and no log file is specified, use "/var/log/messages" */
++#if ENABLE_FEATURE_IPC_SYSLOG
++    if ((G.logFile.path == NULL) && (!opt_C))
++#else
++    if (G.logFile.path == NULL)
++#endif
++    {
++        G.logFile.path = "/var/log/messages";
++    }
++
+ #ifdef SYSLOGD_MARK
+ 	if (opts & OPT_mark) // -m
+ 		G.markInterval = xatou_range(opt_m, 0, INT_MAX/60) * 60;
+-- 
+2.17.1
+
