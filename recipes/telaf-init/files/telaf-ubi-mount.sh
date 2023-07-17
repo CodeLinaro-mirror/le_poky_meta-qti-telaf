@@ -104,6 +104,15 @@ GetVolumeID () {
     done
 }
 
+IsGPIOEnabled () {
+    gpio_enable_status=`cat /proc/cmdline | awk -F'recoveryinfo_gpio=' '{print $2}' | awk '{print $1}' | tr -d '"'`
+    if [ "$gpio_enable_status" == "-1" ]; then
+        echo "gpio status not valid" > /dev/kmsg
+    fi
+
+    return ${gpio_enable_status}
+}
+
 SlotSwitchReboot () {
     local abctl_cmd="/usr/bin/nad-abctl"
     # Set image_set_status fields in recoveryinfo struct
@@ -123,7 +132,6 @@ SlotSwitchReboot () {
     local telaf_a="telaf_a"
     local telaf_b="telaf_b"
 
-    # TODO GPIO needs to be handled
     if [ ! -e ${abctl_cmd} ]; then
         echo "${abctl_cmd} not found, reboot to edl " > /dev/kmsg
         /bin/sh -c 'reboot edl'
@@ -148,20 +156,46 @@ SlotSwitchReboot () {
         fi
 
         #Get current image set status
-        current_image_set_status=`${abctl_cmd} --get_image_set_status`
-        current_image_set_status=`echo $current_image_set_status | cut -d " " -f1`
+        (${abctl_cmd} --get_image_set_status)
+        current_image_set_status=$?
+
+        if [ "$current_image_set_status" -eq "-1" ]; then
+            echo "Error: incorrect image set status" > /dev/kmsg
+            /bin/sh -c 'reboot edl'
+            exit 0
+        fi
 
         if [ "$SLOT_SUFFIX" = "_a" ] && [ "$current_image_set_status" != "$dont_use_set_b" ]; then
             echo "telaf A volume corrupted " > /dev/kmsg
             ${abctl_cmd} --set_image_set_status ${dont_use_set_a}
+            if [ "$?" -eq "-1" ]; then
+                echo "Error: Set error status for Slot A failed" > /dev/kmsg
+                /bin/sh -c 'reboot edl'
+                exit 0
+            fi
         elif [ "$SLOT_SUFFIX" = "_b" ] && [ "$current_image_set_status" != "$dont_use_set_a" ]; then
             echo "telaf B volume corrupted " > /dev/kmsg
             ${abctl_cmd} --set_image_set_status ${dont_use_set_b}
+            if [ "$?" -eq "-1" ]; then
+                echo "Error: Set error status for Slot B failed" > /dev/kmsg
+                /bin/sh -c 'reboot edl'
+                exit 0
+            fi
         else
             echo "telaf A and B volume corrupted" > /dev/kmsg
             ${abctl_cmd} --set_image_set_status ${dont_use_set_ab}
+            if [ "$?" -eq "-1" ]; then
+                echo "Error: Set error status for Slot A and slot B failed" > /dev/kmsg
+                /bin/sh -c 'reboot edl'
+                exit 0
+            fi
         fi
         ${abctl_cmd} --set_owner ${owner_hlos}
+        if [ "$?" -eq "-1" ]; then
+            echo "Error: set owner failed" > /dev/kmsg
+            /bin/sh -c 'reboot edl'
+            exit 0
+        fi
         echo "Reboot for switching slots or EDL mode" > /dev/kmsg
         /bin/sh -c 'reboot'
     else
@@ -269,7 +303,16 @@ IsTelAfExisted
 eval FindAndMountUBI "$telaf_mount_point"
 if [ $? -ne 0 ] ; then
     echo "Unable to mount TelAF_ro onto $telaf_mount_point" > /dev/kmsg
-    SlotSwitchReboot
+    IsGPIOEnabled
+    if [ $? -eq 1 ]; then
+        #GPIO Enabled keeping behavior similar to Mount failure.
+        echo "GPIO Enabled donot switch slots" > /dev/kmsg
+    elif [ $? -eq 0 ]; then
+        echo "GPIO disabled switch slots" > /dev/kmsg
+        SlotSwitchReboot
+    else
+        echo "GPIO status invalid" > /dev/kmsg
+    fi
     exit -1
 fi
 
