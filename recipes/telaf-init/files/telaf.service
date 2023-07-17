@@ -30,6 +30,7 @@ Description=Bringup TelAf
 After=telaf.mount.service
 Before=mrc-daemon.service
 DefaultDependencies=no
+ConditionKernelCommandLine=systemd.setenv
 
 [Service]
 Nice=10
