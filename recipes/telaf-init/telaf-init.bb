@@ -47,6 +47,9 @@ do_install() {
         # create the directories which are used by telaf app installation
         install -m 0755 -d ${D}/app
 
+        # Create directory used by telaf Managed Connectivity Service to store configuration file
+        install -m 0777 -d ${D}${userfsdatadir}/ManagedServices
+
         # create directories with DAC permission for non root users
         install -m 0777 -d ${D}${userfsdatadir}/le_fs
         install -m 0777 -d ${D}${userfsdatadir}/persist/tafKeyStoreSvc
@@ -55,7 +58,7 @@ do_install() {
 
 }
 
-FILES_${PN} += "${systemd_unitdir}/system/* /legato /mnt/legato /app ${userfsdatadir}/persist/* ${userfsdatadir}/le_fs "
+FILES_${PN} += "${systemd_unitdir}/system/* /legato /mnt/legato /app ${userfsdatadir}/persist/* ${userfsdatadir}/le_fs ${userfsdatadir}/ManagedServices"
 
 # Add default telaf users
 inherit useradd
