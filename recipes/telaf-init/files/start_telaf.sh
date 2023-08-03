@@ -26,6 +26,10 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Changes from Qualcomm Innovation Center are provided under the following license:
+# Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+
 # Mount TelAf partition and run it
 if [ -e "/etc/telaf.env" ]; then
     source /etc/telaf.env
@@ -57,11 +61,11 @@ NAD_OTA_STATUS_FILE="/cache/recovery/nad_ota_status"
 fota_success=6
 
 if [ -e ${FOTA_STATE_FILE} ]; then
-    echo "fota state file exists."
+    echo "fota state file exists." > /dev/kmsg
     state=$(od -An -j 0 -N 4 -t d ${FOTA_STATE_FILE})
     if [ $state -eq $fota_success ]; then
         if [ -e ${NAD_OTA_STATUS_FILE} ]; then
-            echo "nad ota status file exists."
+            echo "nad ota status file exists." > /dev/kmsg
             for update_images in `cat ${NAD_OTA_STATUS_FILE}`
             do
                 telaf_updated=$(echo $update_images | grep "telaf")
@@ -77,14 +81,14 @@ fi
 
 case "$1" in
     start)
-        echo "TelAf start sequence"
+        echo "TelAf start sequence" > /dev/kmsg
         umount /legato 2>/dev/null
         mount -o bind $MOUNTPOINT_TELAF /legato
         test -x $TELAF_START && $TELAF_START
         ;;
 
     stop)
-        echo "TelAf shutdown sequence"
+        echo "TelAf shutdown sequence" > /dev/kmsg
         test -x $TELAF_START && $TELAF_START stop
         umount /legato
         umount_all
@@ -97,4 +101,4 @@ case "$1" in
 
 esac
 
-echo "Finished TelAf $1 Sequence"
+echo "Finished TelAf $1 Sequence" > /dev/kmsg

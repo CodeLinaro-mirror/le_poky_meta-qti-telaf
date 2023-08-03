@@ -7,18 +7,14 @@ SRC_URI += "file://telaf-sepolicy/common/ \
 FILESPATH =+ "${WORKSPACE}:"
 SRC_URI += "file://telaf/"
 
-do_patch_append() {
-    # import common TelAF framework policies
-    install_device_policy(d, os.path.join("telaf-sepolicy", "common"))
-
-    # import sa515m specified TelAF framework policies
-    if os.path.exists(os.path.join(d.getVar("WORKDIR"), "telaf-sepolicy", d.getVar("BASEMACHINE"))):
-        install_device_policy(d, os.path.join("telaf-sepolicy", d.getVar("BASEMACHINE")))
-}
-
 do_compile_prepend() {
     DST_DIR=${S}/policy/modules/device
     POLICY_ROOT=${WORKDIR}/telaf/security/selinux/sepolicy
+
+    # import TelAF framework policy
+    cp -fr ${POLICY_ROOT}/sys/* ${DST_DIR}/
+
+    # import TelAF application policy
     SDEF_FILE=${WORKDIR}/telaf/modules/TelSdk/${MACHINE}.sdef
     APPS=$(cat ${SDEF_FILE} | awk '{print $1}' | grep "^\$TELAF_ROOT" | awk -F "/" '{print $NF}')
     for APP in ${APPS}; do

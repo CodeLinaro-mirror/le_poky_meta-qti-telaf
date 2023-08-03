@@ -46,7 +46,12 @@ do_compile() {
 
 do_install_append() {
     install -d ${D}/${libdir}/pkgconfig
-    install -m 0644 ${S}/telaf.pc ${D}/${libdir}/pkgconfig/
+
+    # Replace "{MACHINE}" with machine type
+    TELAF_PC_FILE="${S}/telaf.pc"
+    TELAF_PC_CONTENT=$(cat "${TELAF_PC_FILE}")
+    TELAF_PC_CONTENT=${TELAF_PC_CONTENT//\$\{MACHINE\}/${MACHINE}}
+    echo "${TELAF_PC_CONTENT}" > "${D}/${libdir}/pkgconfig/telaf.pc"
 }
 
 SYSROOT_PREPROCESS_FUNCS += "telaf_populate_sysroot"
