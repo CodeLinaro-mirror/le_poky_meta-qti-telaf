@@ -61,11 +61,11 @@ NAD_OTA_STATUS_FILE="/cache/recovery/nad_ota_status"
 fota_success=6
 
 if [ -e ${FOTA_STATE_FILE} ]; then
-    echo "fota state file exists."
+    echo "fota state file exists." > /dev/kmsg
     state=$(od -An -j 0 -N 4 -t d ${FOTA_STATE_FILE})
     if [ $state -eq $fota_success ]; then
         if [ -e ${NAD_OTA_STATUS_FILE} ]; then
-            echo "nad ota status file exists."
+            echo "nad ota status file exists." > /dev/kmsg
             for update_images in `cat ${NAD_OTA_STATUS_FILE}`
             do
                 telaf_updated=$(echo $update_images | grep "telaf")
@@ -82,9 +82,20 @@ fi
 case "$1" in
     start)
         echo "TelAf start sequence" > /dev/kmsg
+
+        # Add boot KPI markers
+        kpi_file="/sys/kernel/boot_kpi/kpi_values"
+        if [[ -e "$kpi_file" ]]; then
+            echo -n "L - TelAF is starting" > "$kpi_file"
+        fi
+
         umount /legato 2>/dev/null
         mount -o bind $MOUNTPOINT_TELAF /legato
         test -x $TELAF_START && $TELAF_START
+
+        if [[ -e "$kpi_file" ]]; then
+            echo -n "L - TelAF is started" > "$kpi_file"
+        fi
         ;;
 
     stop)
@@ -101,4 +112,4 @@ case "$1" in
 
 esac
 
-echo "Finished TelAf $1 Sequence"
+echo "Finished TelAf $1 Sequence" > /dev/kmsg

@@ -4,10 +4,11 @@ DESCRIPTION = "Telematics Test Applications"
 HOMEPAGE = "https://www.codelinaro.org/"
 LICENSE = "BSD-3-Clause & BSD-3-Clause-Clear"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/BSD-3-Clause;md5=550794465ba0ec5312d6919e203a55f9 \
-    file://${COREBASE}/meta-qti-bsp/files/common-licenses/BSD-3-Clause-Clear;md5=48b43ba58d0f8e9ef3704313a46b7a43"
+    file://${COREBASE}/meta-qti-bsp/files/common-licenses/BSD-3-Clause-Clear;md5=3771d4920bd6cdb8cbdf1e8344489ee0"
 
 # Host dependencies
 DEPENDS += "telaf-build"
+DEPENDS += "telaf-image"
 DEPENDS += "ninja-native"
 DEPENDS += "cmake-native"
 DEPENDS += "coreutils-native"
@@ -38,14 +39,15 @@ do_compile() {
     cmake -E env CFLAGS=" -O " cmake -E env CC="${CC} -O " cmake -E env CXX="${CXX} -O " cmake --build ${S}/testapp_build/build
 }
 
-do_install() {
-    mkdir -p ${DEPLOY_DIR_IMAGE}/Testapps/Unit_testapp
-    mkdir -p ${DEPLOY_DIR_IMAGE}/Testapps/Integration_testapp
-    mkdir -p ${DEPLOY_DIR_IMAGE}/Testapps/Console_testapp
-    install -m  0644  ${S}/testapp_build/build/TestApps/Unit_testapp/* -D ${DEPLOY_DIR_IMAGE}/Testapps/Unit_testapp
-    install -m  0644  ${S}/testapp_build/build/TestApps/Integration_testapp/* -D ${DEPLOY_DIR_IMAGE}/Testapps/Integration_testapp
-    install -m  0644  ${S}/testapp_build/build/TestApps/Console_testapp/* -D ${DEPLOY_DIR_IMAGE}/Testapps/Console_testapp
+do_deploy() {
+    rm -rf ${DEPLOY_DIR_IMAGE}/telaf-images/testapps
+    mkdir -p ${DEPLOY_DIR_IMAGE}/telaf-images/testapps/Unit_testapp
+    mkdir -p ${DEPLOY_DIR_IMAGE}/telaf-images/testapps/Integration_testapp
+    mkdir -p ${DEPLOY_DIR_IMAGE}/telaf-images/testapps/Console_testapp
+    cp -rf ${S}/testapp_build/build/TestApps/Unit_testapp/* ${DEPLOY_DIR_IMAGE}/telaf-images/testapps/Unit_testapp/
+    cp -rf ${S}/testapp_build/build/TestApps/Integration_testapp/* ${DEPLOY_DIR_IMAGE}/telaf-images/testapps/Integration_testapp/
+    cp -rf ${S}/testapp_build/build/TestApps/Console_testapp/* ${DEPLOY_DIR_IMAGE}/telaf-images/testapps/Console_testapp/
 
 }
-
-
+do_deploy[dirs] = "${S} ${DEPLOYDIR}"
+addtask deploy before do_build after do_install

@@ -134,6 +134,7 @@ SlotSwitchReboot () {
     local current_image_set_status=0
     local telaf_a="telaf_a"
     local telaf_b="telaf_b"
+    local volid=$(GetVolumeID telaf)
 
     if [ ! -e ${abctl_cmd} ]; then
         echo "${abctl_cmd} not found, reboot to edl " > /dev/kmsg
@@ -202,7 +203,7 @@ SlotSwitchReboot () {
         echo "Reboot for switching slots or EDL mode" > /dev/kmsg
         /bin/sh -c 'reboot'
     else
-        echo "non a/b volumes , reboot to edl " > /dev/kmsg
+        echo "Cannot get TelAF volume , reboot to edl " > /dev/kmsg
         /bin/sh -c 'reboot edl'
         exit 0
     fi
@@ -314,11 +315,9 @@ if [ $? -ne 0 ] ; then
     if [ $? -eq 1 ]; then
         #GPIO Enabled keeping behavior similar to Mount failure.
         echo "GPIO Enabled donot switch slots" > /dev/kmsg
-    elif [ $? -eq 0 ]; then
-        echo "GPIO disabled switch slots" > /dev/kmsg
-        SlotSwitchReboot
     else
-        echo "GPIO status invalid" > /dev/kmsg
+        echo "GPIO disabled switch the slots or boot to EDL" > /dev/kmsg
+        SlotSwitchReboot
     fi
     exit -1
 fi
