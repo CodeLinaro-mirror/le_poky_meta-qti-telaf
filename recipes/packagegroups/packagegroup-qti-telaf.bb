@@ -18,4 +18,6 @@ RDEPENDS:${PN} += "\
     boost \
     logd \
     keyutils \
+    policycoreutils-hll \
+    policycoreutils-loadpolicy \
     "
