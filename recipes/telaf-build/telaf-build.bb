@@ -58,3 +58,5 @@ telaf_populate_sysroot() {
     sysroot_stage_dir ${S} ${SYSROOT_DESTDIR}/telaf/telaf/
 }
 
+GCC_PREFIX = "${@bb.utils.contains('BASEMACHINE', 'sa525m', bb.utils.contains('MULTILIB_VARIANTS', 'lib32', 'arm-oemllib32-linux-gnueabi', 'aarch64-oe-linux', d), '', d)}"
+EXTRA_OEMAKE += "'GCC_PREFIX=${GCC_PREFIX}'"
