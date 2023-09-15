@@ -11,6 +11,8 @@ DEPENDS += "cmake-native"
 DEPENDS += "coreutils-native"
 DEPENDS += "squashfs-tools-native"
 DEPENDS += "mtd-utils-native"
+DEPENDS += "capicxx-core-native"
+DEPENDS += "capicxx-someip-native"
 
 # Target dependencies
 DEPENDS += "openssl"
@@ -20,6 +22,8 @@ DEPENDS += "telux"
 DEPENDS += "telux-lib"
 
 DEPENDS += "vsomeip"
+DEPENDS += "common-api-c++"
+DEPENDS += "common-api-c++-someip"
 
 DEPENDS += "refpolicy-mls"
 
