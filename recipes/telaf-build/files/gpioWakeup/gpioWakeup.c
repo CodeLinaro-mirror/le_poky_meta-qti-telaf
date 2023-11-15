@@ -7,6 +7,8 @@
 #include <linux/interrupt.h>
 #include <linux/gpio.h>
 #include <gpiolib.h>
+#include <linux/gpio/machine.h>
+#include <linux/gpio/consumer.h>
 
 MODULE_ALIAS("platform:TelAF");
 MODULE_DESCRIPTION("Kernel module for enabling wakeup irq");
@@ -25,8 +27,8 @@ static int gpiochip_name_match(struct gpio_chip *chip, void *data)
 
 static int __init gpio_wakeup_init(void)
 {
-    int irq = 0;
     int ret;
+    int irqNum;
     struct gpio_chip *chip;
     struct gpio_desc *desc;
 
@@ -43,14 +45,20 @@ static int __init gpio_wakeup_init(void)
         return -ENOENT;
     }
 
-    desc = gpiochip_request_own_desc(chip, gpioOffset, "telaf");
+    desc = gpiochip_request_own_desc(
+        chip,
+        gpioOffset,
+        "telaf",
+        GPIO_ACTIVE_HIGH, // default value 0
+        GPIOD_ASIS  // default value 0
+        );
     if (!desc)
     {
         pr_err("cannot found gpio desc for pin %d\n", gpioOffset);
         return -ENOENT;
     }
 
-    int irqNum = gpiod_to_irq(desc);
+    irqNum = gpiod_to_irq(desc);
     ret = irq_set_irq_wake(irqNum, 1);
     if (ret)
     {

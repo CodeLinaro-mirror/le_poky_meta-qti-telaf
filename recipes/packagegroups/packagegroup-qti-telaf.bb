@@ -14,6 +14,7 @@ PACKAGES = "\
 # telaf packages which are common across various machines
 RDEPENDS:${PN} += "\
     telaf-init \
+    telaf-mod-build \
     vsomeip \
     boost \
     logd \
