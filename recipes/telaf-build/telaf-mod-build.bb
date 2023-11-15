@@ -11,3 +11,10 @@ DEPENDS += "virtual/kernel"
 SRC_URI = "file://gpioWakeup"
 
 S = "${WORKDIR}/gpioWakeup"
+
+do_install_append() {
+    install -d ${D}/usr/lib/modules/
+    install -m 0755 ${S}/gpioWakeup.ko -D ${D}${libdir}/modules/gpioWakeup.ko
+}
+
+FILES_${PN} += "${libdir}/modules/*"
