@@ -22,4 +22,5 @@ RDEPENDS:${PN} += "\
     policycoreutils-loadpolicy \
     common-api-c++ \
     common-api-c++-someip \
+    dlt-daemon \
     "
