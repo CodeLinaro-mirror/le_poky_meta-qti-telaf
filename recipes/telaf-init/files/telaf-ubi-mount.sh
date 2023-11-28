@@ -76,7 +76,7 @@ IsTelAfExisted () {
 
 WaitDevReady()
 {
-    local maxTrials=200
+    local maxTrials=800
     local ret=0
 
     while [ ! "$1" "$2" ]; do
