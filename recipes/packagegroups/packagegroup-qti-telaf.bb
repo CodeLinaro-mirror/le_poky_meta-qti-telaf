@@ -20,4 +20,6 @@ RDEPENDS:${PN} += "\
     keyutils \
     policycoreutils-hll \
     policycoreutils-loadpolicy \
+    common-api-c++ \
+    common-api-c++-someip \
     "
