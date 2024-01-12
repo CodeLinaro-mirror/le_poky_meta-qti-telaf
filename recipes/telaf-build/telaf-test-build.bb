@@ -40,6 +40,10 @@ do_compile() {
     export LEGATO_ROOT=${RECIPE_SYSROOT}/telaf/legato/legato-af
     export TELAF_ROOT=${S}
     export OECORE_TARGET_SYSROOT=${RECIPE_SYSROOT}
+    build_directory="${S}/testapp_build/build"
+    if [ -d "$build_directory" ]; then
+        rm -r "$build_directory"
+    fi
     cmake -DLEGATO_TARGET=${MACHINE} -DLEGATO_ROOT=${S_L} -H${S}/testapp_build/ -B${S}/testapp_build/build
     cmake -E env CFLAGS=" -O " cmake -E env CC="${CC} -O " cmake -E env CXX="${CXX} -O " cmake --build ${S}/testapp_build/build
 }
