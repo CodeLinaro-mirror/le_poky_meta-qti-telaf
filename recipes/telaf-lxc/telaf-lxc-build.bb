@@ -11,18 +11,11 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/BSD-3-Clause;m
 DEPENDS += "ninja-native"
 DEPENDS += "cmake-native"
 DEPENDS += "coreutils-native"
-DEPENDS += "squashfs-tools-native"
-DEPENDS += "mtd-utils-native"
 
 # Target dependencies
 DEPENDS += "openssl"
-DEPENDS += "libxml2"
-DEPENDS += "xmllib"
-DEPENDS += "telux"
-DEPENDS += "telux-lib"
-
+DEPENDS += "libcap"
 DEPENDS += "vsomeip"
-
 DEPENDS += "refpolicy-mls"
 
 FILESPATH =+ "${WORKSPACE}:"
@@ -55,17 +48,16 @@ do_compile() {
 
 # Place the TelAF container system into the container rootfs/legato folder
 do_install_append() {
-    install -m 0755  -d ${D}/legato
-
-    cp -r -d --no-preserve=ownership ${TELAF_TARGET_STAGE_DIR}/* ${D}/legato/
+    install -m 0755 -d ${D}/mnt/legato
+    cp -r -d --no-preserve=ownership ${TELAF_TARGET_STAGE_DIR}/* ${D}/mnt/legato/
 
     # TelAF power manager nodes, /sys/power/wake_lock and /sys/power/unwake_lock are not available
     # in the container. So remove them.
-    rm -rf ${D}/legato/systems/current/appsWriteable/powerMgr
+    rm -rf ${D}/mnt/legato/systems/current/appsWriteable/powerMgr
 
 }
 
-FILES_${PN} += "/legato"
+FILES_${PN} += "/mnt/legato"
 
 # The telaf libraries are non versioned and triggers the following QA errors:
 # -------------
@@ -80,3 +72,9 @@ INSANE_SKIP_${PN} = "dev-so"
 
 # Fix for QA warning: File <> in package telaf-lxc-build doesn't have GNU_HASH(didn't pass LDFLAGS?)
 TARGET_CC_ARCH += "${LDFLAGS}"
+
+# Add default telaf user and appdefault user
+inherit useradd
+USERADD_PACKAGES = "${PN}"
+USERADD_PARAM_${PN} += "-M -U telaf;"
+USERADD_PARAM_${PN} += "-M -U appdefault;"
