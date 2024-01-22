@@ -7,7 +7,9 @@ DEPENDS = "boost"
 
 # fetch the version 3.4.9-r1 from github
 SRCREV = "91805d8a24e3f3c63ce72d6eee09a6ee703eff7d"
-SRC_URI = "git://github.com/COVESA/vsomeip.git;protocol=https"
+SRC_URI = "git://github.com/COVESA/vsomeip.git;protocol=https \
+           file://0001-Fix-bug-to-support-multiple-routing-managers-in-sing.patch \
+           "
 S = "${WORKDIR}/git"
 
 # enable multiple routing managers
