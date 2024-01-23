@@ -30,11 +30,17 @@ function telaflxc_create()
 {
     prepare_lxc_dirs
 
+    if [ -n "${1}" ]; then
+        LXC_CONTAINER_CONF="${1}"
+    fi
+
+    logger -- "LXC configuration: ${LXC_CONTAINER_CONF}"
+
     lxc-create -n ${TELAF_LXC_CON_NAME} \
-               -f ${LXC_CONTAINER_CONF} \
-               -t none \
-               -o ${CONTAINER_LOG_STORAGE}/lxc-create.log \
-               -l TRACE
+            -f ${LXC_CONTAINER_CONF} \
+            -t none \
+            -o ${CONTAINER_LOG_STORAGE}/lxc-create.log \
+            -l TRACE
 }
 
 function telaflxc_start()
@@ -71,7 +77,7 @@ function help()
 
 case "$1" in
    create)
-      telaflxc_create
+      telaflxc_create "$2"
       ;;
    start)
       telaflxc_start
