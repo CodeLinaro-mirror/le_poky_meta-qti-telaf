@@ -36,7 +36,6 @@ function lxc_start_telaf()
     busybox syslogd -C2000 -O /tmp/syslog -b 5 &
     [ $? -eq 0 ] || exit $?
 
-    export TELAF_IN_CONTAINER=y
     telaf start
 }
 
@@ -55,10 +54,10 @@ function lxc_stop_telaf()
 
 case "$1" in
    start)
-      lxc_start_telaf
+      [ "$TELAF_IN_CONTAINER" == "y" ] && lxc_start_telaf
       ;;
    stop)
-      lxc_stop_telaf
+      [ "$TELAF_IN_CONTAINER" == "y" ] && lxc_stop_telaf
       ;;
    *)
       echo $"Usage: $0 {start|stop}"

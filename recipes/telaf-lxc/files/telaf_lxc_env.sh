@@ -7,16 +7,45 @@
 
 export PATH=/etc/lxc:$PATH
 
-function telaflxc_attach()
+TELAF_LXC_CMD_SCP=/etc/lxc/telaf_lxc.sh
+
+function telaflxc_cmds()
 {
-    lxc-attach -n telaflxc $@ 2> /dev/null
+    case "$1" in
+        create|c)
+            sh ${TELAF_LXC_CMD_SCP} create "$2"
+            ;;
+        start|st)
+            sh ${TELAF_LXC_CMD_SCP} start
+            ;;
+        info|ls|status)
+            sh ${TELAF_LXC_CMD_SCP} info
+            ;;
+        stop|sp)
+            sh ${TELAF_LXC_CMD_SCP} stop
+            ;;
+        destroy|d)
+            sh ${TELAF_LXC_CMD_SCP} destroy
+            ;;
+        attach|cmd)
+            shift
+            lxc-attach -n telaflxc "$@"
+            ;;
+        *)
+            echo "Usage: telaflxc <create|start|info|stop|destroy|attach>"
+            return 1
+            ;;
+    esac
+
     return $?
 }
 
-alias telaflxc.create="sh /etc/lxc/telaf_lxc.sh create"
-alias telaflxc.start="sh /etc/lxc/telaf_lxc.sh start"
-alias telaflxc.info="sh /etc/lxc/telaf_lxc.sh info"
-alias telaflxc.stop="sh /etc/lxc/telaf_lxc.sh stop"
-alias telaflxc.destroy="sh /etc/lxc/telaf_lxc.sh destroy"
-alias telaflxc.attach="lxc-attach -n telaflxc"
-alias telaflxc.cmd="telaflxc_attach"
+alias telaflxc=telaflxc_cmds
+
+alias telaflxc.create="telaflxc_cmds create"
+alias telaflxc.start="telaflxc_cmds start"
+alias telaflxc.info="telaflxc_cmds info"
+alias telaflxc.stop="telaflxc_cmds stop"
+alias telaflxc.destroy="telaflxc_cmds destroy"
+alias telaflxc.attach="telaflxc_cmds attach"
+alias telaflxc.cmd="telaflxc_cmds cmd"
