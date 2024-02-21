@@ -78,3 +78,5 @@ inherit useradd
 USERADD_PACKAGES = "${PN}"
 USERADD_PARAM_${PN} += "-M -U telaf;"
 USERADD_PARAM_${PN} += "-M -U appdefault;"
+USERADD_PARAM_${PN} += "-M -g root securityunpack;"
+
