@@ -30,6 +30,7 @@ DEPENDS += "refpolicy-mls"
 FILESPATH =+ "${WORKSPACE}:"
 SRC_URI += "file://telaf/"
 SRC_URI += "file://legato/"
+SRC_URI += "file://external/wpa_supplicant_8/"
 
 S = "${WORKDIR}/telaf"
 S_L = "${WORKDIR}/legato"
