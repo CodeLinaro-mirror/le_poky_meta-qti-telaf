@@ -21,7 +21,7 @@ DEPENDS += "telux-lib"
 
 DEPENDS += "vsomeip"
 
-DEPENDS += "refpolicy-mls"
+DEPENDS += "refpolicy-mls-generic"
 
 FILESPATH =+ "${WORKSPACE}:"
 SRC_URI += "file://telaf/"
@@ -42,7 +42,7 @@ do_compile() {
     oe_runmake ${MACHINE}
 }
 
-do_install_append() {
+do_install:append() {
     install -d ${D}/${libdir}/pkgconfig
 
     # Replace "{MACHINE}" with machine type

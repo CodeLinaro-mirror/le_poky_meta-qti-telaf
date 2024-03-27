@@ -11,3 +11,7 @@ SRC_URI = "git://github.com/COVESA/vsomeip.git;protocol=https"
 S = "${WORKDIR}/git"
 
 BBCLASSEXTEND = "nativesdk"
+
+
+INSANE_SKIP:${PN} += "file-rdeps"
+FILES:${PN} += "/usr/etc/vsomeip/*"

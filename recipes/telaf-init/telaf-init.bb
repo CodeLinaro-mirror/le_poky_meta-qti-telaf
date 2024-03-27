@@ -12,7 +12,7 @@ SRC_URI += "file://telaf.mount.service"
 SRC_URI += "file://overlay_selinuxrw-workdir.sh"
 SRC_URI += "file://overlay_selinuxrw-workdir.service"
 
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
 do_compile[noexec] = "1"
 S = "${WORKDIR}"
@@ -20,7 +20,7 @@ S = "${WORKDIR}"
 INITSCRIPT_NAME = "start_telaf.sh"
 INITSCRIPT_PARAMS = "start 99 2 3 4 5 . stop 1 0 1 6 ."
 
-dirs755_append = " /legato /mnt/legato /telaf_app"
+dirs755:append = " /legato /mnt/legato /telaf_app"
 
 do_install() {
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
@@ -65,7 +65,7 @@ do_install() {
 
 }
 
-FILES_${PN} += "${systemd_unitdir}/system/* /legato /mnt/legato /app ${userfsdatadir}/persist/* ${userfsdatadir}/le_fs ${userfsdatadir}/ManagedServices"
+FILES:${PN} += "${systemd_unitdir}/system/* /legato /mnt/legato /app ${userfsdatadir}/persist/* ${userfsdatadir}/le_fs ${userfsdatadir}/ManagedServices"
 
 # Add default telaf users
 inherit useradd
