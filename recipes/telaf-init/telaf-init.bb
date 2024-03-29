@@ -70,7 +70,7 @@ FILES:${PN} += "${systemd_unitdir}/system/* /legato /mnt/legato /app ${userfsdat
 # Add default telaf users
 inherit useradd
 USERADD_PACKAGES = "${PN}"
-USERADD_PARAM_${PN} += "-M -U telaf;"
-USERADD_PARAM_${PN} += "-M -U appdefault;"
-USERADD_PARAM_${PN} += "-M -g root securityunpack;"
+USERADD_PARAM:${PN} += "-M -U telaf;"
+USERADD_PARAM:${PN} += "-M -U appdefault;"
+USERADD_PARAM:${PN} += "-M -g root securityunpack;"
 
