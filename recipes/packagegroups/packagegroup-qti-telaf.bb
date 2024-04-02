@@ -4,7 +4,7 @@ LICENSE = "BSD-3-Clause-Clear"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 PR= "r0"
 
-DEPENDS += "telaf-image telaf-test-build"
+DEPENDS += "telaf-image"
 inherit packagegroup
 
 PACKAGES = "\
