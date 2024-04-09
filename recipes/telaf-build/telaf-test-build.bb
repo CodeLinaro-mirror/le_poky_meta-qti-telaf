@@ -31,6 +31,7 @@ S = "${RECIPE_SYSROOT}/telaf/telaf"
 S_L = "${RECIPE_SYSROOT}/telaf/legato/legato-af"
 
 do_compile() {
+    export TMPDIR=${TMPDIR}
     export TARGET=${MACHINE}
     export LEGATO_ROOT=${RECIPE_SYSROOT}/telaf/legato/legato-af
     export TELAF_ROOT=${RECIPE_SYSROOT}/telaf/telaf

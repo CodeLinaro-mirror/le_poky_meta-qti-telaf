@@ -26,3 +26,9 @@ do_compile:prepend() {
 }
 
 POLICY_CUSTOM_BUILDOPT:append = ""qti-nad-telaf sa525m kirkstone""
+
+do_install:append() {
+    install -d ${TMPDIR}/work-shared
+    cp -rf ${D}/usr/share/selinux ${TMPDIR}/work-shared/
+}
+
