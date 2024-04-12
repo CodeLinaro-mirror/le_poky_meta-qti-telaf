@@ -1,0 +1,39 @@
+From 6cc3ea86727cb2fb1dca5921f94bc80a9fdce3cd Mon Sep 17 00:00:00 2001
+From: Andrew Zhao <quic_zhax@quicinc.com>
+Date: Thu, 14 Mar 2024 16:48:50 +0800
+Subject: [PATCH] power_selinux_issue_fix
+
+---
+ systemd/dlt-system.service.cmake | 2 +-
+ systemd/dlt.service.cmake        | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/systemd/dlt-system.service.cmake b/systemd/dlt-system.service.cmake
+index 708fefc..93e1431 100755
+--- a/systemd/dlt-system.service.cmake
++++ b/systemd/dlt-system.service.cmake
+@@ -21,7 +21,7 @@ Wants=dlt.service
+ [Service]
+ Type=simple
+ ExecStart=@CMAKE_INSTALL_PREFIX@/bin/dlt-system
+-WatchdogSec=@DLT_WatchdogSec@
++Restart=on-failure
+ NotifyAccess=main
+ LimitCORE=infinity
+ 
+diff --git a/systemd/dlt.service.cmake b/systemd/dlt.service.cmake
+index f16b440..b41659d 100755
+--- a/systemd/dlt.service.cmake
++++ b/systemd/dlt.service.cmake
+@@ -20,7 +20,7 @@ Documentation=man:dlt-daemon(1) man:dlt.conf(5)
+ [Service]
+ Type=simple
+ ExecStart=@CMAKE_INSTALL_PREFIX@/bin/dlt-daemon
+-WatchdogSec=@DLT_WatchdogSec@
++Restart=on-failure
+ NotifyAccess=main
+ LimitCORE=infinity
+ 
+-- 
+2.25.1
+

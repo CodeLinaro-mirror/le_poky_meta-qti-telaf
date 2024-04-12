@@ -37,6 +37,7 @@ Wants=dlt.service
 [Service]
 Type=simple
 ExecStart=/usr/bin/dlt-logd-converter
+Restart=on-failure
 NotifyAccess=main
 LimitCORE=infinity
 

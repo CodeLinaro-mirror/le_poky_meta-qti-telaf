@@ -16,7 +16,7 @@ do_install_append() {
    install -m 0755 -d ${D}/legato
 
    # Register a init script to rcS for telaf
-   install -m 0755  -d ${D}/${sysconfdir}/init.d
+   install -m 0755 -d ${D}/${sysconfdir}/init.d
    install -m 0755 ${WORKDIR}/lxc_telaf_init.sh ${D}/${sysconfdir}/init.d/S10_lxc_telaf_init.sh
 }
 

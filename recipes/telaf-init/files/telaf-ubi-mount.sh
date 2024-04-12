@@ -222,6 +222,18 @@ FindAndMountUBI() {
     device=/dev/ubi0_$volid
     block_device=/dev/ubiblock0_$volid
 
+    # Check if telaf volume is empty or not
+    val_data=$(dd if=$device bs=1K count=1 | hexdump -ve '1/1 "%.2x"')
+    if [ "x$val_data" == "x" ]; then
+         echo "Cannot read TelAF volume." > /dev/kmsg
+         return 1
+    fi
+
+    if echo $val_data | grep -qE '^ffff+$'; then
+        echo "TelAF volume is empty - skipped." > /dev/kmsg
+        return -1
+    fi
+
     mkdir -p $dir
     ubiblock --create $device
     WaitDevReady "-b" "${block_device}"
@@ -309,7 +321,13 @@ IsTelAfExisted
 
 # Find correct TelAF volume and mount it
 eval FindAndMountUBI "$telaf_mount_point"
-if [ $? -ne 0 ] ; then
+telaf_mount_status=$?
+if [ "$telaf_mount_status" -eq -1 ] ; then
+   echo "Skipping mounting TelAF_ro onto $telaf_mount_point" > /dev/kmsg
+   exit -1
+fi
+
+if [ "$telaf_mount_status" -ne 0 ] ; then
     echo "Unable to mount TelAF_ro onto $telaf_mount_point" > /dev/kmsg
     IsGPIOEnabled
     if [ $? -eq 1 ]; then
