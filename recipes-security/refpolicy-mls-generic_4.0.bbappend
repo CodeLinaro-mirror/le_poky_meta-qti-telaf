@@ -25,4 +25,4 @@ do_compile:prepend() {
     done
 }
 
-POLICY_CUSTOM_BUILDOPT:append = ""qti-nad-telaf sa525m""
+POLICY_CUSTOM_BUILDOPT:append = ""qti-nad-telaf sa525m kirkstone""
