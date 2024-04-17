@@ -23,7 +23,13 @@ function prepare_lxc_dirs()
     mkdir -p ${PVM_SHARED_LXC_RW}/data
     mkdir -p ${PVM_SHARED_LXC_RW}/persist
     mkdir -p ${PVM_SHARED_LXC_RW}/app
-    mkdir -p ${PVM_SHARED_LXC_RW}/tmp
+    mkdir -p ${PVM_SHARED_LXC_RW}/tmp/legato
+
+    chmod 0777 ${PVM_SHARED_LXC_RW}/data
+    chmod 0777 ${PVM_SHARED_LXC_RW}/persist
+    chmod 0777 ${PVM_SHARED_LXC_RW}/app
+    chmod 0777 ${PVM_SHARED_LXC_RW}/tmp
+    chmod 0701 ${PVM_SHARED_LXC_RW}/tmp/legato
 }
 
 function telaflxc_create()
@@ -46,10 +52,12 @@ function telaflxc_create()
 function telaflxc_start()
 {
     lxc-start -n ${TELAF_LXC_CON_NAME} -o ${CONTAINER_LOG_STORAGE}/lxc-start.log -l TRACE
+    RESULT=$?
 
     lxc-info -n ${TELAF_LXC_CON_NAME} | grep Link: \
              | awk '{print $2}' \
              | xargs -t -I {} /sbin/ifconfig {} ${PVM_VETH_IP_ADDR}
+    return $RESULT
 }
 
 function telaflxc_info()
@@ -65,7 +73,9 @@ function telaflxc_stop()
 function telaflxc_destroy()
 {
     lxc-destroy -n ${TELAF_LXC_CON_NAME}  -o ${CONTAINER_LOG_STORAGE}/lxc-destroy.log -l TRACE
+    RESULT=$?
     rm -rf ${LXC_CONTAINER_PATH}/${TELAF_LXC_CON_NAME}
+    return $RESULT
 }
 
 function help()
