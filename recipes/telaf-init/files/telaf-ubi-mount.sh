@@ -242,6 +242,11 @@ FindAndMountUBI() {
        return 1
     fi
 
+    restorecon ${block_device}
+    if [ $? -ne 0 ] ; then
+        echo "Failed restorecon on ${block_device}." > /dev/kmsg
+    fi
+
     if [ ! -e "${VERITY_ENV}" ]; then
         VERITY_ENV="/proc/cmdline"
     fi
