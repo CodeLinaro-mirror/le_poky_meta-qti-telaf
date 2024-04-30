@@ -29,6 +29,7 @@
 Description=Bringup TelAf
 After=telaf.mount.service
 Before=mrc-daemon.service
+Conflicts=shutdown.target
 DefaultDependencies=no
 ConditionKernelCommandLine=systemd.setenv
 
@@ -42,4 +43,4 @@ ExecStop=sh -c '/etc/init.d/start_telaf.sh stop'
 TimeoutSec=600
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=multi-user.target shutdown.target
