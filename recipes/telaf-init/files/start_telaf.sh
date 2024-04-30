@@ -35,11 +35,22 @@ if [ -e "/etc/telaf.env" ]; then
     source /etc/telaf.env
 fi
 
-umount_all()
+umount_etc()
 {
-    umount /etc/ld.so.conf
-    umount /etc/ld.so.cache
-    umount /etc/hosts
+    umount -l /etc/ld.so.conf
+    umount -l /etc/ld.so.cache
+    umount -l /etc/hosts
+
+    return ${TELAF_OK}
+}
+
+umount_telaf()
+{
+    umount -l /legato/apps
+    umount -l /legato/systems/current
+    umount -l /legato
+    umount -l /mnt/legato
+    umount -l /app
 
     return ${TELAF_OK}
 }
@@ -51,7 +62,7 @@ then
     export PATH=/legato/systems/current/bin:$PATH
     TELAF_START=/legato/systems/current/bin/start
 else
-    echo "Only support read-only TelAf!"
+    echo "Only support read-only TelAf!" > /dev/kmsg
     exit ${TELAF_ERR}
 fi
 
@@ -89,8 +100,13 @@ case "$1" in
             echo -n "L - TelAF is starting" > "$kpi_file"
         fi
 
-        umount /legato 2>/dev/null
-        mount -o bind $MOUNTPOINT_TELAF /legato
+        mount_status=$(mount | awk '{print $3}' | grep -Fx "/legato")
+        if [ -z "${mount_status}" ]; then
+            mount -o bind $MOUNTPOINT_TELAF /legato
+        else
+            echo "$MOUNTPOINT_TELAF already mounted to /legato" > /dev/kmsg
+        fi
+
         test -x $TELAF_START && $TELAF_START
 
         if [[ -e "$kpi_file" ]]; then
@@ -99,14 +115,22 @@ case "$1" in
         ;;
 
     stop)
-        echo "TelAf shutdown sequence" > /dev/kmsg
+        echo "TelAf stop sequence" > /dev/kmsg
         test -x $TELAF_START && $TELAF_START stop
-        umount /legato
-        umount_all
+
+        # Umount "/legato/apps" which was mounted by supervisor
+        umount -l /legato/apps
+
+        umount_etc
+        ;;
+
+    umount)
+        echo "TelAf umount sequence" > /dev/kmsg
+        umount_telaf
         ;;
 
     *)
-        echo "Only support start & stop!"
+        echo "Only support start, stop and umount!"  > /dev/kmsg
         exit ${TELAF_ERR}
         ;;
 
