@@ -56,8 +56,8 @@ CreateSelinuxOverlayDirectories () {
      chmod 0755 /data/var_selinux_wk
      chcon system_u:object_r:semanage_store_t:s0 /data/var_selinux_wk
 
-     mount -t overlay overlay -o rootcontext=system_u:object_r:selinux_config_t:s0,upperdir=${SE_OVELAY_PATH},lowerdir=/etc/selinux/mls,workdir=/data/etc_selinux_wk,redirect_dir=on /etc/selinux/mls
-     mount -t overlay overlay -o rootcontext=system_u:object_r:semanage_store_t:s0,upperdir=/data/var_selinux,lowerdir=/var/lib/selinux,workdir=/data/var_selinux_wk,redirect_dir=on /var/lib/selinux
+     mount -t overlay overlay -o rootcontext=system_u:object_r:selinux_config_t:s0,upperdir=${SE_OVELAY_PATH},lowerdir=/etc/selinux/mls,workdir=/data/etc_selinux_wk,noexec,nosuid,nodev,redirect_dir=on /etc/selinux/mls
+     mount -t overlay overlay -o rootcontext=system_u:object_r:semanage_store_t:s0,upperdir=/data/var_selinux,lowerdir=/var/lib/selinux,workdir=/data/var_selinux_wk,noexec,nosuid,nodev,redirect_dir=on /var/lib/selinux
      ReloadSelinuxPolicy
    elif [ $mount_operation == "stop" ]; then
      umount /etc/selinux
