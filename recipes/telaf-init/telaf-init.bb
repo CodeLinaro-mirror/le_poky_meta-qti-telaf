@@ -28,7 +28,7 @@ do_install() {
         install -d 0644 ${D}${sysconfdir}/initscripts
         install -d 0644 ${D}${systemd_unitdir}/system
         install -d ${D}/${systemd_unitdir}/system/multi-user.target.wants
-        install -m 0744 ${WORKDIR}/telaf-ubi-mount.sh ${D}${sysconfdir}/initscripts/telaf-ubi-mount.sh
+        install -m 0555 ${WORKDIR}/telaf-ubi-mount.sh ${D}${sysconfdir}/initscripts/telaf-ubi-mount.sh
         install -m 0644 ${WORKDIR}/telaf.mount.service ${D}${systemd_unitdir}/system/telaf.mount.service
         ln -sf ${systemd_unitdir}/system/telaf.mount.service ${D}${systemd_unitdir}/system/multi-user.target.wants/telaf.mount.service
 
@@ -39,7 +39,7 @@ do_install() {
         install -m 0644 ${S}/telaf.service -D ${D}${systemd_unitdir}/system/telaf.service
         ln -sf ${systemd_unitdir}/system/telaf.service ${D}${systemd_unitdir}/system/multi-user.target.wants/telaf.service
         install -m 0644 ${S}/telaf.env -D ${D}${sysconfdir}/telaf.env
-        install -m 0755 ${S}/start_telaf.sh -D ${D}${sysconfdir}/init.d/start_telaf.sh
+        install -m 0555 ${S}/start_telaf.sh -D ${D}${sysconfdir}/init.d/start_telaf.sh
 
         # create the directories which are used by telaf
         install -m 0755 -d ${D}/legato
