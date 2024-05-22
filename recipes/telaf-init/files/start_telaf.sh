@@ -100,13 +100,23 @@ case "$1" in
             echo -n "L - TelAF is starting" > "$kpi_file"
         fi
 
-        mount_status=$(mount | awk '{print $3}' | grep -Fx "/legato")
-        if [ -z "${mount_status}" ]; then
-            mount -o bind $MOUNTPOINT_TELAF /legato
-        else
-            echo "$MOUNTPOINT_TELAF already mounted to /legato" > /dev/kmsg
+        # These paths "/legato/systems/current" and "/legato" are needed during "telaf stop", in
+        # this case, here need to clean it and remount for the coming telaf start.
+        mount_point=$(mount | awk '{print $3}' | grep -Fx "/legato/systems/current")
+        echo "mount_point=$mount_point"
+        if [ -n "${mount_point}" ]; then
+            umount -l /legato/systems/current
+            sync
         fi
 
+        mount_point=$(mount | awk '{print $3}' | grep -Fx "/legato")
+        echo "mount_point=$mount_point"
+        if [ -n "${mount_point}" ]; then
+            umount -l /legato
+            sync
+        fi
+
+        mount -o bind $MOUNTPOINT_TELAF /legato
         test -x $TELAF_START && $TELAF_START
 
         if [[ -e "$kpi_file" ]]; then
@@ -120,7 +130,6 @@ case "$1" in
 
         # Umount "/legato/apps" which was mounted by supervisor
         umount -l /legato/apps
-
         umount_etc
         ;;
 
