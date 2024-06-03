@@ -29,11 +29,13 @@ DEPENDS += "refpolicy-mls"
 
 FILESPATH =+ "${WORKSPACE}:"
 SRC_URI += "file://telaf/"
+SRC_URI += "file://telaf-adv/"
 SRC_URI += "file://legato/"
 SRC_URI += "file://external/wpa_supplicant_8/"
 
 S = "${WORKDIR}/telaf"
 S_L = "${WORKDIR}/legato"
+S_V = "${WORKDIR}/telaf-adv"
 
 PARALLEL_MAKE = ""
 
@@ -61,6 +63,7 @@ SYSROOT_PREPROCESS_FUNCS += "telaf_populate_sysroot"
 telaf_populate_sysroot() {
     sysroot_stage_dir ${S_L} ${SYSROOT_DESTDIR}/telaf/legato/
     sysroot_stage_dir ${S} ${SYSROOT_DESTDIR}/telaf/telaf/
+    sysroot_stage_dir ${S_V} ${SYSROOT_DESTDIR}/telaf/telaf-adv/
 }
 
 GCC_PREFIX = "${@bb.utils.contains('BASEMACHINE', 'sa525m', bb.utils.contains('MULTILIB_VARIANTS', 'lib32', 'arm-oemllib32-linux-gnueabi', 'aarch64-oe-linux', d), '', d)}"
