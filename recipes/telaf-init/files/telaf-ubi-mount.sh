@@ -91,16 +91,11 @@ WaitDevReady()
 }
 
 GetVolumeID () {
-    if [ "x${SLOT_SUFFIX}" == "x" ]; then
-       SLOT_SUFFIX="_a"
-    fi
-
-    fs_ab_name=${1}${SLOT_SUFFIX}
     volcount=`cat /sys/class/ubi/ubi0/volumes_count`
 
     for vid in `seq 0 $volcount`; do
         name=`cat /sys/class/ubi/ubi0_$vid/name`
-        if [ "$name" == "${1}" ] || [ "$name" == "$fs_ab_name" ]; then
+        if [ "$name" == "${1}" ]; then
             echo $vid
             break
         fi
@@ -134,7 +129,7 @@ SlotSwitchReboot () {
     local current_image_set_status=0
     local telaf_a="telaf_a"
     local telaf_b="telaf_b"
-    local volid=$(GetVolumeID telaf)
+    local volid=$(GetVolumeID telaf${SLOT_SUFFIX})
 
     if [ ! -e ${abctl_cmd} ]; then
         echo "${abctl_cmd} not found, reboot to edl " > /dev/kmsg
@@ -209,31 +204,46 @@ SlotSwitchReboot () {
     fi
 }
 
+IsVolumeEmpty() {
+    local val_data=0
+    local vid=0
+    vid=$(GetVolumeID $1)
+    if [ "$vid" == "" ]; then
+       echo "Cannot get $1 volume." > /dev/kmsg
+       return 1
+    fi
+    device=/dev/ubi0_$vid
+    # Checking first page header of ubi volume. If header page is erased,
+    # then considering volume full empty else corrupted.
+    val_data=$(dd if=$device bs=1K count=1 | hexdump -ve '1/1 "%.2x"')
+    if echo $val_data | grep -qE '^ffff+$'; then
+        return 0
+    fi
+    return 1
+}
+
 FindAndMountUBI() {
     dir=$1
-    volid=$(GetVolumeID telaf)
+    IsVolumeEmpty "telaf_a"
+    local vol_status_a=$?
+    IsVolumeEmpty "telaf_b"
+    local vol_status_b=$?
+
+    #if active and inactive volume is empty, skip mounting.
+    if [ $vol_status_a -eq 0 ] && [ $vol_status_b -eq 0 ] ; then
+           echo "Both TelAF volumes are empty - Skipping. Continue Boot" > /dev/kmsg
+           return 2
+    fi 
+    #volume not empty, continue boot and check for any corruption
+    volid=$(GetVolumeID telaf${SLOT_SUFFIX})
     if [ "$volid" == "" ]; then
-        echo "Cannot get TelAF volume." > /dev/kmsg
+        echo "Cannot get TelAF${SLOT_SUFFIX} volume." > /dev/kmsg
         return 1
     fi
-
     telaf_vol_name=`cat /sys/class/ubi/ubi0_$volid/name`
-    echo "Get TelAF volume: $volid, name: $telaf_vol_name." > /dev/kmsg
+    echo "TelAF volume: $volid, name: $telaf_vol_name." > /dev/kmsg
     device=/dev/ubi0_$volid
     block_device=/dev/ubiblock0_$volid
-
-    # Check if telaf volume is empty or not
-    val_data=$(dd if=$device bs=1K count=1 | hexdump -ve '1/1 "%.2x"')
-    if [ "x$val_data" == "x" ]; then
-         echo "Cannot read TelAF volume." > /dev/kmsg
-         return 1
-    fi
-
-    if echo $val_data | grep -qE '^ffff+$'; then
-        echo "TelAF volume is empty - skipped." > /dev/kmsg
-        return -1
-    fi
-
     mkdir -p $dir
     ubiblock --create $device
     WaitDevReady "-b" "${block_device}"
@@ -254,7 +264,7 @@ FindAndMountUBI() {
     if grep 'nad_avb=1' ${VERITY_ENV} > /dev/null; then
         # The system certificate CA is in the system volume, verified-boot utility
         # need to use this CA to verify the user certificate.
-        volid=$(GetVolumeID rootfs)
+        volid=$(GetVolumeID rootfs${SLOT_SUFFIX})
         if [ "$volid" == "" ]; then
             echo "Cannot get system volume." > /dev/kmsg
             return 1
@@ -327,9 +337,10 @@ IsTelAfExisted
 # Find correct TelAF volume and mount it
 eval FindAndMountUBI "$telaf_mount_point"
 telaf_mount_status=$?
-if [ "$telaf_mount_status" -eq -1 ] ; then
+if [ "$telaf_mount_status" -eq 2 ] ; then
    echo "Skipping mounting TelAF_ro onto $telaf_mount_point" > /dev/kmsg
-   exit -1
+   #exit as error to not mount the service.
+   exit 1 
 fi
 
 if [ "$telaf_mount_status" -ne 0 ] ; then
@@ -343,7 +354,7 @@ if [ "$telaf_mount_status" -ne 0 ] ; then
         echo "GPIO disabled switch the slots or boot to EDL" > /dev/kmsg
         SlotSwitchReboot
     fi
-    exit -1
+    exit 1
 fi
 
 # Find correct TelAF App volume and mount it
