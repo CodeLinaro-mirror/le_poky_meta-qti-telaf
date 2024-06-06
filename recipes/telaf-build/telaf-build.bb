@@ -25,17 +25,28 @@ DEPENDS += "vsomeip"
 DEPENDS += "common-api-c++"
 DEPENDS += "common-api-c++-someip"
 
-DEPENDS += "refpolicy-mls"
+DEPENDS += "refpolicy-mls-generic"
+
+def get_depends_noship(d):
+    if d.getVar('HAS_TELAF_NOSHIP', True) == 'true':
+        return "uds-stack"
+    else:
+        return ""
+DEPENDS += "${@get_depends_noship(d)}"
 
 FILESPATH =+ "${WORKSPACE}:"
 SRC_URI += "file://telaf/"
+SRC_URI += "file://telaf-adv/"
 SRC_URI += "file://legato/"
 SRC_URI += "file://external/wpa_supplicant_8/"
 
 S = "${WORKDIR}/telaf"
 S_L = "${WORKDIR}/legato"
+S_V = "${WORKDIR}/telaf-adv"
 
 PARALLEL_MAKE = ""
+
+RM_WORK_EXCLUDE += "telaf-build"
 
 do_compile() {
     export WORK_ROOT=${WORKDIR}
@@ -47,7 +58,7 @@ do_compile() {
     oe_runmake ${MACHINE}
 }
 
-do_install_append() {
+do_install:append() {
     install -d ${D}/${libdir}/pkgconfig
 
     # Replace "{MACHINE}" with machine type
@@ -61,6 +72,7 @@ SYSROOT_PREPROCESS_FUNCS += "telaf_populate_sysroot"
 telaf_populate_sysroot() {
     sysroot_stage_dir ${S_L} ${SYSROOT_DESTDIR}/telaf/legato/
     sysroot_stage_dir ${S} ${SYSROOT_DESTDIR}/telaf/telaf/
+    sysroot_stage_dir ${S_V} ${SYSROOT_DESTDIR}/telaf/telaf-adv/
 }
 
 GCC_PREFIX = "${@bb.utils.contains('BASEMACHINE', 'sa525m', bb.utils.contains('MULTILIB_VARIANTS', 'lib32', 'arm-oemllib32-linux-gnueabi', 'aarch64-oe-linux', d), '', d)}"

@@ -12,7 +12,7 @@ SRC_URI += "file://telaf.mount.service"
 SRC_URI += "file://overlay_selinuxrw-workdir.sh"
 SRC_URI += "file://overlay_selinuxrw-workdir.service"
 
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
 do_compile[noexec] = "1"
 S = "${WORKDIR}"
@@ -20,7 +20,7 @@ S = "${WORKDIR}"
 INITSCRIPT_NAME = "start_telaf.sh"
 INITSCRIPT_PARAMS = "start 99 2 3 4 5 . stop 1 0 1 6 ."
 
-dirs755_append = " /legato /mnt/legato /telaf_app"
+dirs755:append = " /legato /mnt/legato /telaf_app"
 
 do_install() {
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
@@ -65,12 +65,47 @@ do_install() {
 
 }
 
-FILES_${PN} += "${systemd_unitdir}/system/* /legato /mnt/legato /app ${userfsdatadir}/persist/* ${userfsdatadir}/le_fs ${userfsdatadir}/ManagedServices"
+FILES:${PN} += "${systemd_unitdir}/system/* /legato /mnt/legato /app ${userfsdatadir}/persist/* ${userfsdatadir}/le_fs ${userfsdatadir}/ManagedServices"
 
 # Add default telaf users
 inherit useradd
 USERADD_PACKAGES = "${PN}"
-USERADD_PARAM_${PN} += "-M -U telaf;"
-USERADD_PARAM_${PN} += "-M -U appdefault;"
-USERADD_PARAM_${PN} += "-M -g root securityunpack;"
-
+USERADD_PARAM:${PN} += "-M -U telaf;"
+USERADD_PARAM:${PN} += "-M -U appdefault;"
+USERADD_PARAM:${PN} += "-M -g root securityunpack;"
+# Default service users
+USERADD_PARAM:${PN} += "-M -U tafaudiosvc;"
+USERADD_PARAM:${PN} += "-M -U tafcansvc;"
+USERADD_PARAM:${PN} += "-M -U tafdatacallsvc;"
+USERADD_PARAM:${PN} += "-M -U tafdevinfosvc;"
+USERADD_PARAM:${PN} += "-M -U tafdiagsvc;"
+USERADD_PARAM:${PN} += "-M -U tafhmsvc;"
+USERADD_PARAM:${PN} += "-M -U tafivssinfosvc;"
+USERADD_PARAM:${PN} += "-M -U tafivssradiosvc;"
+USERADD_PARAM:${PN} += "-M -U tafivsssimsvc;"
+USERADD_PARAM:${PN} += "-M -U tafkeystoresvc;"
+USERADD_PARAM:${PN} += "-M -U taflocationsvc;"
+USERADD_PARAM:${PN} += "-M -U taflxcinitapp;"
+USERADD_PARAM:${PN} += "-M -U tafmrcsvc;"
+USERADD_PARAM:${PN} += "-M -U tafmngdaudiosvc;"
+USERADD_PARAM:${PN} += "-M -U tafmngdconnsvc;"
+USERADD_PARAM:${PN} += "-M -U tafmngdpmsvc;"
+USERADD_PARAM:${PN} += "-M -U tafnetsvc;"
+USERADD_PARAM:${PN} += "-M -U tafpmsvc;"
+USERADD_PARAM:${PN} += "-M -U tafradiosvc;"
+USERADD_PARAM:${PN} += "-M -U tafremotesimsvc;"
+USERADD_PARAM:${PN} += "-M -U tafrpcproxy;"
+USERADD_PARAM:${PN} += "-M -U tafsmssvc;"
+USERADD_PARAM:${PN} += "-M -U tafsimcardsvc;"
+USERADD_PARAM:${PN} += "-M -U tafsomeipgwsvc;"
+USERADD_PARAM:${PN} += "-M -U tafthermsvc;"
+USERADD_PARAM:${PN} += "-M -U taftimesvc;"
+USERADD_PARAM:${PN} += "-M -U tafupdatesvc;"
+USERADD_PARAM:${PN} += "-M -U tafvoicecallsvc;"
+# TelAF Reserved Users
+USERADD_PARAM:${PN} += "-M -U taftestapp;"
+USERADD_PARAM:${PN} += "-M -U tafsampleapp;"
+USERADD_PARAM:${PN} += "-M -U tafusr0;"
+USERADD_PARAM:${PN} += "-M -U tafusr1;"
+USERADD_PARAM:${PN} += "-M -U tafusr2;"
+USERADD_PARAM:${PN} += "-M -U tafusr3;"
