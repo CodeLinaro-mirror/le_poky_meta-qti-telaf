@@ -25,7 +25,7 @@ DEPENDS += "vsomeip"
 DEPENDS += "common-api-c++"
 DEPENDS += "common-api-c++-someip"
 
-DEPENDS += "refpolicy-mls"
+DEPENDS += "refpolicy-mls-generic"
 
 def get_depends_noship(d):
     if d.getVar('HAS_TELAF_NOSHIP', True) == 'true':
@@ -33,8 +33,6 @@ def get_depends_noship(d):
     else:
         return ""
 DEPENDS += "${@get_depends_noship(d)}"
-
-#RDEPENDS:${PN} += "${@get_depends_noship(d)}"
 
 FILESPATH =+ "${WORKSPACE}:"
 SRC_URI += "file://telaf/"
@@ -48,6 +46,8 @@ S_V = "${WORKDIR}/telaf-adv"
 
 PARALLEL_MAKE = ""
 
+RM_WORK_EXCLUDE += "telaf-build"
+
 do_compile() {
     export WORK_ROOT=${WORKDIR}
     export OECORE_TARGET_SYSROOT=${RECIPE_SYSROOT}
@@ -58,7 +58,7 @@ do_compile() {
     oe_runmake ${MACHINE}
 }
 
-do_install_append() {
+do_install:append() {
     install -d ${D}/${libdir}/pkgconfig
 
     # Replace "{MACHINE}" with machine type

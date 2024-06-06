@@ -47,7 +47,7 @@ do_compile() {
 }
 
 # Place the TelAF container system into the container rootfs/legato folder
-do_install_append() {
+do_install:append() {
     install -m 0755 -d ${D}/mnt/legato
     cp -r -d --no-preserve=ownership ${TELAF_TARGET_STAGE_DIR}/* ${D}/mnt/legato/
 
@@ -57,7 +57,7 @@ do_install_append() {
 
 }
 
-FILES_${PN} += "/mnt/legato"
+FILES:${PN} += "/mnt/legato"
 
 # The telaf libraries are non versioned and triggers the following QA errors:
 # -------------
@@ -68,7 +68,7 @@ FILES_${PN} += "/mnt/legato"
 #
 # -------------
 # To avoid the QA error, skip so testing. TelAF when building, checks the whole system.
-INSANE_SKIP_${PN} = "dev-so"
+INSANE_SKIP:${PN} = "dev-so"
 
 # Fix for QA warning: File <> in package telaf-lxc-build doesn't have GNU_HASH(didn't pass LDFLAGS?)
 TARGET_CC_ARCH += "${LDFLAGS}"
@@ -76,42 +76,43 @@ TARGET_CC_ARCH += "${LDFLAGS}"
 # Add default telaf user and appdefault user
 inherit useradd
 USERADD_PACKAGES = "${PN}"
-USERADD_PARAM_${PN} += "-M -U telaf;"
-USERADD_PARAM_${PN} += "-M -U appdefault;"
-USERADD_PARAM_${PN} += "-M -g root securityunpack;"
+USERADD_PARAM:${PN} += "-M -U telaf;"
+USERADD_PARAM:${PN} += "-M -U appdefault;"
+USERADD_PARAM:${PN} += "-M -g root securityunpack;"
 # Default service users
-USERADD_PARAM_${PN} += "-M -U tafaudiosvc;"
-USERADD_PARAM_${PN} += "-M -U tafcansvc;"
-USERADD_PARAM_${PN} += "-M -U tafdatacallsvc;"
-USERADD_PARAM_${PN} += "-M -U tafdevinfosvc;"
-USERADD_PARAM_${PN} += "-M -U tafdiagsvc;"
-USERADD_PARAM_${PN} += "-M -U tafhmsvc;"
-USERADD_PARAM_${PN} += "-M -U tafivssinfosvc;"
-USERADD_PARAM_${PN} += "-M -U tafivssradiosvc;"
-USERADD_PARAM_${PN} += "-M -U tafivsssimsvc;"
-USERADD_PARAM_${PN} += "-M -U tafkeystoresvc;"
-USERADD_PARAM_${PN} += "-M -U taflocationsvc;"
-USERADD_PARAM_${PN} += "-M -U taflxcinitapp;"
-USERADD_PARAM_${PN} += "-M -U tafmrcsvc;"
-USERADD_PARAM_${PN} += "-M -U tafmngdaudiosvc;"
-USERADD_PARAM_${PN} += "-M -U tafmngdconnsvc;"
-USERADD_PARAM_${PN} += "-M -U tafmngdpmsvc;"
-USERADD_PARAM_${PN} += "-M -U tafnetsvc;"
-USERADD_PARAM_${PN} += "-M -U tafpmsvc;"
-USERADD_PARAM_${PN} += "-M -U tafradiosvc;"
-USERADD_PARAM_${PN} += "-M -U tafremotesimsvc;"
-USERADD_PARAM_${PN} += "-M -U tafrpcproxy;"
-USERADD_PARAM_${PN} += "-M -U tafsmssvc;"
-USERADD_PARAM_${PN} += "-M -U tafsimcardsvc;"
-USERADD_PARAM_${PN} += "-M -U tafsomeipgwsvc;"
-USERADD_PARAM_${PN} += "-M -U tafthermsvc;"
-USERADD_PARAM_${PN} += "-M -U taftimesvc;"
-USERADD_PARAM_${PN} += "-M -U tafupdatesvc;"
-USERADD_PARAM_${PN} += "-M -U tafvoicecallsvc;"
+USERADD_PARAM:${PN} += "-M -U tafaudiosvc;"
+USERADD_PARAM:${PN} += "-M -U tafcansvc;"
+USERADD_PARAM:${PN} += "-M -U tafdatacallsvc;"
+USERADD_PARAM:${PN} += "-M -U tafdevinfosvc;"
+USERADD_PARAM:${PN} += "-M -U tafdiagsvc;"
+USERADD_PARAM:${PN} += "-M -U tafhmsvc;"
+USERADD_PARAM:${PN} += "-M -U tafivssinfosvc;"
+USERADD_PARAM:${PN} += "-M -U tafivssradiosvc;"
+USERADD_PARAM:${PN} += "-M -U tafivsssimsvc;"
+USERADD_PARAM:${PN} += "-M -U tafkeystoresvc;"
+USERADD_PARAM:${PN} += "-M -U taflocationsvc;"
+USERADD_PARAM:${PN} += "-M -U taflxcinitapp;"
+USERADD_PARAM:${PN} += "-M -U tafmrcsvc;"
+USERADD_PARAM:${PN} += "-M -U tafmngdaudiosvc;"
+USERADD_PARAM:${PN} += "-M -U tafmngdconnsvc;"
+USERADD_PARAM:${PN} += "-M -U tafmngdpmsvc;"
+USERADD_PARAM:${PN} += "-M -U tafnetsvc;"
+USERADD_PARAM:${PN} += "-M -U tafpmsvc;"
+USERADD_PARAM:${PN} += "-M -U tafradiosvc;"
+USERADD_PARAM:${PN} += "-M -U tafremotesimsvc;"
+USERADD_PARAM:${PN} += "-M -U tafrpcproxy;"
+USERADD_PARAM:${PN} += "-M -U tafsmssvc;"
+USERADD_PARAM:${PN} += "-M -U tafsimcardsvc;"
+USERADD_PARAM:${PN} += "-M -U tafsomeipgwsvc;"
+USERADD_PARAM:${PN} += "-M -U tafthermsvc;"
+USERADD_PARAM:${PN} += "-M -U taftimesvc;"
+USERADD_PARAM:${PN} += "-M -U tafupdatesvc;"
+USERADD_PARAM:${PN} += "-M -U tafvoicecallsvc;"
 # TelAF Reserved Users
-USERADD_PARAM_${PN} += "-M -U taftestapp;"
-USERADD_PARAM_${PN} += "-M -U tafsampleapp;"
-USERADD_PARAM_${PN} += "-M -U tafusr0;"
-USERADD_PARAM_${PN} += "-M -U tafusr1;"
-USERADD_PARAM_${PN} += "-M -U tafusr2;"
-USERADD_PARAM_${PN} += "-M -U tafusr3;"
+USERADD_PARAM:${PN} += "-M -U taftestapp;"
+USERADD_PARAM:${PN} += "-M -U tafsampleapp;"
+USERADD_PARAM:${PN} += "-M -U tafusr0;"
+USERADD_PARAM:${PN} += "-M -U tafusr1;"
+USERADD_PARAM:${PN} += "-M -U tafusr2;"
+USERADD_PARAM:${PN} += "-M -U tafusr3;"
+

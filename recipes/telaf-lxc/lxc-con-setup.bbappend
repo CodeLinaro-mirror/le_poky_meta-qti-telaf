@@ -3,11 +3,11 @@ DESCRIPTION = "This recipe is required for copying the files to container to sta
 LICENSE = "BSD-3-Clause-Clear"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta-qti-bsp/files/common-licenses/BSD-3-Clause-Clear;md5=3771d4920bd6cdb8cbdf1e8344489ee0"
 
-FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
-SRC_URI_append += "file://lxc_telaf_init.sh"
+SRC_URI:append += "file://lxc_telaf_init.sh"
 
-do_install_append() {
+do_install:append() {
    # Add TelAF required directries to LXC container
    install -m 0755 -d ${D}/app
    install -m 0755 -d ${D}/data
@@ -20,9 +20,9 @@ do_install_append() {
    install -m 0755 ${WORKDIR}/lxc_telaf_init.sh ${D}/${sysconfdir}/init.d/S10_lxc_telaf_init.sh
 }
 
-FILES_${PN} += "${sysconfdir}/*"
-FILES_${PN} += "/app"
-FILES_${PN} += "/data"
-FILES_${PN} += "/persist"
-FILES_${PN} += "/mnt/legato"
-FILES_${PN} += "/legato"
+FILES:${PN} += "${sysconfdir}/*"
+FILES:${PN} += "/app"
+FILES:${PN} += "/data"
+FILES:${PN} += "/persist"
+FILES:${PN} += "/mnt/legato"
+FILES:${PN} += "/legato"
