@@ -1,4 +1,4 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 SRC_URI += "\
             file://syslog-startup.conf \
@@ -6,7 +6,7 @@ SRC_URI += "\
 "
 
 # enable shared memory for logread, which is used by TelAf logs
-do_install_append() {
+do_install:append() {
     install -d ${D}${sysconfdir}/udev/syslog-startup.conf
     install -m 0744 ${WORKDIR}/syslog-startup.conf ${D}${sysconfdir}/syslog-startup.conf
     install -d ${D}${sysconfdir}/initscripts
