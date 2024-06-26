@@ -59,7 +59,7 @@ do_install() {
 
         # Install SELinux overlay service
         install -m 0640 ${WORKDIR}/overlay_selinuxrw-workdir.service ${D}${systemd_unitdir}/system/overlay_selinuxrw-workdir.service
-        install -m 0740 ${WORKDIR}/overlay_selinuxrw-workdir.sh ${D}${sysconfdir}/initscripts/overlay_selinuxrw-workdir.sh
+        install -m 0555 ${WORKDIR}/overlay_selinuxrw-workdir.sh ${D}${sysconfdir}/initscripts/overlay_selinuxrw-workdir.sh
         ln -sf ${systemd_unitdir}/system/overlay_selinuxrw-workdir.service ${D}${systemd_unitdir}/system/multi-user.target.wants/overlay_selinuxrw-workdir.service
     fi
 
