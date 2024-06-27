@@ -56,7 +56,7 @@ function telaflxc_start()
 
     lxc-info -n ${TELAF_LXC_CON_NAME} | grep Link: \
              | awk '{print $2}' \
-             | xargs -t -I {} /sbin/ifconfig {} ${PVM_VETH_IP_ADDR}
+             | xargs -t -I {} ifconfig {} ${PVM_VETH_IP_ADDR}
     return $RESULT
 }
 
