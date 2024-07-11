@@ -4,6 +4,9 @@ FILESEXTRAPATHS:append := "${THISDIR}:"
 SRC_URI += "file://telaf-sepolicy/common/ \
             file://telaf-sepolicy/${BASEMACHINE}/ "
 
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
+SRC_URI += "file://0070-TelAF-Fix-Argument-list-too-long-issue.patch"
+
 FILESPATH =+ "${WORKSPACE}:"
 SRC_URI += "file://telaf/"
 
