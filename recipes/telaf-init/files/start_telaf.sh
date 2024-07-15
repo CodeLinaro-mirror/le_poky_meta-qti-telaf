@@ -35,6 +35,8 @@ if [ -e "/etc/telaf.env" ]; then
     source /etc/telaf.env
 fi
 
+MOUNTPOINT_TELAF="/mnt/legato"
+
 umount_etc()
 {
     umount -l /etc/ld.so.conf
@@ -55,7 +57,49 @@ umount_telaf()
     return ${TELAF_OK}
 }
 
-MOUNTPOINT_TELAF="/mnt/legato"
+IsProcessRunning()
+{
+   local processName="$1"
+   ps -e -o comm= | grep -x "$processName" > /dev/null
+}
+
+WaitProcessToExit()
+{
+   local processName="$1"
+   local timeOutCount="$2"
+
+    while [ "$timeOutCount" -ne 0 ]; do
+        if IsProcessRunning "$processName"; then
+           usleep 100000
+       else
+           break
+       fi
+       timeOutCount=$(expr "$timeOutCount" - 1)
+
+       if [ "$timeOutCount" -eq 0 ]; then
+           echo "Stop process'$processName' timeout"
+       fi
+   done
+}
+
+DisableWatchdogAndServices()
+{
+    if IsProcessRunning "watchdog";
+    then
+        # Important: 'startSystem' needs to exit before 'watchdog', and the
+        # 'watchdog' will exit when it receives 'SIGTERM' signal.
+        echo TelAF: killing 'startSystem' and 'watchdog' ...   > /dev/kmsg
+        killall -9 startSystem
+        WaitProcessToExit "startSystem" "20"
+
+        killall -TERM $(ps -e | awk '{print $4}' | grep -x watchdog)
+        WaitProcessToExit "watchdog" "5"
+
+        # Send 15/SIGTERM signal to terminate some other telaf services to
+        # avoid hung up issue during reboot/poweroff.
+        kill -TERM $(ps -ef|grep telaf|grep -v grep|awk '{print $1}')
+    fi
+}
 
 if [ -e "${MOUNTPOINT_TELAF}/systems/current/read-only" ]
 then
@@ -126,11 +170,14 @@ case "$1" in
 
     stop)
         echo "TelAf stop sequence" > /dev/kmsg
-        test -x $TELAF_START && $TELAF_START stop
 
         # Umount "/legato/apps" which was mounted by supervisor
         umount -l /legato/apps
         umount_etc
+
+        # Terminate the watchdog to make sure watchdog can be closed correctly
+        # to avoid poweroff failed issue.
+        DisableWatchdogAndServices
         ;;
 
     umount)
