@@ -1,0 +1,50 @@
+From a1b6ce4390a9eefba48e5e6b785b531e65e25c67 Mon Sep 17 00:00:00 2001
+From: Caupar Gu <quic_shiwgu@quicinc.com>
+Date: Thu, 11 Jul 2024 17:53:30 +0800
+Subject: [PATCH] TelAF: Fix Argument list too long issue
+
+---
+ support/Makefile.devel | 17 +++++++++++++++--
+ 1 file changed, 15 insertions(+), 2 deletions(-)
+
+diff --git a/support/Makefile.devel b/support/Makefile.devel
+index afb8e48a9..53948c13d 100644
+--- a/support/Makefile.devel
++++ b/support/Makefile.devel
+@@ -92,6 +92,11 @@ header_layers := $(filter-out $(HEADERDIR)/support,$(shell find $(HEADERDIR)/* -
+ header_xml := $(addsuffix .xml,$(header_layers))
+ header_interfaces := $(foreach layer,$(header_layers),$(wildcard $(layer)/*.if))
+ 
++num_file := $(words $(header_interfaces))
++num_half := $(shell echo $$(($(num_file) / 2)))
++group1_interfaces := $(wordlist 1,$(num_half),$(header_interfaces))
++group2_interfaces := $(wordlist $(num_half),$(num_file),$(header_interfaces))
++
+ local_layers := $(filter-out CVS tmp $(docs),$(shell find * -maxdepth 0 -type d))
+ local_xml := $(addprefix tmp/, $(addsuffix .xml,$(local_layers)))
+ 
+@@ -173,11 +178,19 @@ tmp/%.mod.fc: $(m4support) %.fc
+ 	@echo "Creating $(NAME) $(@F) policy package"
+ 	$(verbose) $(SEMOD_PKG) -o $@ -m $< -f $<.fc
+ 
+-tmp/all_interfaces.conf: $(m4support) $(header_interfaces) $(detected_ifs)
++tmp/group1_interfaces.conf: $(m4support) $(group1_interfaces) $(detected_ifs)
++	@test -d $(@D) || mkdir -p $(@D)
++	@echo "ifdef(\`__if_error',\`m4exit(1)')" > tmp/iferror.m4
++	$(verbose) $(M4) $^ tmp/iferror.m4 | sed -e s/dollarsstar/\$$\*/g >> $@
++
++tmp/group2_interfaces.conf: $(m4support) $(group2_interfaces) $(detected_ifs)
+ 	@test -d $(@D) || mkdir -p $(@D)
+ 	@echo "ifdef(\`__if_error',\`m4exit(1)')" > tmp/iferror.m4
+-	@echo "divert(-1)" > $@
+ 	$(verbose) $(M4) $^ tmp/iferror.m4 | sed -e s/dollarsstar/\$$\*/g >> $@
++
++tmp/all_interfaces.conf: tmp/group1_interfaces.conf tmp/group2_interfaces.conf
++	@echo "divert(-1)" > $@
++	@cat $^  >> $@
+ 	@echo "divert" >> $@
+ 
+ # so users dont have to make empty .fc and .if files
+-- 
+2.17.1
+
