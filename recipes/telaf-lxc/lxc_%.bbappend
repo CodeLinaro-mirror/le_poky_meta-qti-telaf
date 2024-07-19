@@ -7,6 +7,6 @@ SRC_URI:append += "file://telaf_lxc.sh"
 do_install:append() {
    # Replace the default lxc configuration file
    install -m 0644 ${WORKDIR}/lxc_telaf.conf ${D}${sysconfdir}/lxc/lxc_telaf.conf
-   install -m 0755 ${WORKDIR}/telaf_lxc_env.sh ${D}${sysconfdir}/lxc/telaf_lxc_env.sh
-   install -m 0755 ${WORKDIR}/telaf_lxc.sh ${D}${sysconfdir}/lxc/telaf_lxc.sh
+   install -m 0555 ${WORKDIR}/telaf_lxc_env.sh ${D}${sysconfdir}/lxc/telaf_lxc_env.sh
+   install -m 0555 ${WORKDIR}/telaf_lxc.sh ${D}${sysconfdir}/lxc/telaf_lxc.sh
 }
