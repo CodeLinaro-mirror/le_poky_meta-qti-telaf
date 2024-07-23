@@ -16,7 +16,7 @@ DEPENDS += "coreutils-native"
 DEPENDS += "openssl"
 DEPENDS += "libcap"
 DEPENDS += "vsomeip"
-DEPENDS += "refpolicy-mls"
+DEPENDS += "refpolicy-mls-generic"
 
 FILESPATH =+ "${WORKSPACE}:"
 SRC_URI += "file://telaf/"
@@ -69,9 +69,11 @@ FILES:${PN} += "/mnt/legato"
 # -------------
 # To avoid the QA error, skip so testing. TelAF when building, checks the whole system.
 INSANE_SKIP:${PN} = "dev-so"
+# Avoid [already-stripped] and [ldflags] QA errors.
+INSANE_SKIP:${PN} += "already-stripped"
 
 # Fix for QA warning: File <> in package telaf-lxc-build doesn't have GNU_HASH(didn't pass LDFLAGS?)
-TARGET_CC_ARCH += "${LDFLAGS}"
+INSANE_SKIP:${PN} += "ldflags"
 
 # Add default telaf user and appdefault user
 inherit useradd
