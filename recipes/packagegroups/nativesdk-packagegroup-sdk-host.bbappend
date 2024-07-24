@@ -1,6 +1,6 @@
 # Append telaf related nativesdk packages.
 
-RDEPENDS_${PN}_qti-distro-base += "\
+RDEPENDS:${PN}:append:qti-distro-base = "\
     nativesdk-capicxx-core \
     nativesdk-capicxx-someip \
     "
