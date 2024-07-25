@@ -25,7 +25,7 @@ DEPENDS += "vsomeip"
 DEPENDS += "common-api-c++"
 DEPENDS += "common-api-c++-someip"
 
-DEPENDS += "refpolicy-mls-generic"
+DEPENDS += "refpolicy-mls-auto"
 
 def get_depends_noship(d):
     if d.getVar('HAS_TELAF_NOSHIP', True) == 'true':
