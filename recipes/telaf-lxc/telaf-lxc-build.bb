@@ -16,7 +16,7 @@ DEPENDS += "coreutils-native"
 DEPENDS += "openssl"
 DEPENDS += "libcap"
 DEPENDS += "vsomeip"
-DEPENDS += "refpolicy-mls-generic"
+DEPENDS += "refpolicy-mls-auto"
 
 FILESPATH =+ "${WORKSPACE}:"
 SRC_URI += "file://telaf/"
