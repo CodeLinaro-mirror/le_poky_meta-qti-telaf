@@ -50,10 +50,11 @@ do_install() {
         install -m 0755 -d ${D}/app
 
         # Create directory used by telaf Managed Connectivity Service to store configuration file
-        install -m 0777 -d ${D}${userfsdatadir}/ManagedServices
+        install -m 0755 -d ${D}${userfsdatadir}/ManagedServices
 
         # create directories with DAC permission for non root users
-        install -m 0777 -d ${D}${userfsdatadir}/le_fs
+        install -m 0775 -d ${D}${userfsdatadir}/le_fs
+        chown -h telaf.telaf ${D}${userfsdatadir}/le_fs
         install -m 0777 -d ${D}${userfsdatadir}/persist/tafKeyStoreSvc
         install -m 0777 -d ${D}${userfsdatadir}/persist/tafKeyStoreSvc/internalKey
 
