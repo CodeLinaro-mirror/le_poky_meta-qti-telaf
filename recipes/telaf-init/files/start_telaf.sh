@@ -70,7 +70,7 @@ WaitProcessToExit()
 
     while [ "$timeOutCount" -ne 0 ]; do
         if IsProcessRunning "$processName"; then
-           usleep 100000
+           usleep 1000000
        else
            break
        fi
@@ -82,22 +82,48 @@ WaitProcessToExit()
    done
 }
 
-DisableWatchdogAndServices()
+TelafGraceFullShutDown()
+{
+    if IsProcessRunning "startSystem";
+    then
+        nice -n -10 app "stopLegato" 2> /dev/null
+    fi
+}
+
+CleanTelafRunningProcess()
 {
     if IsProcessRunning "watchdog";
     then
         # Important: 'startSystem' needs to exit before 'watchdog', and the
-        # 'watchdog' will exit when it receives 'SIGTERM' signal.
-        echo TelAF: killing 'startSystem' and 'watchdog' ...   > /dev/kmsg
+        # 'watchdog' need to be killed with 'SIGTERM' to avoid watchdog bite.
         killall -9 startSystem
-        WaitProcessToExit "startSystem" "20"
+        WaitProcessToExit "startSystem" "10"
 
-        killall -TERM $(ps -e | awk '{print $4}' | grep -x watchdog)
+        nice -n -5 killall -TERM watchdog
         WaitProcessToExit "watchdog" "5"
+    fi
 
-        # Send 15/SIGTERM signal to terminate some other telaf services to
-        # avoid hung up issue during reboot/poweroff.
-        kill -TERM $(ps -ef|grep telaf|grep -v grep|awk '{print $1}')
+    if IsProcessRunning "supervisor";
+    then
+        killall -9 supervisor
+    fi
+
+    ServiceList=$(ps -ef|grep telaf|grep taf |awk '{print $1}')
+    if [ -n "$ServiceList" ]; then
+        kill -9 ${ServiceList}
+    fi
+
+    CoreSvcList="logCtrlDaemon|configTree|serviceDirectory|updateDaemon|deviceManager"
+    RemainCoreSvc=$(ps aux | grep -E "$CoreSvcList" | grep -v "grep" |awk '{print $1}')
+    if [ -n "$RemainCoreSvc" ]; then
+        kill -9 $RemainCoreSvc
+    fi
+
+    SERVICES_LIST=$(ps -ef|grep telaf|grep taf |awk '{print $4}')
+    if [ -n "$SERVICES_LIST" ]; then
+        # Since the above was using hard kill (-9), so the systemd will wait
+        # these services "$SERVICES_LIST" to exit, here don't need to wait.
+        echo TelAF: SERVICES_LIST:$SERVICES_LIST  > /dev/kmsg
     fi
 }
 
@@ -171,13 +197,16 @@ case "$1" in
     stop)
         echo "TelAf stop sequence" > /dev/kmsg
 
+        # Use graceful shut down to safely exit.
+        #TelafGraceFullShutDown
+
+        # Hard kill all the processes if not exit.
+        CleanTelafRunningProcess
+
         # Umount "/legato/apps" which was mounted by supervisor
         umount -l /legato/apps
         umount_etc
 
-        # Terminate the watchdog to make sure watchdog can be closed correctly
-        # to avoid poweroff failed issue.
-        DisableWatchdogAndServices
         ;;
 
     umount)
