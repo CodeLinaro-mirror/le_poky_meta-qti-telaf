@@ -43,4 +43,4 @@ ExecStop=sh -c '/etc/init.d/start_telaf.sh stop'
 TimeoutSec=600
 
 [Install]
-WantedBy=multi-user.target shutdown.target
+WantedBy=multi-user.target
