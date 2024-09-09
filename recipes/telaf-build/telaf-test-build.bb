@@ -49,7 +49,7 @@ do_compile() {
         rm -r "$build_directory"
     fi
     cmake -DLEGATO_TARGET=${MACHINE} -DLEGATO_ROOT=${S_L} -H${S}/testapp_build/ -B${S}/testapp_build/build
-    cmake -E env CFLAGS=" -O " cmake -E env CC="${CC} -O " cmake -E env CXX="${CXX} -O " cmake --build ${S}/testapp_build/build
+    cmake -E env CFLAGS="-O" CC="${CC} -O" CXX="${CXX} -O" cmake --build ${S}/testapp_build/build -j $(nproc)
 }
 
 do_deploy() {
