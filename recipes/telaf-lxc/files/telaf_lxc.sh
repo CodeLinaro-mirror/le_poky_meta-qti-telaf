@@ -47,6 +47,8 @@ function telaflxc_create()
             -t none \
             -o ${CONTAINER_LOG_STORAGE}/lxc-create.log \
             -l TRACE
+
+    chcon -t lxcrootfs_t -R ${PVM_SHARED_LXC_RW}/app
 }
 
 function telaflxc_start()
