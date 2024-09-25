@@ -164,6 +164,11 @@ case "$1" in
     start)
         echo "TelAf start sequence" > /dev/kmsg
 
+        if [ ! -e /tmp/legato ]; then
+            mkdir -p /tmp/legato
+            chcon -R system_u:object_r:telaf_apptmp_rw_t:s0 /tmp/legato
+        fi
+
         # Add boot KPI markers
         kpi_file="/sys/kernel/boot_kpi/kpi_values"
         if [[ -e "$kpi_file" ]]; then
