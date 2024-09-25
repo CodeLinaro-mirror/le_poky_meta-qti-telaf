@@ -2,5 +2,6 @@
 
 RDEPENDS:${PN}:append:qti-distro-base = "\
     nativesdk-capicxx-core \
+    nativesdk-avbtool \
     nativesdk-capicxx-someip \
     "
