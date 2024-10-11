@@ -26,9 +26,3 @@ RDEPENDS:${PN} += "\
     dlt-daemon \
     "
 
-def get_depends_noship(d):
-    if d.getVar('HAS_TELAF_NOSHIP', True) == 'true':
-        return "uds-stack"
-    else:
-        return ""
-RDEPENDS:${PN} += "${@get_depends_noship(d)}"
