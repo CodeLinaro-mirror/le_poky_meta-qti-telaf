@@ -164,15 +164,15 @@ case "$1" in
     start)
         echo "TelAf start sequence" > /dev/kmsg
 
-        if [ ! -e /tmp/legato ]; then
-            mkdir -p /tmp/legato
-            chcon -R system_u:object_r:telaf_apptmp_rw_t:s0 /tmp/legato
-        fi
-
         # Add boot KPI markers
         kpi_file="/sys/kernel/boot_kpi/kpi_values"
         if [[ -e "$kpi_file" ]]; then
             echo -n "L - TelAF is starting" > "$kpi_file"
+        fi
+
+        if [ ! -e /tmp/legato ]; then
+            mkdir -p /tmp/legato
+            chcon -R system_u:object_r:telaf_apptmp_rw_t:s0 /tmp/legato
         fi
 
         # These paths "/legato/systems/current" and "/legato" are needed during "telaf stop", in
@@ -211,7 +211,6 @@ case "$1" in
         # Umount "/legato/apps" which was mounted by supervisor
         umount -l /legato/apps
         umount_etc
-
         ;;
 
     umount)
@@ -219,8 +218,18 @@ case "$1" in
         umount_telaf
         ;;
 
+    startGroup)
+        echo "TelAf startGroup sequence" > /dev/kmsg
+        app startGroup
+        ;;
+
+    stopGroup)
+        echo "TelAf stopGroup sequence" > /dev/kmsg
+        app stopGroup
+        ;;
+
     *)
-        echo "Only support start, stop and umount!"  > /dev/kmsg
+        echo "Only support start, stop, startGroup, stopGroup and umount!"  > /dev/kmsg
         exit ${TELAF_ERR}
         ;;
 

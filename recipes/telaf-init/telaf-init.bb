@@ -6,6 +6,7 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5
 SRC_URI = "file://start_telaf.sh"
 SRC_URI += "file://telaf.rules"
 SRC_URI += "file://telaf.service"
+SRC_URI += "file://telaf.app.service"
 SRC_URI += "file://telaf.env"
 SRC_URI += "file://telaf-ubi-mount.sh"
 SRC_URI += "file://telaf.mount.service"
@@ -38,6 +39,9 @@ do_install() {
         install -m 0644 ${S}/telaf.rules -D ${D}${sysconfdir}/udev/rules.d/telaf.rules
         install -m 0644 ${S}/telaf.service -D ${D}${systemd_unitdir}/system/telaf.service
         ln -sf ${systemd_unitdir}/system/telaf.service ${D}${systemd_unitdir}/system/multi-user.target.wants/telaf.service
+
+        install -m 0644 ${S}/telaf.app.service -D ${D}${systemd_unitdir}/system/telaf.app.service
+        ln -sf ${systemd_unitdir}/system/telaf.app.service ${D}${systemd_unitdir}/system/multi-user.target.wants/telaf.app.service
         install -m 0644 ${S}/telaf.env -D ${D}${sysconfdir}/telaf.env
         install -m 0555 ${S}/start_telaf.sh -D ${D}${sysconfdir}/init.d/start_telaf.sh
 
