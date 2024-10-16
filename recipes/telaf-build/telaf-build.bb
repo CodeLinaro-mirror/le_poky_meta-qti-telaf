@@ -27,13 +27,6 @@ DEPENDS += "common-api-c++-someip"
 
 DEPENDS += "refpolicy-mls-auto"
 
-def get_depends_noship(d):
-    if d.getVar('HAS_TELAF_NOSHIP', True) == 'true':
-        return "uds-stack"
-    else:
-        return ""
-DEPENDS += "${@get_depends_noship(d)}"
-
 FILESPATH =+ "${WORKSPACE}:"
 SRC_URI += "file://telaf/"
 SRC_URI += "file://telaf-adv/"
