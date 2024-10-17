@@ -48,8 +48,17 @@ do_compile() {
     if [ -d "$build_directory" ]; then
         rm -r "$build_directory"
     fi
+
+    if echo "$CFLAGS" | grep -q "\-D_TIME_BITS=64"; then
+        BUILD_FLAGS="-D_TIME_BITS=64 -D_FILE_OFFSET_BITS=64"
+        MKTOOLS_X_C_FLAGS="-X -D_TIME_BITS=64 -X -D_FILE_OFFSET_BITS=64"
+        MKTOOLS_X_C_FLAGS+=" -C -D_TIME_BITS=64 -C -D_FILE_OFFSET_BITS=64"
+        export MKTOOLS_X_C_FLAGS
+    fi
+    export CFLAGS="$BUILD_FLAGS -O"
+
     cmake -DLEGATO_TARGET=${MACHINE} -DLEGATO_ROOT=${S_L} -H${S}/testapp_build/ -B${S}/testapp_build/build
-    cmake -E env CFLAGS="-O" CC="${CC} -O" CXX="${CXX} -O" cmake --build ${S}/testapp_build/build -j $(nproc)
+    cmake -E env CFLAGS="$CFLAGS" CC="${CC} -O" CXX="${CXX} -O" cmake --build ${S}/testapp_build/build -j $(nproc)
 }
 
 do_deploy() {
