@@ -58,7 +58,7 @@ do_compile() {
     export CFLAGS="$BUILD_FLAGS -O"
 
     cmake -DLEGATO_TARGET=${MACHINE} -DLEGATO_ROOT=${S_L} -H${S}/testapp_build/ -B${S}/testapp_build/build
-    cmake -E env CFLAGS="$CFLAGS" CC="${CC} -O" CXX="${CXX} -O" cmake --build ${S}/testapp_build/build -j $(nproc)
+    cmake -E env CFLAGS="$CFLAGS" CC="${CC} -O" CXX="${CXX} -O" cmake --build ${S}/testapp_build/build
 }
 
 do_deploy() {
