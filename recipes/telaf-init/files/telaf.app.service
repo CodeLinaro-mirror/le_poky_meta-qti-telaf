@@ -16,7 +16,6 @@ Type=oneshot
 ExecStart=sh -c '/etc/init.d/start_telaf.sh startGroup'
 ExecStop=sh -c '/etc/init.d/start_telaf.sh stopGroup'
 RemainAfterExit=yes
-Nice=10
 
 [Install]
 WantedBy=multi-user.target
