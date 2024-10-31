@@ -54,6 +54,15 @@ do_compile() {
     if [ -f ${S}/VERSION ]; then
         export LEGATO_VERSION=`cat ${S}/VERSION 2>/dev/null`
     fi
+
+    if ${@bb.utils.contains('MULTILIB_VARIANTS', 'lib32', 'true', 'false', d)}; then
+        if ${@bb.utils.contains('CFLAGS', '-D_TIME_BITS=64', 'true', 'false', d)}; then
+            MKTOOLS_X_C_FLAGS="-X -D_TIME_BITS=64 -X -D_FILE_OFFSET_BITS=64"
+            MKTOOLS_X_C_FLAGS+=" -C -D_TIME_BITS=64 -C -D_FILE_OFFSET_BITS=64"
+            export MKTOOLS_X_C_FLAGS
+        fi
+    fi
+
     oe_runmake distclean
     oe_runmake ${MACHINE}
 }
