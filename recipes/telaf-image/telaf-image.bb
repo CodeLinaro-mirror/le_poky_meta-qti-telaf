@@ -56,13 +56,13 @@ do_compile() {
 }
 
 do_deploy() {
-    rm -rf   ${DEPLOY_DIR_IMAGE}/telaf-images
-    mkdir -p ${DEPLOY_DIR_IMAGE}/telaf-images/security/selinux/sepolicy/files
-    cp -rf   ${TELAF_TARGET_STAGE_DIR} ${DEPLOY_DIR_IMAGE}/telaf-images/telaf_ro
-    cp -rf   ${TELAF_SELINUX_FILE_CONTEXTS} ${DEPLOY_DIR_IMAGE}/telaf-images/security/selinux/sepolicy/files/
+    rm -rf   ${DEPLOYDIR}/telaf-images
+    mkdir -p ${DEPLOYDIR}/telaf-images/security/selinux/sepolicy/files
+    cp -rf   ${TELAF_TARGET_STAGE_DIR} ${DEPLOYDIR}/telaf-images/telaf_ro
+    cp -rf   ${TELAF_SELINUX_FILE_CONTEXTS} ${DEPLOYDIR}/telaf-images/security/selinux/sepolicy/files/
 
-    # Deploy the telaf-sdk-[telaf-version].tar.bz2 to $DEPLOY_DIR_IMAGE directory
-    install ${S}/telaf/build/${MACHINE}/telaf-sdk* ${DEPLOY_DIR_IMAGE}/
+    # Deploy the telaf-sdk-[telaf-version].tar.bz2 to $DEPLOYDIR directory
+    install ${S}/telaf/build/${MACHINE}/telaf-sdk* ${DEPLOYDIR}/
 }
 do_deploy[dirs] = "${S} ${DEPLOYDIR}"
 addtask deploy before do_build after do_install

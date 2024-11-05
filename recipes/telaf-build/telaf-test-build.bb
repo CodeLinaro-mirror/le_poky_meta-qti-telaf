@@ -64,13 +64,13 @@ do_compile() {
 }
 
 do_deploy() {
-    rm -rf ${DEPLOY_DIR_IMAGE}/telaf-images/testapps
-    mkdir -p ${DEPLOY_DIR_IMAGE}/telaf-images/testapps/Unit_testapp
-    mkdir -p ${DEPLOY_DIR_IMAGE}/telaf-images/testapps/Integration_testapp
-    mkdir -p ${DEPLOY_DIR_IMAGE}/telaf-images/testapps/Console_testapp
-    cp -rf ${S}/testapp_build/build/TestApps/Unit_testapp/* ${DEPLOY_DIR_IMAGE}/telaf-images/testapps/Unit_testapp/
-    cp -rf ${S}/testapp_build/build/TestApps/Integration_testapp/* ${DEPLOY_DIR_IMAGE}/telaf-images/testapps/Integration_testapp/
-    cp -rf ${S}/testapp_build/build/TestApps/Console_testapp/* ${DEPLOY_DIR_IMAGE}/telaf-images/testapps/Console_testapp/
+    rm -rf ${DEPLOYDIR}/telaf-images/testapps
+    mkdir -p ${DEPLOYDIR}/telaf-images/testapps/Unit_testapp
+    mkdir -p ${DEPLOYDIR}/telaf-images/testapps/Integration_testapp
+    mkdir -p ${DEPLOYDIR}/telaf-images/testapps/Console_testapp
+    cp -rf ${S}/testapp_build/build/TestApps/Unit_testapp/* ${DEPLOYDIR}/telaf-images/testapps/Unit_testapp/
+    cp -rf ${S}/testapp_build/build/TestApps/Integration_testapp/* ${DEPLOYDIR}/telaf-images/testapps/Integration_testapp/
+    cp -rf ${S}/testapp_build/build/TestApps/Console_testapp/* ${DEPLOYDIR}/telaf-images/testapps/Console_testapp/
 
 }
 do_deploy[dirs] = "${S} ${DEPLOYDIR}"
