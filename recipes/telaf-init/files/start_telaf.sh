@@ -77,7 +77,7 @@ WaitProcessToExit()
        timeOutCount=$(expr "$timeOutCount" - 1)
 
        if [ "$timeOutCount" -eq 0 ]; then
-           echo "Stop process'$processName' timeout"
+           echo "TelAF stop process'$processName' timeout"
        fi
    done
 }
@@ -92,6 +92,9 @@ TelafGraceFullShutDown()
 
 CleanTelafRunningProcess()
 {
+    # Clean the report from release_agent
+    echo "" > /sys/fs/cgroup/freezer/release_agent
+
     if IsProcessRunning "watchdog";
     then
         # Important: 'startSystem' needs to exit before 'watchdog', and the
@@ -108,17 +111,27 @@ CleanTelafRunningProcess()
         killall -9 supervisor
     fi
 
+    # Kill telaf service
     ServiceList=$(ps -ef|grep telaf|grep taf |awk '{print $1}')
     if [ -n "$ServiceList" ]; then
         kill -9 ${ServiceList}
     fi
 
+    # Kill telaf core service
     CoreSvcList="logCtrlDaemon|configTree|serviceDirectory|updateDaemon|deviceManager"
     RemainCoreSvc=$(ps aux | grep -E "$CoreSvcList" | grep -v "grep" |awk '{print $1}')
     if [ -n "$RemainCoreSvc" ]; then
         kill -9 $RemainCoreSvc
     fi
 
+    # Clean all the processes triggered by release_agent
+    StopCLientList=$(ps aux | grep "_appStopClient" | grep -v "grep" |awk '{print $1}')
+    if [ -n "$StopCLientList" ]; then
+        kill -9 $StopCLientList
+        echo StopCLientList=$StopCLientList  > /dev/kmsg
+    fi
+
+    # Check if any pending service or not
     SERVICES_LIST=$(ps -ef|grep telaf|grep taf |awk '{print $4}')
     if [ -n "$SERVICES_LIST" ]; then
         # Since the above was using hard kill (-9), so the systemd will wait
@@ -181,14 +194,12 @@ case "$1" in
         echo "mount_point=$mount_point"
         if [ -n "${mount_point}" ]; then
             umount -l /legato/systems/current
-            sync
         fi
 
         mount_point=$(mount | awk '{print $3}' | grep -Fx "/legato")
         echo "mount_point=$mount_point"
         if [ -n "${mount_point}" ]; then
             umount -l /legato
-            sync
         fi
 
         mount -o bind $MOUNTPOINT_TELAF /legato
@@ -225,7 +236,8 @@ case "$1" in
 
     stopGroup)
         echo "TelAf stopGroup sequence" > /dev/kmsg
-        app stopGroup
+        # Un comment it to use graceful shut down
+        # app stopGroup
         ;;
 
     *)

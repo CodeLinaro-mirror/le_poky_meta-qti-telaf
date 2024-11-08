@@ -215,7 +215,7 @@ IsVolumeEmpty() {
     device=/dev/ubi0_$vid
     # Checking first page header of ubi volume. If header page is erased,
     # then considering volume full empty else corrupted.
-    val_data=$(dd if=$device bs=1K count=1 | hexdump -ve '1/1 "%.2x"')
+    val_data=$(dd if=$device bs=4 count=1 | hexdump -ve '1/1 "%.2x"')
     if echo $val_data | grep -qE '^ffff+$'; then
         return 0
     fi
@@ -244,8 +244,9 @@ FindAndMountUBI() {
     echo "TelAF volume: $volid, name: $telaf_vol_name." > /dev/kmsg
     device=/dev/ubi0_$volid
     block_device=/dev/ubiblock0_$volid
-    mkdir -p $dir
+
     ubiblock --create $device
+    mkdir -p $dir
     WaitDevReady "-b" "${block_device}"
     if [ $? -ne 0 ]; then
        echo "Failed to wait on ${block_device}, exiting." > /dev/kmsg
@@ -299,33 +300,13 @@ FindAndMountUBI() {
     return 0
 }
 
-GetTelAfAppVolumeID () {
-    volcount=`cat /sys/class/ubi/ubi0/volumes_count`
-
-    for vid in `seq 0 $volcount`; do
-        name=`cat /sys/class/ubi/ubi0_$vid/name`
-        if [ "$name" == "telaf_app" ]; then
-            echo $vid
-            break
-        fi
-    done
-}
 
 FindAndMountApp() {
     dir=$1
-    volid=$(GetTelAfAppVolumeID)
-    if [ "$volid" == "" ]; then
-        echo "Cannot get TelAF volume." > /dev/kmsg
-        return 1
-    fi
 
-    telaf_vol_name=`cat /sys/class/ubi/ubi0_$volid/name`
-    echo "Get TelAF volume: $volid, name: $telaf_vol_name." > /dev/kmsg
-    device=/dev/ubi0_$volid
-
-    mount -t ubifs $device $dir -o rw,rootcontext=system_u:object_r:telaf_fw_t:s0
+    mount -t ubifs ubi0:telaf_app $dir -o rw,rootcontext=system_u:object_r:telaf_fw_t:s0
     if [ $? -ne 0 ] ; then
-        echo "Unable to mount ubifs onto TelAF $dir." > /dev/kmsg
+        echo "Unable to mount ubi0:telaf_app onto TelAF $dir." > /dev/kmsg
         return 1
     fi
 
@@ -335,7 +316,7 @@ FindAndMountApp() {
 IsTelAfExisted
 
 # Find correct TelAF volume and mount it
-eval FindAndMountUBI "$telaf_mount_point"
+FindAndMountUBI "$telaf_mount_point"
 telaf_mount_status=$?
 if [ "$telaf_mount_status" -eq 2 ] ; then
    echo "Skipping mounting TelAF_ro onto $telaf_mount_point" > /dev/kmsg
@@ -358,7 +339,7 @@ if [ "$telaf_mount_status" -ne 0 ] ; then
 fi
 
 # Find correct TelAF App volume and mount it
-eval FindAndMountApp "$telaf_app_mount_point"
+FindAndMountApp "$telaf_app_mount_point"
 if [ $? -ne 0 ] ; then
     echo "Unable to mount TelAF_rw onto $telaf_app_mount_point" > /dev/kmsg
     exit -1

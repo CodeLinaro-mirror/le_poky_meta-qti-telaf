@@ -32,7 +32,7 @@
 
 [Unit]
 Description=Bringup TelAf
-After=telaf.mount.service basic.target dlt.service dlt-system.service dlt-logd-converter.service
+After=telaf.mount.service basic.target
 Before=telaf.app.service
 Conflicts=shutdown.target
 DefaultDependencies=no
