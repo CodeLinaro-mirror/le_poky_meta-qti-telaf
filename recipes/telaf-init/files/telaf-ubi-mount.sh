@@ -200,8 +200,8 @@ SlotSwitchReboot () {
             /bin/sh -c 'reboot edl'
             exit 0
         fi
-        echo "Reboot for switching slots or EDL mode" > /dev/kmsg
-        /bin/sh -c 'reboot'
+        echo "RBM: Crashing for switching slots or EDL mode" > /dev/kmsg
+	echo c > /proc/sysrq-trigger
     else
         echo "Cannot get TelAF volume , reboot to edl " > /dev/kmsg
         /bin/sh -c 'reboot edl'
