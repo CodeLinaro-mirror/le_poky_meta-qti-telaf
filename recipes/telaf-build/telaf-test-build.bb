@@ -49,11 +49,13 @@ do_compile() {
         rm -r "$build_directory"
     fi
 
-    if echo "$CFLAGS" | grep -q "\-D_TIME_BITS=64"; then
-        BUILD_FLAGS="-D_TIME_BITS=64 -D_FILE_OFFSET_BITS=64"
-        MKTOOLS_X_C_FLAGS="-X -D_TIME_BITS=64 -X -D_FILE_OFFSET_BITS=64"
-        MKTOOLS_X_C_FLAGS+=" -C -D_TIME_BITS=64 -C -D_FILE_OFFSET_BITS=64"
-        export MKTOOLS_X_C_FLAGS
+    if ${@bb.utils.contains('MULTILIB_VARIANTS', 'lib32', 'true', 'false', d)}; then
+        if ${@bb.utils.contains('CFLAGS', '-D_TIME_BITS=64', 'true', 'false', d)}; then
+            BUILD_FLAGS="-D_TIME_BITS=64 -D_FILE_OFFSET_BITS=64"
+            MKTOOLS_X_C_FLAGS="-X -D_TIME_BITS=64 -X -D_FILE_OFFSET_BITS=64"
+            MKTOOLS_X_C_FLAGS+=" -C -D_TIME_BITS=64 -C -D_FILE_OFFSET_BITS=64"
+            export MKTOOLS_X_C_FLAGS
+        fi
     fi
     export CFLAGS="$BUILD_FLAGS -O"
 
