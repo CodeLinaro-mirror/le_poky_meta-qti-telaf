@@ -48,11 +48,9 @@ umount_etc()
 
 umount_telaf()
 {
-    umount -l /legato/apps
     umount -l /legato/systems/current
     umount -l /legato
     umount -l /mnt/legato
-    umount -l /app
 
     return ${TELAF_OK}
 }
@@ -219,8 +217,8 @@ case "$1" in
         # Hard kill all the processes if not exit.
         CleanTelafRunningProcess
 
-        # Umount "/legato/apps" which was mounted by supervisor
-        umount -l /legato/apps
+        # Umount the path that was mounted by supervisor
+        umount -l /tmp/legato/appsWriteable
         umount_etc
         ;;
 
