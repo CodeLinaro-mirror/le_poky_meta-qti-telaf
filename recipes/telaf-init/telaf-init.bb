@@ -55,6 +55,7 @@ do_install() {
 
         # Create directory used by telaf Managed Connectivity Service to store configuration file
         install -m 0755 -d ${D}${userfsdatadir}/ManagedServices
+        install -m 0755 -d ${D}${userfsdatadir}/persist/telaf/config
 
         # create directories with DAC permission for non root users
         install -m 0775 -d ${D}${userfsdatadir}/le_fs
