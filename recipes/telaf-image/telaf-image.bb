@@ -31,6 +31,10 @@ DEPENDS += "xmllib"
 DEPENDS += "telux"
 DEPENDS += "telux-lib"
 
+# If telaf-vendor-build is needed, uncomment following code
+# DEPENDS += "telaf-vendor-build"
+
+RM_WORK_EXCLUDE += "telaf-image"
 
 S = "${WORKDIR}/telaf-image/stage"
 LEGATO_ROOT = "${S}/legato/legato-af"
@@ -51,6 +55,7 @@ do_compile() {
     export TELAF_PROP=${S}/telaf-prop
     export TELAF_NOSHIP=${S}/telaf-noship
     export WORK_ROOT=${WORKDIR}
+    export VENDOR_ROOT=${S}/vendor
     ${TELAF_ROOT}/mkimg.sh ${MACHINE} ${S}
     ${TELAF_ROOT}/bin/createsdk ${MACHINE} ${S}
 }
