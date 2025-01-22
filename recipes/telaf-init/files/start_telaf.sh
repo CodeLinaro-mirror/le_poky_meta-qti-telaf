@@ -231,7 +231,7 @@ case "$1" in
 
     startGroup)
         echo "TelAf startGroup sequence" > /dev/kmsg
-        app startGroup
+        app startGroup &
         ;;
 
     stopGroup)
