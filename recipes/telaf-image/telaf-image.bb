@@ -50,7 +50,7 @@ do_compile() {
 do_deploy() {
     rm -rf ${DEPLOYDIR}/telaf-images
     mkdir -p ${DEPLOYDIR}/telaf-images/security/selinux/sepolicy/files
-    cp -rf ${TELAF_TARGET_STAGE_DIR} ${DEPLOYDIR}/telaf-images/telaf_ro
+    cp -r -d --preserve=mode,xattr,links ${TELAF_TARGET_STAGE_DIR} ${DEPLOYDIR}/telaf-images/telaf_ro
     cp -rf ${TELAF_SELINUX_FILE_CONTEXTS} ${DEPLOYDIR}/telaf-images/security/selinux/sepolicy/files/
 
     # Deploy the telaf-sdk-[telaf-version].tar.bz2 to $DEPLOYDIR directory
