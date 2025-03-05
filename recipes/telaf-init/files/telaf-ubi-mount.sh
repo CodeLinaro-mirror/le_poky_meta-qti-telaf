@@ -246,7 +246,6 @@ FindAndMountUBI() {
     device=/dev/ubi0_$volid
     block_device=/dev/ubiblock0_$volid
     ubiblock --create $device
-    mkdir -p $dir
     WaitDevReady "-b" "${block_device}"
     if [ $? -ne 0 ]; then
        echo "Failed to wait on ${block_device}, exiting." > /dev/kmsg
