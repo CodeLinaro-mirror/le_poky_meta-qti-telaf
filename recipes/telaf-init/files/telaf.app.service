@@ -5,16 +5,15 @@
 [Unit]
 Description=Start TelAF APPs
 Requires=telaf.service
-After=telaf.service init_audio.service
-Before=mrc-daemon.service
+After=telaf.service
 Conflicts=shutdown.target
 DefaultDependencies=no
 ConditionKernelCommandLine=systemd.setenv
 
 [Service]
 Type=oneshot
-ExecStart=sh -c '/etc/init.d/start_telaf.sh startGroup'
-ExecStop=sh -c '/etc/init.d/start_telaf.sh stopGroup'
+ExecStart=sh -c '/etc/initscripts/start_telaf.sh startGroup'
+ExecStop=sh -c '/etc/initscripts/start_telaf.sh stopGroup'
 RemainAfterExit=yes
 
 [Install]

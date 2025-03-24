@@ -42,8 +42,8 @@ ConditionKernelCommandLine=systemd.setenv
 GuessMainPID=no
 Type=forking
 User=root
-ExecStart=sh -c '/etc/init.d/start_telaf.sh start'
-ExecStop=sh -c '/etc/init.d/start_telaf.sh stop'
+ExecStart=sh -c '/etc/initscripts/start_telaf.sh start'
+ExecStop=sh -c '/etc/initscripts/start_telaf.sh stop'
 
 [Install]
 WantedBy=multi-user.target

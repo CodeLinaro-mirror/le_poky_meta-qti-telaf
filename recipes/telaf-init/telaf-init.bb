@@ -1,3 +1,5 @@
+inherit systemd
+
 DESCRIPTION = "TalAf Initialization"
 HOMEPAGE = "https://www.codeaurora.org/"
 LICENSE = "BSD-3-Clause"
@@ -21,6 +23,8 @@ S = "${WORKDIR}"
 INITSCRIPT_NAME = "start_telaf.sh"
 INITSCRIPT_PARAMS = "start 99 2 3 4 5 . stop 1 0 1 6 ."
 
+SYSTEMD_SERVICE:${PN} = "overlay_selinuxrw-workdir.service telaf.mount.service telaf.service telaf.app.service"
+
 dirs755:append = " /legato /mnt/legato /telaf_app"
 
 do_install() {
@@ -31,19 +35,16 @@ do_install() {
         install -d ${D}/${systemd_unitdir}/system/multi-user.target.wants
         install -m 0555 ${WORKDIR}/telaf-ubi-mount.sh ${D}${sysconfdir}/initscripts/telaf-ubi-mount.sh
         install -m 0644 ${WORKDIR}/telaf.mount.service ${D}${systemd_unitdir}/system/telaf.mount.service
-        ln -sf ${systemd_unitdir}/system/telaf.mount.service ${D}${systemd_unitdir}/system/multi-user.target.wants/telaf.mount.service
 
         # Install telaf initscript Service
         install -d ${D}${sysconfdir}/udev/rules.d/
         install -d ${D}${sysconfdir}/tmpfiles.d
         install -m 0644 ${S}/telaf.rules -D ${D}${sysconfdir}/udev/rules.d/telaf.rules
         install -m 0644 ${S}/telaf.service -D ${D}${systemd_unitdir}/system/telaf.service
-        ln -sf ${systemd_unitdir}/system/telaf.service ${D}${systemd_unitdir}/system/multi-user.target.wants/telaf.service
 
         install -m 0644 ${S}/telaf.app.service -D ${D}${systemd_unitdir}/system/telaf.app.service
-        ln -sf ${systemd_unitdir}/system/telaf.app.service ${D}${systemd_unitdir}/system/multi-user.target.wants/telaf.app.service
         install -m 0644 ${S}/telaf.env -D ${D}${sysconfdir}/telaf.env
-        install -m 0555 ${S}/start_telaf.sh -D ${D}${sysconfdir}/init.d/start_telaf.sh
+        install -m 0555 ${S}/start_telaf.sh -D ${D}${sysconfdir}/initscripts/start_telaf.sh
 
         # create the directories which are used by telaf
         install -m 0755 -d ${D}/legato
@@ -55,6 +56,7 @@ do_install() {
 
         # Create directory used by telaf Managed Connectivity Service to store configuration file
         install -m 0755 -d ${D}${userfsdatadir}/ManagedServices
+        install -m 0755 -d ${D}${userfsdatadir}/persist/telaf/config
 
         # create directories with DAC permission for non root users
         install -m 0775 -d ${D}${userfsdatadir}/le_fs
@@ -65,7 +67,6 @@ do_install() {
         # Install SELinux overlay service
         install -m 0640 ${WORKDIR}/overlay_selinuxrw-workdir.service ${D}${systemd_unitdir}/system/overlay_selinuxrw-workdir.service
         install -m 0555 ${WORKDIR}/overlay_selinuxrw-workdir.sh ${D}${sysconfdir}/initscripts/overlay_selinuxrw-workdir.sh
-        ln -sf ${systemd_unitdir}/system/overlay_selinuxrw-workdir.service ${D}${systemd_unitdir}/system/multi-user.target.wants/overlay_selinuxrw-workdir.service
     fi
 
 }

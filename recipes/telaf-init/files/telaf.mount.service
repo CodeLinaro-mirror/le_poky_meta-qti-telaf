@@ -32,7 +32,7 @@
 
 [Unit]
 Description=Mount telaf partition to /mnt/legato
-After=local-fs.target set-slotsuffix.service
+After=basic.target set-slotsuffix.service
 Conflicts=shutdown.target
 SourcePath=/etc/initscripts/telaf-ubi-mount.sh
 DefaultDependencies=no
@@ -42,7 +42,7 @@ ConditionKernelCommandLine=systemd.setenv
 Type=oneshot
 PassEnvironment="SLOT_SUFFIX"
 ExecStart=sh -c '/etc/initscripts/telaf-ubi-mount.sh'
-ExecStop=sh -c '/etc/init.d/start_telaf.sh umount'
+ExecStop=sh -c '/etc/initscripts/start_telaf.sh umount'
 RemainAfterExit=yes
 
 [Install]

@@ -195,7 +195,8 @@ SlotSwitchReboot () {
             /bin/sh -c 'reboot edl'
             exit 0
         fi
-        echo "Reboot for switching slots or EDL mode" > /dev/kmsg
+        echo "RBM: Rebooting for switching slots or EDL mode" > /dev/kmsg
+        echo "warm" > /sys/kernel/reboot/mode
         /bin/sh -c 'reboot'
     else
         echo "Cannot get TelAF volume , reboot to edl " > /dev/kmsg
@@ -244,7 +245,6 @@ FindAndMountUBI() {
     echo "TelAF volume: $volid, name: $telaf_vol_name." > /dev/kmsg
     device=/dev/ubi0_$volid
     block_device=/dev/ubiblock0_$volid
-
     ubiblock --create $device
     mkdir -p $dir
     WaitDevReady "-b" "${block_device}"
@@ -300,19 +300,6 @@ FindAndMountUBI() {
     return 0
 }
 
-
-FindAndMountApp() {
-    dir=$1
-
-    mount -t ubifs ubi0:telaf_app $dir -o rw,rootcontext=system_u:object_r:telaf_fw_t:s0
-    if [ $? -ne 0 ] ; then
-        echo "Unable to mount ubi0:telaf_app onto TelAF $dir." > /dev/kmsg
-        return 1
-    fi
-
-    return 0
-}
-
 IsTelAfExisted
 
 # Find correct TelAF volume and mount it
@@ -321,7 +308,7 @@ telaf_mount_status=$?
 if [ "$telaf_mount_status" -eq 2 ] ; then
    echo "Skipping mounting TelAF_ro onto $telaf_mount_point" > /dev/kmsg
    #exit as error to not mount the service.
-   exit 1 
+   exit 1
 fi
 
 if [ "$telaf_mount_status" -ne 0 ] ; then
@@ -338,12 +325,6 @@ if [ "$telaf_mount_status" -ne 0 ] ; then
     exit 1
 fi
 
-# Find correct TelAF App volume and mount it
-FindAndMountApp "$telaf_app_mount_point"
-if [ $? -ne 0 ] ; then
-    echo "Unable to mount TelAF_rw onto $telaf_app_mount_point" > /dev/kmsg
-    exit -1
-fi
-
-echo "Success to mount TelAF onto $telaf_mount_point and $telaf_app_mount_point" > /dev/kmsg
+echo "Success to mount TelAF onto $telaf_mount_point" > /dev/kmsg
 exit 0
+
