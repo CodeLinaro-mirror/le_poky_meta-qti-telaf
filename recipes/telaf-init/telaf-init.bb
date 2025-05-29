@@ -58,6 +58,10 @@ do_install() {
         install -m 0755 -d ${D}${userfsdatadir}/ManagedServices
         install -m 0755 -d ${D}${userfsdatadir}/persist/telaf/config
 
+        # Create directory used by telaf diag Service to store database file
+        install -m 0755 -d ${D}${userfsdatadir}/diag
+        chown telaf.telaf ${D}${userfsdatadir}/diag
+
         # create directories with DAC permission for non root users
         install -m 0775 -d ${D}${userfsdatadir}/le_fs
         chown -h telaf.telaf ${D}${userfsdatadir}/le_fs
@@ -71,7 +75,7 @@ do_install() {
 
 }
 
-FILES:${PN} += "${systemd_unitdir}/system/* /legato /mnt/legato /app ${userfsdatadir}/persist/* ${userfsdatadir}/le_fs ${userfsdatadir}/ManagedServices"
+FILES:${PN} += "${systemd_unitdir}/system/* /legato /mnt/legato /app ${userfsdatadir}/persist/* ${userfsdatadir}/le_fs ${userfsdatadir}/ManagedServices ${userfsdatadir}/diag"
 
 # Add default telaf users
 inherit useradd
