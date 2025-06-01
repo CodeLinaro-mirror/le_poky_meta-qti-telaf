@@ -25,6 +25,7 @@ set_environment_variables() {
     export LEGATO_ROOT="${RECIPE_SYSROOT}/telaf/legato/legato-af"
     export TELAF_ROOT="${RECIPE_SYSROOT}/telaf/telaf"
     export TELAF_PA_DEFAULT="${RECIPE_SYSROOT}/telaf/telaf-pa-default"
+    export TELAF_PA="${WORK_ROOT}/telaf-pa"
 
     if ${@bb.utils.contains('MULTILIB_VARIANTS', 'lib32', 'true', 'false', d)} && \
        ${@bb.utils.contains('CFLAGS', '-D_TIME_BITS=64', 'true', 'false', d)}; then
@@ -40,7 +41,6 @@ do_compile() {
 
 SYSROOT_PREPROCESS_FUNCS += "telaf_populate_sysroot"
 telaf_populate_sysroot() {
-    MY_DIR=${SS}
-    [ ! -d ${MY_DIR} ] && MY_DIR=${S}
-    sysroot_stage_dir ${MY_DIR}/ ${SYSROOT_DESTDIR}/telaf/telaf-pa/
+    sysroot_stage_dir ${SS}/ ${SYSROOT_DESTDIR}/telaf/telaf-pa/
+    sysroot_stage_dir ${S}/ ${SYSROOT_DESTDIR}/telaf/telaf-pa/
 }
