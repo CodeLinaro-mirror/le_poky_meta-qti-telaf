@@ -13,7 +13,7 @@ SRC_URI = "file://gpioWakeup"
 
 S = "${WORKDIR}/gpioWakeup"
 
-KERNEL_CC:append:sa525m = " ${SECURITY_CFLAGS} "
+KERNEL_CC:append:sa510m = " ${SECURITY_CFLAGS} "
 
 do_install:append() {
     install -d ${D}/usr/lib/modules/

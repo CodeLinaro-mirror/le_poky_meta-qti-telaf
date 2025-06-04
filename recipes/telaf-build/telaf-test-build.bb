@@ -40,7 +40,7 @@ S_L = "${RECIPE_SYSROOT}/telaf/legato/legato-af"
 do_compile[depends] += "refpolicy-mls-auto:do_install"
 do_compile() {
     export TMPDIR=${TMPDIR}
-    export TARGET=${MACHINE}
+    export TARGET=${TELAF_MACHINE}
     export LEGATO_ROOT=${RECIPE_SYSROOT}/telaf/legato/legato-af
     export TELAF_ROOT=${S}
     export OECORE_TARGET_SYSROOT=${RECIPE_SYSROOT}
@@ -59,7 +59,7 @@ do_compile() {
     fi
     export CFLAGS="$BUILD_FLAGS -O"
 
-    cmake -DLEGATO_TARGET=${MACHINE} -DLEGATO_ROOT=${S_L} -H${S}/testapp_build/ -B${S}/testapp_build/build
+    cmake -DLEGATO_TARGET=${TELAF_MACHINE} -DLEGATO_ROOT=${S_L} -H${S}/testapp_build/ -B${S}/testapp_build/build
     cmake -E env CFLAGS="-O" CC="${CC} -O" CXX="${CXX} -O" cmake --build ${S}/testapp_build/build
 }
 
@@ -75,3 +75,9 @@ do_deploy() {
 }
 do_deploy[dirs] = "${S} ${DEPLOYDIR}"
 addtask deploy before do_build after do_install
+
+python __anonymous() {
+    machine = d.getVar('MACHINE')
+    telaf_machine = 'sa510m' if machine == 'sa510m-1g' else machine
+    d.setVar('TELAF_MACHINE', telaf_machine)
+}

@@ -9,14 +9,18 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5
 DEPENDS += "ninja-native cmake-native coreutils-native squashfs-tools-native mtd-utils-native capicxx-core-native capicxx-someip-native telaf-pa-default-build"
 
 # Target dependencies
-DEPENDS += "openssl libxml2 xmllib telux telux-lib vsomeip common-api-c++ common-api-c++-someip refpolicy-mls-auto"
+DEPENDS += "openssl libxml2 xmllib telux telux-lib vsomeip common-api-c++ common-api-c++-someip"
 
 FILESPATH =+ "${WORKSPACE}:"
-SRC_URI += "file://telaf/ file://telaf-adv/ file://legato/ file://telaf-pa/ file://telaf-pa-default/ file://external/wpa_supplicant_8/"
+SRC_URI += "file://telaf/ \
+            file://legato/ \
+            file://telaf-pa/ \
+            file://telaf-pa-default/ \
+            file://external/wpa_supplicant_8/"
 
 S = "${WORKDIR}/telaf"
 S_L = "${WORKDIR}/legato"
-S_V = "${WORKDIR}/telaf-adv"
+# S_V = "${WORKDIR}/telaf-adv"
 S_PA_DEF = "${WORKDIR}/telaf-pa-default"
 
 PARALLEL_MAKE = ""
@@ -41,16 +45,16 @@ do_compile() {
     set_environment_variables
 
     oe_runmake distclean
-    oe_runmake ${MACHINE}
+    oe_runmake ${TELAF_MACHINE}
 }
 
 do_install:append() {
     install -d ${D}/${libdir}/pkgconfig
 
-    # Replace "{MACHINE}" with machine type
+    # Replace "{TELAF_MACHINE}" with machine type
     TELAF_PC_FILE="${S}/telaf.pc"
     TELAF_PC_CONTENT=$(cat "${TELAF_PC_FILE}")
-    TELAF_PC_CONTENT=${TELAF_PC_CONTENT//\$\{MACHINE\}/${MACHINE}}
+    TELAF_PC_CONTENT=${TELAF_PC_CONTENT//\$\{TELAF_MACHINE\}/${TELAF_MACHINE}}
     echo "${TELAF_PC_CONTENT}" > "${D}/${libdir}/pkgconfig/telaf.pc"
 }
 
@@ -58,9 +62,12 @@ SYSROOT_PREPROCESS_FUNCS += "telaf_populate_sysroot"
 telaf_populate_sysroot() {
     sysroot_stage_dir ${S_L} ${SYSROOT_DESTDIR}/telaf/legato/
     sysroot_stage_dir ${S} ${SYSROOT_DESTDIR}/telaf/telaf/
-    sysroot_stage_dir ${S_V} ${SYSROOT_DESTDIR}/telaf/telaf-adv/
+    # sysroot_stage_dir ${S_V} ${SYSROOT_DESTDIR}/telaf/telaf-adv/
     sysroot_stage_dir ${S_PA_DEF} ${SYSROOT_DESTDIR}/telaf/telaf-pa-default/
 }
 
-GCC_PREFIX = "${@bb.utils.contains('BASEMACHINE', 'sa525m', bb.utils.contains('MULTILIB_VARIANTS', 'lib32', 'arm-oemllib32-linux-gnueabi', 'aarch64-oe-linux', d), '', d)}"
-EXTRA_OEMAKE += "'GCC_PREFIX=${GCC_PREFIX}'"
+python __anonymous() {
+    machine = d.getVar('MACHINE')
+    telaf_machine = 'sa510m' if machine == 'sa510m-1g' else machine
+    d.setVar('TELAF_MACHINE', telaf_machine)
+}

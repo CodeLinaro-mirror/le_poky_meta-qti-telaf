@@ -74,11 +74,11 @@ python do_configure () {
 do_compile () {
     set -eu
 
-    local BASE_STAGE_DIR="${TELAF_ROOT}/build/${MACHINE}/_staging_system.${MACHINE}.update_ro"
+    local BASE_STAGE_DIR="${TELAF_ROOT}/build/${TELAF_MACHINE}/_staging_system.${TELAF_MACHINE}.update_ro"
 
     env OBJCOPY="${OBJCOPY}" STRIP="${STRIP}" \
         "${WORKDIR}/mkimg.sh" \
-            -t "${MACHINE}" \
+            -t "${TELAF_MACHINE}" \
             -o "${S}" \
             -r "${TELAF_ROOT}" \
             -s "${BASE_STAGE_DIR}" \
@@ -91,7 +91,7 @@ do_compile () {
 
     # Only run createsdk if the file exists and is executable
     if [ -x "${TELAF_ROOT}/bin/createsdk" ]; then
-        "${TELAF_ROOT}/bin/createsdk" "${MACHINE}" "${S}"
+        "${TELAF_ROOT}/bin/createsdk" "${TELAF_MACHINE}" "${S}"
     fi
 }
 
@@ -122,7 +122,7 @@ do_deploy () {
         bbnote "DISTRO_FEATURES lacks selinux; skipping SELinux contexts deployment."
     fi
 
-    SDK_GLOB="${S}/telaf/build/${MACHINE}/telaf-sdk*"
+    SDK_GLOB="${S}/telaf/build/${TELAF_MACHINE}/telaf-sdk*"
     set +e
     ls ${SDK_GLOB} >/dev/null 2>&1
     found=$?
@@ -146,3 +146,8 @@ do_deploy () {
 }
 
 addtask deploy after do_compile before do_build
+python __anonymous() {
+    machine = d.getVar('MACHINE')
+    telaf_machine = 'sa510m' if machine == 'sa510m-1g' else machine
+    d.setVar('TELAF_MACHINE', telaf_machine)
+}

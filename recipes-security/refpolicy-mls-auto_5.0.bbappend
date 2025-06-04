@@ -18,7 +18,7 @@ do_compile:prepend() {
     cp -fr ${POLICY_ROOT}/sys/* ${DST_DIR}/
 
     # import TelAF application policy
-    SDEF_FILE=${WORKDIR}/telaf/modules/TelSdk/${MACHINE}.sdef
+    SDEF_FILE=${WORKDIR}/telaf/modules/TelSdk/${TELAF_MACHINE}.sdef
     APPS=$(cat ${SDEF_FILE} | awk '{print $1}' | grep "^\$TELAF_ROOT" | awk -F "/" '{print $NF}')
     for APP in ${APPS}; do
         APP_DIR=`find ${POLICY_ROOT} -type d -name ${APP} | tail -n 1`
@@ -28,10 +28,16 @@ do_compile:prepend() {
     done
 }
 
-POLICY_CUSTOM_BUILDOPT:append = ""qti-nad-telaf sa525m kirkstone""
+POLICY_CUSTOM_BUILDOPT:append = ""qti-nad-telaf sa510m-1g scarthgap""
 
 do_install:append() {
     install -d ${TMPDIR}/work-shared
     cp -rf ${D}/usr/share/selinux ${TMPDIR}/work-shared/
+}
+
+python __anonymous() {
+    machine = d.getVar('MACHINE')
+    telaf_machine = 'sa510m' if machine == 'sa510m-1g' else machine
+    d.setVar('TELAF_MACHINE', telaf_machine)
 }
 

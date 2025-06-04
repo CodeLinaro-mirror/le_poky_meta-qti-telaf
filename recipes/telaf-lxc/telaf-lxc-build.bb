@@ -27,7 +27,7 @@ S_L = "${WORKDIR}/legato"
 
 PARALLEL_MAKE = ""
 
-TELAF_TARGET_STAGE_DIR = "${S_L}/legato-af/build/${MACHINE}/_staging_system.${MACHINE}.update_ro"
+TELAF_TARGET_STAGE_DIR = "${S_L}/legato-af/build/${TELAF_MACHINE}/_staging_system.${TELAF_MACHINE}.update_ro"
 
 do_compile[nostamp]  = "1"
 
@@ -51,7 +51,7 @@ do_compile() {
     fi
 
     oe_runmake distclean
-    oe_runmake ${MACHINE}
+    oe_runmake ${TELAF_MACHINE}
 }
 
 # Place the TelAF container system into the container rootfs/legato folder
@@ -128,3 +128,9 @@ USERADD_PARAM:${PN} += "-M -U tafusr3;"
 
 GCC_PREFIX = "${@bb.utils.contains('BASEMACHINE', 'sa525m', bb.utils.contains('MULTILIB_VARIANTS', 'lib32', 'arm-oemllib32-linux-gnueabi', 'aarch64-oe-linux', d), '', d)}"
 EXTRA_OEMAKE += "'GCC_PREFIX=${GCC_PREFIX}'"
+
+python __anonymous() {
+    machine = d.getVar('MACHINE')
+    telaf_machine = 'sa510m' if machine == 'sa510m-1g' else machine
+    d.setVar('TELAF_MACHINE', telaf_machine)
+}

@@ -16,7 +16,7 @@ SRC_DIR = "${WORKSPACE}/telaf-pa/"
 INSANE_SKIP:${PN} += "installed-vs-shipped"
 
 S = "${WORKDIR}/telaf-pa"
-SS = "${RECIPE_SYSROOT}/telaf/telaf/build/${MACHINE}/telaf-pa"
+SS = "${RECIPE_SYSROOT}/telaf/telaf/build/${TELAF_MACHINE}/telaf-pa"
 
 TARGET_CC_ARCH += "${LDFLAGS}"
 
@@ -35,7 +35,7 @@ set_environment_variables() {
 do_compile() {
     set_environment_variables
 
-    ${S}/build.sh ${MACHINE}
+    ${S}/build.sh ${TELAF_MACHINE}
 }
 
 SYSROOT_PREPROCESS_FUNCS += "telaf_populate_sysroot"
@@ -43,4 +43,10 @@ telaf_populate_sysroot() {
     MY_DIR=${SS}
     [ ! -d ${MY_DIR} ] && MY_DIR=${S}
     sysroot_stage_dir ${MY_DIR}/ ${SYSROOT_DESTDIR}/telaf/telaf-pa/
+}
+
+python __anonymous() {
+    machine = d.getVar('MACHINE')
+    telaf_machine = 'sa510m' if machine == 'sa510m-1g' else machine
+    d.setVar('TELAF_MACHINE', telaf_machine)
 }

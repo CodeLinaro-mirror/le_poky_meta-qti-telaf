@@ -233,7 +233,7 @@ FindAndMountUBI() {
     if [ $vol_status_a -eq 0 ] && [ $vol_status_b -eq 0 ] ; then
            echo "Both TelAF volumes are empty - Skipping. Continue Boot" > /dev/kmsg
            return 2
-    fi 
+    fi
     #volume not empty, continue boot and check for any corruption
     volid=$(GetVolumeID telaf${SLOT_SUFFIX})
     if [ "$volid" == "" ]; then
@@ -275,7 +275,7 @@ FindAndMountUBI() {
         fi
         dm_verity_name=telaf
         dm_verity_device=/dev/mapper/${dm_verity_name}
-        verified-boot -n ${dm_verity_name} -d $block_device -p ${CERT_CA_PATH} > /dev/kmsg
+        verified-boot -n ${dm_verity_name} -d $block_device -s -p ${CERT_CA_PATH} > /dev/kmsg
         if [ $? -ne 0 ] ; then
             echo CERT_CA_PATH=${CERT_CA_PATH} > /dev/kmsg
             echo "Created dm-verity device ${dm_verity_device} failed." > /dev/kmsg
