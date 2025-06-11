@@ -55,6 +55,10 @@ do_deploy() {
 
     # Deploy the telaf-sdk-[telaf-version].tar.bz2 to $DEPLOYDIR directory
     install ${S}/telaf/build/${MACHINE}/telaf-sdk* ${DEPLOYDIR}/
+
+    # Copy debug binaries to debug_files folder
+    mkdir -p ${DEPLOYDIR}/telaf-images/debug_files
+    cp ${S}/libComponent*.so.debug ${DEPLOYDIR}/telaf-images/debug_files/
 }
 do_deploy[dirs] = "${S} ${DEPLOYDIR}"
 addtask deploy before do_build after do_install
