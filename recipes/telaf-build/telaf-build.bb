@@ -9,7 +9,7 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5
 DEPENDS += "ninja-native cmake-native coreutils-native squashfs-tools-native mtd-utils-native capicxx-core-native capicxx-someip-native"
 
 # Target dependencies
-DEPENDS += "openssl libxml2 xmllib telux telux-lib vsomeip common-api-c++ common-api-c++-someip refpolicy-mls-auto"
+DEPENDS += "openssl libxml2 xmllib telux telux-lib vsomeip common-api-c++ common-api-c++-someip refpolicy-mls-auto open-avb"
 
 FILESPATH =+ "${WORKSPACE}:"
 SRC_URI += "file://telaf/ file://telaf-adv/ file://legato/ file://telaf-pa/ file://telaf-pa-default/ file://external/wpa_supplicant_8/"
