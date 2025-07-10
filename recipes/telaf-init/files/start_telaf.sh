@@ -229,7 +229,11 @@ case "$1" in
 
     startGroup)
         echo "TelAf startGroup sequence" > /dev/kmsg
-        app startGroup &
+        app startGroup
+        if [ $? -ne 0 ] ; then
+            echo "TelAf run 'app startGroup' failed" > /dev/kmsg
+            exit ${TELAF_ERR}
+        fi
         ;;
 
     stopGroup)

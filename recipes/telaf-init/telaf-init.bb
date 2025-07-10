@@ -58,11 +58,17 @@ do_install() {
         install -m 0755 -d ${D}${userfsdatadir}/ManagedServices
         install -m 0755 -d ${D}${userfsdatadir}/persist/telaf/config
 
+        # Create directory used by telaf diag Service to store database file
+        install -m 0755 -d ${D}${userfsdatadir}/diag
+        chown telaf.telaf ${D}${userfsdatadir}/diag
+
         # create directories with DAC permission for non root users
         install -m 0775 -d ${D}${userfsdatadir}/le_fs
         chown -h telaf.telaf ${D}${userfsdatadir}/le_fs
-        install -m 0777 -d ${D}${userfsdatadir}/persist/tafKeyStoreSvc
-        install -m 0777 -d ${D}${userfsdatadir}/persist/tafKeyStoreSvc/internalKey
+        install -m 0700 -d ${D}${userfsdatadir}/persist/tafKeyStoreSvc
+        chown -h telaf.telaf ${D}${userfsdatadir}/persist/tafKeyStoreSvc
+        install -m 0700 -d ${D}${userfsdatadir}/persist/tafKeyStoreSvc/internalKey
+        chown -h telaf.telaf ${D}${userfsdatadir}/persist/tafKeyStoreSvc/internalKey
 
         # Install SELinux overlay service
         install -m 0640 ${WORKDIR}/overlay_selinuxrw-workdir.service ${D}${systemd_unitdir}/system/overlay_selinuxrw-workdir.service
@@ -71,7 +77,7 @@ do_install() {
 
 }
 
-FILES:${PN} += "${systemd_unitdir}/system/* /legato /mnt/legato /app ${userfsdatadir}/persist/* ${userfsdatadir}/le_fs ${userfsdatadir}/ManagedServices"
+FILES:${PN} += "${systemd_unitdir}/system/* /legato /mnt/legato /app ${userfsdatadir}/persist/* ${userfsdatadir}/le_fs ${userfsdatadir}/ManagedServices ${userfsdatadir}/diag"
 
 # Add default telaf users
 inherit useradd
