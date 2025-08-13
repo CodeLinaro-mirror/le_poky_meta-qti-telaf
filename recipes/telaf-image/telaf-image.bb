@@ -1,68 +1,148 @@
-inherit systemd pkgconfig deploy
-DESCRIPTION = "Telematics Application Framework"
-
+DESCRIPTION = "Building Image for Telematics Application Framework"
 HOMEPAGE = "https://www.codeaurora.org/"
-LICENSE = "BSD-3-Clause"
-LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
 
-DEPENDS += "ninja-native"
-DEPENDS += "cmake-native"
-DEPENDS += "coreutils-native"
-DEPENDS += "squashfs-tools-native"
-DEPENDS += "mtd-utils-native"
+LICENSE = "BSD-3-Clause-Clear"
+LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5=7a434440b651f4a472ca93716d01033a"
 
-DEPENDS += "telaf-build"
-def get_depends_prop(d):
-    if d.getVar('HAS_TELAF_PROP', True) == 'true':
-        return "telaf-prop-build"
-    else:
-        return ""
-DEPENDS += "${@get_depends_prop(d)}"
-def get_depends_noship(d):
-    if d.getVar('HAS_TELAF_NOSHIP', True) == 'true':
-        return "telaf-noship-build"
-    else:
-        return ""
-DEPENDS += "${@get_depends_noship(d)}"
+inherit deploy features_check
 
-DEPENDS += "openssl"
-DEPENDS += "libxml2"
-DEPENDS += "xmllib"
-DEPENDS += "telux"
-DEPENDS += "telux-lib"
+SRC_URI += "file://mkimg.sh"
 
+DEPENDS += " \
+    ninja-native \
+    cmake-native \
+    coreutils-native \
+    squashfs-tools-native \
+    mtd-utils-native \
+    binutils-native \
+    openssl \
+    libxml2 \
+    xmllib \
+    telux \
+    telux-lib \
+    telaf-pa-target-build \
+"
 
-S = "${WORKDIR}/telaf-image/stage"
-LEGATO_ROOT = "${S}/legato/legato-af"
-TELAF_ROOT = "${S}/telaf"
-TELAF_TARGET_STAGE_DIR = "${LEGATO_ROOT}/build/${MACHINE}/_staging_system.${MACHINE}.update_ro"
-TELAF_SELINUX_FILE_CONTEXTS = "${TELAF_ROOT}/security/selinux/sepolicy/files/file_contexts"
+# Only add dependency when it is full variant
+DEPENDS:append = " ${@bb.utils.contains('BUILD_VARIANT', 'full', 'telaf-build telaf-pa-legacy-build telaf-pa-default-build', '', d)}"
 
-do_configure() {
-    if [ -d "${S}" ]; then
-        rm -fr ${S}/*
+# Check if meta-qti-telaf-prop exists and check if BUILD_VARIANT is full
+PACKAGECONFIG ??= ""
+PACKAGECONFIG:append = " ${@('prop') if (d.getVar('BUILD_VARIANT') == 'full' and 'telaf-prop' in (d.getVar('BBFILE_COLLECTIONS') or '')) else ''}"
+DEPENDS:append = " ${@' telaf-prop-build' if (d.getVar('BUILD_VARIANT') == 'full' and 'prop' in (d.getVar('PACKAGECONFIG') or '').split()) else ''}"
+DEPENDS:append = " ${@' telaf-noship-build' if (d.getVar('BUILD_VARIANT') == 'full' and 'prop' in (d.getVar('PACKAGECONFIG') or '').split()) else ''}"
+
+S = "${WORKDIR}/src"
+B = "${WORKDIR}/build"
+
+TELAF_ROOT              ?= "${S}/telaf"
+TELAF_PROP_DIR          ?= "${S}/telaf-prop"
+TELAF_NOSHIP_DIR        ?= "${S}/telaf-noship"
+TELAF_LEGACY_PA_DIR     ?= "${S}/telaf-pa"
+VENDOR_ROOT             ?= "${S}/vendor"
+TELAF_TARGET_PA_DIR     ?= "${S}/target-pa"
+TELAF_DEFAULT_PA_DIR    ?= "${S}/default-pa"
+
+TELAF_TARGET_STAGE_DIR  ?= "${S}/staging_combined"
+TELAF_SELINUX_FILE_CONTEXTS ?= "${S}/telaf/security/selinux/sepolicy/files/file_contexts"
+
+RM_WORK_EXCLUDE += "telaf-image"
+
+#do_configure[depends] += "telaf-build:do_populate_sysroot telaf-pa-build:do_populate_sysroot telaf-pa-rw-build:do_populate_sysroot"
+do_deploy[depends]    += "attr-native:do_populate_sysroot"
+
+do_deploy[cleandirs]  = "${DEPLOYDIR}/telaf-images"
+
+python do_configure () {
+    import os, shutil, subprocess
+
+    sdir    = d.getVar("S")
+    sysroot = d.getVar("RECIPE_SYSROOT")
+
+    telaf_sysroot = os.path.join(sysroot, "telaf")
+    if not os.path.isdir(telaf_sysroot):
+        bb.fatal("Expected TELAF content at: %s (did telaf-build populate sysroot?)" % telaf_sysroot)
+
+    if os.path.isdir(sdir):
+        shutil.rmtree(sdir)
+    os.makedirs(sdir, exist_ok=True)
+
+    cmd = "set -eu; cp -a --no-preserve=ownership '{}'/* '{}'".format(telaf_sysroot, sdir)
+    subprocess.check_call(["/bin/sh", "-c", cmd])
+}
+
+do_compile () {
+    set -eu
+
+    local BASE_STAGE_DIR="${TELAF_ROOT}/build/${MACHINE}/_staging_system.${MACHINE}.update_ro"
+
+    env OBJCOPY="${OBJCOPY}" STRIP="${STRIP}" \
+        "${WORKDIR}/mkimg.sh" \
+            -t "${MACHINE}" \
+            -o "${S}" \
+            -r "${TELAF_ROOT}" \
+            -s "${BASE_STAGE_DIR}" \
+            -a "${TELAF_LEGACY_PA_DIR}" \
+            -p "${TELAF_PROP_DIR}" \
+            -n "${TELAF_NOSHIP_DIR}" \
+            -w "${TELAF_TARGET_PA_DIR}" \
+			-d "${TELAF_DEFAULT_PA_DIR}" \
+            -v "${VENDOR_ROOT}"
+
+    # Only run createsdk if the file exists and is executable
+    if [ -x "${TELAF_ROOT}/bin/createsdk" ]; then
+        "${TELAF_ROOT}/bin/createsdk" "${MACHINE}" "${S}"
     fi
-    cp -rf ${RECIPE_SYSROOT}/telaf/* ${S}
 }
 
-do_compile() {
-    export LEGATO_ROOT=${LEGATO_ROOT}
-    export TELAF_ROOT=${TELAF_ROOT}
-    export TELAF_PROP=${S}/telaf-prop
-    export TELAF_NOSHIP=${S}/telaf-noship
-    export WORK_ROOT=${WORKDIR}
-    ${TELAF_ROOT}/mkimg.sh ${MACHINE} ${S}
-    ${TELAF_ROOT}/bin/createsdk ${MACHINE} ${S}
+do_install[noexec] = "1"
+
+do_deploy () {
+    set -eu
+
+    install -d "${DEPLOYDIR}/telaf-images"
+    install -d "${DEPLOYDIR}/telaf-images/security/selinux/sepolicy/files"
+    install -d "${DEPLOYDIR}/telaf-images/debug_files"
+
+    if [ -d "${TELAF_TARGET_STAGE_DIR}" ]; then
+        cp -a --no-preserve=ownership "${TELAF_TARGET_STAGE_DIR}" "${DEPLOYDIR}/telaf-images/telaf_ro"
+    else
+        bbwarn "TELAF_TARGET_STAGE_DIR not found: ${TELAF_TARGET_STAGE_DIR}"
+    fi
+
+    if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
+        if [ -f "${TELAF_SELINUX_FILE_CONTEXTS}" ]; then
+            install -m 0644 "${TELAF_SELINUX_FILE_CONTEXTS}" \
+                "${DEPLOYDIR}/telaf-images/security/selinux/sepolicy/files/file_contexts"
+        else
+            bbwarn "SELinux file_contexts not found: ${TELAF_SELINUX_FILE_CONTEXTS}, creating empty fallback"
+            touch "${DEPLOYDIR}/telaf-images/security/selinux/sepolicy/files/file_contexts"
+        fi
+    else
+        bbnote "DISTRO_FEATURES lacks selinux; skipping SELinux contexts deployment."
+    fi
+
+    SDK_GLOB="${S}/telaf/build/${MACHINE}/telaf-sdk*"
+    set +e
+    ls ${SDK_GLOB} >/dev/null 2>&1
+    found=$?
+    set -e
+    if [ $found -eq 0 ]; then
+        install -m 0644 ${SDK_GLOB} "${DEPLOYDIR}/"
+    else
+        bbwarn "No SDK bundle matched: ${SDK_GLOB}"
+    fi
+
+    any_debug="false"
+    for f in "${S}"/libComponent*.so.debug; do
+        if [ -e "$f" ]; then
+            install -m 0644 "$f" "${DEPLOYDIR}/telaf-images/debug_files/"
+            any_debug="true"
+        fi
+    done
+    if [ "$any_debug" != "true" ]; then
+        bbnote "No debug files found at ${S}/libComponent*.so.debug"
+    fi
 }
 
-do_deploy() {
-    rm -rf   ${DEPLOYDIR}/telaf-images
-    mkdir -p ${DEPLOYDIR}/telaf-images/security/selinux/sepolicy/files
-    cp -rf   ${TELAF_TARGET_STAGE_DIR} ${DEPLOYDIR}/telaf-images/telaf_ro
-    cp -rf   ${TELAF_SELINUX_FILE_CONTEXTS} ${DEPLOYDIR}/telaf-images/security/selinux/sepolicy/files/
-
-    # Deploy the telaf-sdk-[telaf-version].tar.bz2 to $DEPLOYDIR directory
-    install ${S}/telaf/build/${MACHINE}/telaf-sdk* ${DEPLOYDIR}/
-}
-do_deploy[dirs] = "${S} ${DEPLOYDIR}"
-addtask deploy before do_build after do_install
+addtask deploy after do_compile before do_build
