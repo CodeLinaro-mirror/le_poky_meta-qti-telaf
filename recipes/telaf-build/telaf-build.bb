@@ -6,7 +6,7 @@ LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
 
 # Host dependencies
-DEPENDS += "ninja-native cmake-native coreutils-native squashfs-tools-native mtd-utils-native capicxx-core-native capicxx-someip-native"
+DEPENDS += "ninja-native cmake-native coreutils-native squashfs-tools-native mtd-utils-native capicxx-core-native capicxx-someip-native telaf-pa-default-build"
 
 # Target dependencies
 DEPENDS += "openssl libxml2 xmllib telux telux-lib vsomeip common-api-c++ common-api-c++-someip refpolicy-mls-auto open-avb"
@@ -34,6 +34,7 @@ set_environment_variables() {
        ${@bb.utils.contains('CFLAGS', '-D_TIME_BITS=64', 'true', 'false', d)}; then
         export MKTOOLS_X_C_FLAGS="-X -D_TIME_BITS=64 -X -D_FILE_OFFSET_BITS=64 -C -D_TIME_BITS=64 -C -D_FILE_OFFSET_BITS=64"
     fi
+    export TELAF_DEFAULT_PA_LIB_DIR=${OECORE_TARGET_SYSROOT}/telaf/default-pa/
 }
 
 do_compile() {
