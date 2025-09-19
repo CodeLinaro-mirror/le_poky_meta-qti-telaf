@@ -27,5 +27,5 @@ RDEPENDS:${PN} += "\
     telaf-init \
     "
 
-RDEPENDS:${PN}:append = " ${@bb.utils.contains('BUILD_VARIANT', 'full', 'telaf-mod-build', '', d)}"
+#RDEPENDS:${PN}:append = " ${@bb.utils.contains('BUILD_VARIANT', 'full', 'telaf-mod-build', '', d)}"
 

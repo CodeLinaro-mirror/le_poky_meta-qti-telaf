@@ -13,8 +13,16 @@ SRC_DIR = "${WORKSPACE}/telaf-pa/"
 
 S = "${WORKDIR}/telaf-pa"
 
-# do not pack the libraries to rootfs
-PACKAGES = ""
+# Allow empty main package to avoid packaging errors
+ALLOW_EMPTY:${PN} = "1"
+
+# Include all installed shared libraries in the package
+# Package layout
+FILES:${PN} = "/telaf/target-pa/lib/*.so.*"
+FILES:${PN}-dev += "/telaf/target-pa/lib/*.so"
+INSANE_SKIP:${PN}-dbg += "buildpaths"
+
+
 
 SYSROOT_DIRS:append = " /telaf"
 
