@@ -81,6 +81,8 @@ USERADD_PACKAGES = "${PN}"
 USERADD_PARAM:${PN} += "-M -U telaf;"
 USERADD_PARAM:${PN} += "-M -U appdefault;"
 USERADD_PARAM:${PN} += "-M -g root securityunpack;"
+USERADD_PARAM:${PN} += "-G root,system,diag,radio,inet,telaf -M -U tafcore;"
+USERADD_PARAM:${PN} += "-G root,system,diag,radio,inet,sensors,telaf,tafcore -M -U tafsuper;"
 # Default service users
 USERADD_PARAM:${PN} += "-M -U tafaudiosvc;"
 USERADD_PARAM:${PN} += "-M -U tafcansvc;"
