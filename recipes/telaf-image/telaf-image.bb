@@ -30,7 +30,9 @@ DEPENDS:append = " ${@bb.utils.contains('BUILD_VARIANT', 'full', 'telaf-build te
 PACKAGECONFIG ??= ""
 PACKAGECONFIG:append = " ${@('prop') if (d.getVar('BUILD_VARIANT') == 'full' and 'telaf-prop' in (d.getVar('BBFILE_COLLECTIONS') or '')) else ''}"
 DEPENDS:append = " ${@' telaf-prop-build' if (d.getVar('BUILD_VARIANT') == 'full' and 'prop' in (d.getVar('PACKAGECONFIG') or '').split()) else ''}"
+DEPENDS:append = " ${@' telaf-prop-legacy-build' if (d.getVar('BUILD_VARIANT') == 'full' and 'prop' in (d.getVar('PACKAGECONFIG') or '').split()) else ''}"
 DEPENDS:append = " ${@' telaf-noship-build' if (d.getVar('BUILD_VARIANT') == 'full' and 'prop' in (d.getVar('PACKAGECONFIG') or '').split()) else ''}"
+DEPENDS:append = " ${@' telaf-noship-legacy-build' if (d.getVar('BUILD_VARIANT') == 'full' and 'prop' in (d.getVar('PACKAGECONFIG') or '').split()) else ''}"
 
 S = "${WORKDIR}/src"
 B = "${WORKDIR}/build"
