@@ -24,7 +24,7 @@ DEPENDS += " \
 "
 
 # Only add dependency when it is full variant
-DEPENDS:append = " ${@bb.utils.contains('BUILD_VARIANT', 'full', 'telaf-build telaf-pa-legacy-build telaf-pa-default-build', '', d)}"
+DEPENDS:append = " ${@bb.utils.contains('BUILD_VARIANT', 'full', 'telaf-build telaf-test-build telaf-pa-legacy-build telaf-pa-default-build', '', d)}"
 
 # Check if meta-qti-telaf-prop exists and check if BUILD_VARIANT is full
 PACKAGECONFIG ??= ""
@@ -35,20 +35,27 @@ DEPENDS:append = " ${@' telaf-noship-build' if (d.getVar('BUILD_VARIANT') == 'fu
 S = "${WORKDIR}/src"
 B = "${WORKDIR}/build"
 
-TELAF_ROOT              ?= "${S}/telaf"
-TELAF_PROP_DIR          ?= "${S}/telaf-prop"
-TELAF_NOSHIP_DIR        ?= "${S}/telaf-noship"
-TELAF_LEGACY_PA_DIR     ?= "${S}/telaf-pa"
-VENDOR_ROOT             ?= "${S}/vendor"
-TELAF_TARGET_PA_DIR     ?= "${S}/target-pa"
-TELAF_DEFAULT_PA_DIR    ?= "${S}/default-pa"
+TELAF_ROOT                         ?= "${S}/telaf"
+TELAF_TEST_ROOT                    ?= "${S}/telaf-test"
+TELAF_PROP_DIR                     ?= "${S}/telaf-prop"
+TELAF_NOSHIP_DIR                   ?= "${S}/telaf-noship"
+TELAF_LEGACY_PA_DIR                ?= "${S}/telaf-pa"
+VENDOR_ROOT                        ?= "${S}/vendor"
+TELAF_TARGET_PA_DIR                ?= "${S}/target-pa"
+TELAF_DEFAULT_PA_DIR               ?= "${S}/default-pa"
+TELAF_IMAGE_BASIC_STAGING_PROD     ?= "${S}/staging/prod"
+TELAF_IMAGE_BASIC_STAGING_TEST     ?= "${S}/staging/test"
 
-TELAF_TARGET_STAGE_DIR  ?= "${S}/staging_combined"
-TELAF_SELINUX_FILE_CONTEXTS ?= "${S}/telaf/security/selinux/sepolicy/files/file_contexts"
+TELAF_IMAGE_OUTPUT_PROD            ?= "${S}/prod_img"
+TELAF_IMAGE_OUTPUT_TEST            ?= "${S}/test_img"
+TELAF_IMAGE_COMBINED_PROD          ?= "${TELAF_IMAGE_OUTPUT_PROD}/staging_combined"
+TELAF_IMAGE_COMBINED_TEST          ?= "${TELAF_IMAGE_OUTPUT_TEST}/staging_combined"
+
+TELAF_SELINUX_FILE_CONTEXTS_PROD ?= "${TELAF_ROOT}/security/selinux/sepolicy/files/file_contexts"
+TELAF_SELINUX_FILE_CONTEXTS_TEST ?= "${TELAF_TEST_ROOT}/security/selinux/sepolicy/files/file_contexts"
 
 RM_WORK_EXCLUDE += "telaf-image"
 
-#do_configure[depends] += "telaf-build:do_populate_sysroot telaf-pa-build:do_populate_sysroot telaf-pa-rw-build:do_populate_sysroot"
 do_deploy[depends]    += "attr-native:do_populate_sysroot"
 
 do_deploy[cleandirs]  = "${DEPLOYDIR}/telaf-images"
@@ -74,14 +81,12 @@ python do_configure () {
 do_compile () {
     set -eu
 
-    local BASE_STAGE_DIR="${TELAF_ROOT}/build/${MACHINE}/_staging_system.${MACHINE}.update_ro"
-
     env OBJCOPY="${OBJCOPY}" STRIP="${STRIP}" \
         "${WORKDIR}/mkimg.sh" \
             -t "${MACHINE}" \
-            -o "${S}" \
+            -o "${TELAF_IMAGE_OUTPUT_PROD}" \
             -r "${TELAF_ROOT}" \
-            -s "${BASE_STAGE_DIR}" \
+            -s "${TELAF_IMAGE_BASIC_STAGING_PROD}" \
             -a "${TELAF_LEGACY_PA_DIR}" \
             -p "${TELAF_PROP_DIR}" \
             -n "${TELAF_NOSHIP_DIR}" \
@@ -89,7 +94,19 @@ do_compile () {
             -d "${TELAF_DEFAULT_PA_DIR}" \
             -v "${VENDOR_ROOT}"
 
-    # Only run createsdk if the file exists and is executable
+    env OBJCOPY="${OBJCOPY}" STRIP="${STRIP}" \
+        "${WORKDIR}/mkimg.sh" \
+            -t "${MACHINE}" \
+            -o "${TELAF_IMAGE_OUTPUT_TEST}" \
+            -r "${TELAF_TEST_ROOT}" \
+            -s "${TELAF_IMAGE_BASIC_STAGING_TEST}" \
+            -a "${TELAF_LEGACY_PA_DIR}" \
+            -p "${TELAF_PROP_DIR}" \
+            -n "${TELAF_NOSHIP_DIR}" \
+            -w "${TELAF_TARGET_PA_DIR}" \
+            -d "${TELAF_DEFAULT_PA_DIR}" \
+            -v "${VENDOR_ROOT}"
+
     if [ -x "${TELAF_ROOT}/bin/createsdk" ]; then
         "${TELAF_ROOT}/bin/createsdk" "${MACHINE}" "${S}"
     fi
@@ -103,21 +120,37 @@ do_deploy () {
     install -d "${DEPLOYDIR}/telaf-images"
     install -d "${DEPLOYDIR}/telaf-images/security/selinux/sepolicy/files"
     install -d "${DEPLOYDIR}/telaf-images/debug_files"
+    install -d "${DEPLOYDIR}/telaf-images/telaf_ro"
 
-    if [ -d "${TELAF_TARGET_STAGE_DIR}" ]; then
-        cp -a --no-preserve=ownership "${TELAF_TARGET_STAGE_DIR}" "${DEPLOYDIR}/telaf-images/telaf_ro"
+    if [ -d "${TELAF_IMAGE_COMBINED_PROD}" ]; then
+        cp -a --no-preserve=ownership "${TELAF_IMAGE_COMBINED_PROD}" "${DEPLOYDIR}/telaf-images/telaf_ro/prod/"
     else
-        bbwarn "TELAF_TARGET_STAGE_DIR not found: ${TELAF_TARGET_STAGE_DIR}"
+        bbwarn "TELAF_IMAGE_COMBINED_PROD not found: ${TELAF_IMAGE_COMBINED_PROD}"
+    fi
+
+    if [ -d "${TELAF_IMAGE_COMBINED_TEST}" ]; then
+        cp -a --no-preserve=ownership "${TELAF_IMAGE_COMBINED_TEST}" "${DEPLOYDIR}/telaf-images/telaf_ro/test/"
+    else
+        bbnote "TELAF_IMAGE_COMBINED_TEST not found: ${TELAF_IMAGE_COMBINED_TEST}"
     fi
 
     if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
-        if [ -f "${TELAF_SELINUX_FILE_CONTEXTS}" ]; then
-            install -m 0644 "${TELAF_SELINUX_FILE_CONTEXTS}" \
-                "${DEPLOYDIR}/telaf-images/security/selinux/sepolicy/files/file_contexts"
+        if [ -f "${TELAF_SELINUX_FILE_CONTEXTS_PROD}" ]; then
+            install -m 0644 "${TELAF_SELINUX_FILE_CONTEXTS_PROD}" \
+                "${DEPLOYDIR}/telaf-images/security/selinux/sepolicy/files/file_contexts_prod"
         else
-            bbwarn "SELinux file_contexts not found: ${TELAF_SELINUX_FILE_CONTEXTS}, creating empty fallback"
-            touch "${DEPLOYDIR}/telaf-images/security/selinux/sepolicy/files/file_contexts"
+            bbwarn "SELinux file_contexts not found: ${TELAF_SELINUX_FILE_CONTEXTS_PROD}, creating empty fallback"
+            touch "${DEPLOYDIR}/telaf-images/security/selinux/sepolicy/files/file_contexts_prod"
         fi
+
+        if [ -f "${TELAF_SELINUX_FILE_CONTEXTS_TEST}" ]; then
+            install -m 0644 "${TELAF_SELINUX_FILE_CONTEXTS_TEST}" \
+                "${DEPLOYDIR}/telaf-images/security/selinux/sepolicy/files/file_contexts_test"
+        else
+            bbwarn "SELinux file_contexts not found: ${TELAF_SELINUX_FILE_CONTEXTS_TEST}, creating empty fallback"
+            touch "${DEPLOYDIR}/telaf-images/security/selinux/sepolicy/files/file_contexts_test"
+        fi
+
     else
         bbnote "DISTRO_FEATURES lacks selinux; skipping SELinux contexts deployment."
     fi

@@ -60,6 +60,7 @@ telaf_populate_sysroot() {
     sysroot_stage_dir ${S} ${SYSROOT_DESTDIR}/telaf/telaf/
     sysroot_stage_dir ${S_V} ${SYSROOT_DESTDIR}/telaf/telaf-adv/
     sysroot_stage_dir ${S_PA_DEF} ${SYSROOT_DESTDIR}/telaf/telaf-pa-default/
+    sysroot_stage_dir ${S}/build/${MACHINE}/_staging_system.${MACHINE}.update_ro ${SYSROOT_DESTDIR}/telaf/staging/prod/
 }
 
 GCC_PREFIX = "${@bb.utils.contains('BASEMACHINE', 'sa525m', bb.utils.contains('MULTILIB_VARIANTS', 'lib32', 'arm-oemllib32-linux-gnueabi', 'aarch64-oe-linux', d), '', d)}"
