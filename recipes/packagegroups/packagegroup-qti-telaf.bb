@@ -4,7 +4,9 @@ LICENSE = "BSD-3-Clause-Clear"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 PR= "r0"
 
-DEPENDS += "telaf-image telaf-test-build"
+DEPENDS += "telaf-image"
+DEPENDS:append = " ${@bb.utils.contains('BUILD_VARIANT', 'full', 'telaf-pa-legacy-build telaf-pa-default-build', '', d)}"
+
 inherit packagegroup
 
 PACKAGES = "\
@@ -12,9 +14,8 @@ PACKAGES = "\
            "
 
 # telaf packages which are common across various machines
+# dlt-daemon excluded
 RDEPENDS:${PN} += "\
-    telaf-init \
-    telaf-mod-build \
     vsomeip \
     boost \
     logd \
@@ -23,6 +24,8 @@ RDEPENDS:${PN} += "\
     policycoreutils-loadpolicy \
     common-api-c++ \
     common-api-c++-someip \
-    dlt-daemon \
+    telaf-init \
     "
+
+#RDEPENDS:${PN}:append = " ${@bb.utils.contains('BUILD_VARIANT', 'full', 'telaf-mod-build', '', d)}"
 

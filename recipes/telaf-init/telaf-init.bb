@@ -61,8 +61,10 @@ do_install() {
         # create directories with DAC permission for non root users
         install -m 0775 -d ${D}${userfsdatadir}/le_fs
         chown -h telaf.telaf ${D}${userfsdatadir}/le_fs
-        install -m 0777 -d ${D}${userfsdatadir}/persist/tafKeyStoreSvc
-        install -m 0777 -d ${D}${userfsdatadir}/persist/tafKeyStoreSvc/internalKey
+        install -m 0700 -d ${D}${userfsdatadir}/persist/tafKeyStoreSvc
+        chown -h telaf.telaf ${D}${userfsdatadir}/persist/tafKeyStoreSvc
+        install -m 0700 -d ${D}${userfsdatadir}/persist/tafKeyStoreSvc/internalKey
+        chown -h telaf.telaf ${D}${userfsdatadir}/persist/tafKeyStoreSvc/internalKey
 
         # Install SELinux overlay service
         install -m 0640 ${WORKDIR}/overlay_selinuxrw-workdir.service ${D}${systemd_unitdir}/system/overlay_selinuxrw-workdir.service
@@ -79,6 +81,8 @@ USERADD_PACKAGES = "${PN}"
 USERADD_PARAM:${PN} += "-M -U telaf;"
 USERADD_PARAM:${PN} += "-M -U appdefault;"
 USERADD_PARAM:${PN} += "-M -g root securityunpack;"
+USERADD_PARAM:${PN} += "-G root,system,diag,radio,inet,telaf -M -U tafcore;"
+USERADD_PARAM:${PN} += "-G root,system,diag,radio,inet,sensors,telaf,tafcore -M -U tafsuper;"
 # Default service users
 USERADD_PARAM:${PN} += "-M -U tafaudiosvc;"
 USERADD_PARAM:${PN} += "-M -U tafcansvc;"
