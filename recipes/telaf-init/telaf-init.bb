@@ -119,6 +119,7 @@ USERADD_PARAM:${PN} += "-M -U tafvoicecallsvc;"
 # TelAF Reserved Users
 USERADD_PARAM:${PN} += "-M -U taftestapp;"
 USERADD_PARAM:${PN} += "-M -U tafsampleapp;"
+USERADD_PARAM:${PN} += "-M -U tafrefapp;"
 USERADD_PARAM:${PN} += "-M -U tafusr0;"
 USERADD_PARAM:${PN} += "-M -U tafusr1;"
 USERADD_PARAM:${PN} += "-M -U tafusr2;"
