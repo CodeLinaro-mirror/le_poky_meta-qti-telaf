@@ -271,7 +271,7 @@ FindAndMountUBI() {
         if dd if=/dev/ubi0_$volid count=1 bs=4 2>/dev/null | grep 'hsqs' > /dev/null; then
             CERT_CA_PATH=/dev/ubiblock0_$volid
         else
-            CERT_CA_PATH=/dev/mapper/system
+            CERT_CA_PATH=/dev/mapper/rootfs_dmcrypt
         fi
         dm_verity_name=telaf
         dm_verity_device=/dev/mapper/${dm_verity_name}
