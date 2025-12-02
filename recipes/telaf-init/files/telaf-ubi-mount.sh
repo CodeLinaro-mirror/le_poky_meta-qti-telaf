@@ -318,7 +318,7 @@ if [ "$telaf_mount_status" -ne 0 ] ; then
         /bin/sh -c 'reboot edl'
     else
         echo "GPIO disabled switch the slots or boot to EDL" > /dev/kmsg
-        SlotSwitchReboot
+        # SlotSwitchReboot
     fi
     exit 1
 fi
