@@ -12,8 +12,8 @@ SRC_URI += "file://telaf.app.service"
 SRC_URI += "file://telaf.env"
 SRC_URI += "file://telaf-ubi-mount.sh"
 SRC_URI += "file://telaf.mount.service"
-SRC_URI += "file://overlay_selinuxrw-workdir.sh"
-SRC_URI += "file://overlay_selinuxrw-workdir.service"
+# SRC_URI += "file://overlay_selinuxrw-workdir.sh"
+# SRC_URI += "file://overlay_selinuxrw-workdir.service"
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
@@ -23,7 +23,8 @@ S = "${WORKDIR}"
 INITSCRIPT_NAME = "start_telaf.sh"
 INITSCRIPT_PARAMS = "start 99 2 3 4 5 . stop 1 0 1 6 ."
 
-SYSTEMD_SERVICE:${PN} = "overlay_selinuxrw-workdir.service telaf.mount.service telaf.service telaf.app.service"
+# SYSTEMD_SERVICE:${PN} = "overlay_selinuxrw-workdir.service telaf.mount.service telaf.service telaf.app.service"
+SYSTEMD_SERVICE:${PN} = "telaf.mount.service telaf.service telaf.app.service"
 
 dirs755:append = " /legato /mnt/legato /telaf_app"
 
@@ -67,8 +68,8 @@ do_install() {
         chown -h telaf.telaf ${D}${userfsdatadir}/persist/tafKeyStoreSvc/internalKey
 
         # Install SELinux overlay service
-        install -m 0640 ${WORKDIR}/overlay_selinuxrw-workdir.service ${D}${systemd_unitdir}/system/overlay_selinuxrw-workdir.service
-        install -m 0555 ${WORKDIR}/overlay_selinuxrw-workdir.sh ${D}${sysconfdir}/initscripts/overlay_selinuxrw-workdir.sh
+        # install -m 0640 ${WORKDIR}/overlay_selinuxrw-workdir.service ${D}${systemd_unitdir}/system/overlay_selinuxrw-workdir.service
+        # install -m 0555 ${WORKDIR}/overlay_selinuxrw-workdir.sh ${D}${sysconfdir}/initscripts/overlay_selinuxrw-workdir.sh
     fi
 
 }
