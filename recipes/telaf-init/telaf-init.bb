@@ -37,7 +37,6 @@ do_install() {
         install -d ${D}${sysconfdir}/tmpfiles.d
         install -m 0644 ${S}/telaf.rules -D ${D}${sysconfdir}/udev/rules.d/telaf.rules
         install -m 0644 ${S}/telaf.service -D ${D}${systemd_unitdir}/system/telaf.service
-        ln -sf ${systemd_unitdir}/system/telaf.service ${D}${systemd_unitdir}/system/multi-user.target.wants/telaf.service
         install -m 0644 ${S}/telaf.env -D ${D}${sysconfdir}/telaf.env
         install -m 0755 ${S}/start_telaf.sh -D ${D}${sysconfdir}/init.d/start_telaf.sh
 
