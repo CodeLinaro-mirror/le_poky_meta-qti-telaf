@@ -5,7 +5,7 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 PR= "r0"
 
 DEPENDS += "telaf-image"
-DEPENDS:append = " ${@bb.utils.contains('BUILD_VARIANT', 'full', 'telaf-pa-legacy-build telaf-pa-default-build telaf-test-build', '', d)}"
+DEPENDS:append = " ${@bb.utils.contains('BUILD_VARIANT', 'full', 'telaf-pa-default-build telaf-test-build', '', d)}"
 
 inherit packagegroup
 
