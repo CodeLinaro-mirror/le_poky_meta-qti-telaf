@@ -170,15 +170,49 @@ do_deploy () {
         bbwarn "No SDK bundle matched: ${SDK_GLOB}"
     fi
 
-    any_debug="false"
-    for f in "${S}"/libComponent*.so.debug; do
-        if [ -e "$f" ]; then
-            install -m 0644 "$f" "${DEPLOYDIR}/telaf-images/debug_files/"
-            any_debug="true"
+    install -d "${DEPLOYDIR}/telaf-images/debug_files/build-id"
+    declare -A BUILD_ID_DIRS=(
+        ["SERVICE_BUILD_ID_DIR"]="${S}/telaf/build/${MACHINE}/debug/.build-id"
+        ["TARGET_PA_BUILD_ID_DIR"]="${S}/target-pa/.build-id"
+        ["DEFAULT_PA_BUILD_ID_DIR"]="${S}/default-pa/.build-id"
+        ["NOSHIP_PA_BUILD_ID_DIR"]="${S}/telaf-noship/.build-id"
+        ["PROP_PA_BUILD_ID_DIR"]="${S}/telaf-prop/.build-id"
+    )
+
+    for label in "${!BUILD_ID_DIRS[@]}"; do
+        src_dir="${BUILD_ID_DIRS[$label]}"
+        if [ -d "${src_dir}" ]; then
+            cp -a --no-preserve=ownership "${src_dir}/." \
+                "${DEPLOYDIR}/telaf-images/debug_files/build-id/"
+            bbnote "Copied build-id debug symbols from ${src_dir} to ${DEPLOYDIR}/telaf-images/debug_files/build-id/ (dir is ${label})"
+        else
+            bbwarn "Build-id directory not found: ${src_dir} (dir is ${label})"
         fi
     done
-    if [ "$any_debug" != "true" ]; then
-        bbnote "No debug files found at ${S}/libComponent*.so.debug"
+
+    build_id_root="${DEPLOYDIR}/telaf-images/debug_files"
+    build_id_dir="${build_id_root}/build-id"
+    if [ -d "${build_id_dir}" ]; then
+        if command -v zstd >/dev/null 2>&1; then
+            tar -C "${build_id_root}" \
+                --sort=name --mtime='@0' --owner=0 --group=0 --numeric-owner \
+                -I 'zstd -19 -T0' \
+                -cf "${build_id_root}/build-id.tar.zst" build-id
+            bbnote "Compressed build-id directory to ${build_id_root}/build-id.tar.zst"
+        elif command -v pigz >/dev/null 2>&1; then
+            tar -C "${build_id_root}" \
+                --sort=name --mtime='@0' --owner=0 --group=0 --numeric-owner \
+                -I pigz \
+                -cf "${build_id_root}/build-id.tar.gz" build-id
+            bbnote "Compressed build-id directory to ${build_id_root}/build-id.tar.gz (pigz)"
+        else
+            tar -C "${build_id_root}" \
+                --sort=name --mtime='@0' --owner=0 --group=0 --numeric-owner \
+                -czf "${build_id_root}/build-id.tar.gz" build-id
+            bbnote "Compressed build-id directory to ${build_id_root}/build-id.tar.gz (gzip)"
+        fi
+    else
+        bbwarn "Skip compression: build-id directory not found at ${build_id_dir}"
     fi
 }
 
