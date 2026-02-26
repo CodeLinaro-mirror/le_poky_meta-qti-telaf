@@ -371,7 +371,7 @@ SELINUX_FILE_CONTEXTS="${TELAF}/security/selinux/sepolicy/files/file_contexts"
 if [[ ! -f "$SELINUX_FILE_CONTEXTS" ]]; then
   warn "SELINUX file_contexts missing, creating empty fallback"
   SELINUX_FILE_CONTEXTS="$OUTPUT/file_contexts.empty"
-  touch "$SELINUX_FILE_CONTEXTS"
+  install -d -m 0755 "$(dirname "$SELINUX_FILE_CONTEXTS")" && : > "$SELINUX_FILE_CONTEXTS"
 fi
 export SELINUX_FILE_CONTEXTS
 

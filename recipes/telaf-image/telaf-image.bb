@@ -24,14 +24,13 @@ DEPENDS += " \
 "
 
 # Only add dependency when it is full variant
-DEPENDS:append = " ${@bb.utils.contains('BUILD_VARIANT', 'full', 'telaf-build telaf-test-build telaf-pa-legacy-build telaf-pa-default-build', '', d)}"
+DEPENDS:append = " ${@bb.utils.contains('BUILD_VARIANT', 'full', 'telaf-build telaf-test-build telaf-pa-default-build', '', d)}"
 
 # Check if meta-qti-telaf-prop exists and check if BUILD_VARIANT is full
 PACKAGECONFIG ??= ""
 PACKAGECONFIG:append = " ${@('prop') if (d.getVar('BUILD_VARIANT') == 'full' and 'telaf-prop' in (d.getVar('BBFILE_COLLECTIONS') or '')) else ''}"
 DEPENDS:append = " ${@' telaf-prop-build' if (d.getVar('BUILD_VARIANT') == 'full' and 'prop' in (d.getVar('PACKAGECONFIG') or '').split()) else ''}"
 DEPENDS:append = " ${@' telaf-noship-build' if (d.getVar('BUILD_VARIANT') == 'full' and 'prop' in (d.getVar('PACKAGECONFIG') or '').split()) else ''}"
-DEPENDS:append = " ${@' telaf-noship-legacy-build' if (d.getVar('BUILD_VARIANT') == 'full' and 'prop' in (d.getVar('PACKAGECONFIG') or '').split()) else ''}"
 
 S = "${WORKDIR}/src"
 B = "${WORKDIR}/build"
@@ -54,6 +53,10 @@ TELAF_IMAGE_COMBINED_TEST          ?= "${TELAF_IMAGE_OUTPUT_TEST}/staging_combin
 
 TELAF_SELINUX_FILE_CONTEXTS_PROD ?= "${TELAF_ROOT}/security/selinux/sepolicy/files/file_contexts"
 TELAF_SELINUX_FILE_CONTEXTS_TEST ?= "${TELAF_TEST_ROOT}/security/selinux/sepolicy/files/file_contexts"
+
+# Only pass default-PA to mkimg in FULL variant. In MINIMAL (PA-only), do not pass -d to skip strong/weak check.
+DEFAULT_PA_OPT = "${@('-d \"%s\"' % d.getVar('TELAF_DEFAULT_PA_DIR')) \
+                   if d.getVar('BUILD_VARIANT') == 'full' else ''}"
 
 RM_WORK_EXCLUDE += "telaf-image"
 
@@ -92,7 +95,7 @@ do_compile () {
             -p "${TELAF_PROP_DIR}" \
             -n "${TELAF_NOSHIP_DIR}" \
             -w "${TELAF_TARGET_PA_DIR}" \
-            -d "${TELAF_DEFAULT_PA_DIR}" \
+            ${DEFAULT_PA_OPT} \
             -v "${VENDOR_ROOT}"
 
     env OBJCOPY="${OBJCOPY}" STRIP="${STRIP}" \
@@ -105,7 +108,7 @@ do_compile () {
             -p "${TELAF_PROP_DIR}" \
             -n "${TELAF_NOSHIP_DIR}" \
             -w "${TELAF_TARGET_PA_DIR}" \
-            -d "${TELAF_DEFAULT_PA_DIR}" \
+            ${DEFAULT_PA_OPT} \
             -v "${VENDOR_ROOT}"
 
     if [ -x "${TELAF_ROOT}/bin/createsdk" ]; then
