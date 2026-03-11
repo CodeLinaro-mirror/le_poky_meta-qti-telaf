@@ -11,6 +11,7 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/BSD-3-Clause;m
 DEPENDS += "ninja-native"
 DEPENDS += "cmake-native"
 DEPENDS += "coreutils-native"
+DEPENDS += "boost-native"
 
 # Target dependencies
 DEPENDS += "openssl"

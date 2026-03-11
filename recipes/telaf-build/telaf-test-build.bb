@@ -18,6 +18,7 @@ DEPENDS += "\
     mtd-utils-native \
     capicxx-core-native \
     capicxx-someip-native \
+    boost-native \
 "
 
 DEPENDS += "\

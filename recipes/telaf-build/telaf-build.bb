@@ -6,7 +6,7 @@ LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
 
 # Host dependencies
-DEPENDS += "ninja-native cmake-native coreutils-native squashfs-tools-native mtd-utils-native capicxx-core-native capicxx-someip-native telaf-pa-default-build"
+DEPENDS += "ninja-native cmake-native coreutils-native squashfs-tools-native mtd-utils-native capicxx-core-native capicxx-someip-native telaf-pa-default-build boost-native"
 
 # Target dependencies
 DEPENDS += "openssl libxml2 xmllib telux telux-lib vsomeip common-api-c++ common-api-c++-someip refpolicy-mls-auto open-avb"
@@ -65,3 +65,11 @@ telaf_populate_sysroot() {
 
 GCC_PREFIX = "${@bb.utils.contains('BASEMACHINE', 'sa525m', bb.utils.contains('MULTILIB_VARIANTS', 'lib32', 'arm-oemllib32-linux-gnueabi', 'aarch64-oe-linux', d), '', d)}"
 EXTRA_OEMAKE += "'GCC_PREFIX=${GCC_PREFIX}'"
+
+EXTRA_OEMAKE += " \
+  BUILD_CXX='${BUILD_CXX}' \
+  BUILD_CXXFLAGS='${BUILD_CXXFLAGS}' \
+  BUILD_LDFLAGS='${BUILD_LDFLAGS}' \
+  STAGING_INCDIR_NATIVE='${STAGING_INCDIR_NATIVE}' \
+  STAGING_LIBDIR_NATIVE='${STAGING_LIBDIR_NATIVE}' \
+"
