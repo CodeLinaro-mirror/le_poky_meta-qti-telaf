@@ -1,0 +1,100 @@
+From 4244b707f6f9ad14c4e85043adc9a5cf18387976 Mon Sep 17 00:00:00 2001
+From: Andrew Zhao <quic_zhax@quicinc.com>
+Date: Mon, 4 Nov 2024 17:41:35 +0800
+Subject: [PATCH] qualcom_patches
+
+---
+ CMakeLists.txt                                             | 5 +----
+ implementation/configuration/include/internal.hpp.in       | 2 +-
+ implementation/routing/src/event.cpp                       | 7 ++-----
+ .../service_discovery/src/service_discovery_impl.cpp       | 5 ++++-
+ 4 files changed, 8 insertions(+), 11 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index ab399a69..82ab4b3f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -22,10 +22,7 @@ if (NOT GTEST_ROOT)
+     if (DEFINED ENV{GTEST_ROOT})
+         set(GTEST_ROOT $ENV{GTEST_ROOT})
+     else()
+-        include(FetchContent)
+-        FetchContent_Declare(googletest GIT_REPOSITORY https://github.com/google/googletest.git GIT_TAG v1.14.0) 
+-        FetchContent_Populate(googletest)
+-        set(GTEST_ROOT ${googletest_SOURCE_DIR})
++        set(GTEST_ROOT "n/a" CACHE STRING "Path to root folder of googletest. Must be set for building the tests.")
+     endif()
+ endif()
+ 
+diff --git a/implementation/configuration/include/internal.hpp.in b/implementation/configuration/include/internal.hpp.in
+index 72c8d503..f83f5150 100644
+--- a/implementation/configuration/include/internal.hpp.in
++++ b/implementation/configuration/include/internal.hpp.in
+@@ -125,7 +125,7 @@
+ #define VSOMEIP_DIAGNOSIS_ADDRESS               @VSOMEIP_DIAGNOSIS_ADDRESS@
+ 
+ #define VSOMEIP_DEFAULT_SHM_PERMISSION          0666
+-#define VSOMEIP_DEFAULT_UDS_PERMISSIONS         0666
++#define VSOMEIP_DEFAULT_UDS_PERMISSIONS         0660
+ 
+ #define VSOMEIP_ROUTING_READY_MESSAGE           "@VSOMEIP_ROUTING_READY_MESSAGE@"
+ 
+diff --git a/implementation/routing/src/event.cpp b/implementation/routing/src/event.cpp
+index 8f5b44ce..48af1dfb 100644
+--- a/implementation/routing/src/event.cpp
++++ b/implementation/routing/src/event.cpp
+@@ -685,9 +685,7 @@ event::get_filtered_subscribers(bool _force) {
+ 
+     if (filters_.empty()) {
+ 
+-        bool must_forward = (type_ != event_type_e::ET_FIELD
+-                || _force
+-                || epsilon_change_func_(its_payload, its_payload_update));
++        bool must_forward = _force || epsilon_change_func_(its_payload, its_payload_update);
+ 
+         if (must_forward)
+             return its_subscribers;
+@@ -704,8 +702,7 @@ event::get_filtered_subscribers(bool _force) {
+                     its_filtered_subscribers.insert(s);
+             } else {
+                 if (is_allowed == 0xff) {
+-                    is_allowed = (type_ != event_type_e::ET_FIELD
+-                        || _force
++                    is_allowed = (_force
+                         || epsilon_change_func_(its_payload, its_payload_update)
+                         ? 0x01 : 0x00);
+                 }
+diff --git a/implementation/service_discovery/src/service_discovery_impl.cpp b/implementation/service_discovery/src/service_discovery_impl.cpp
+index de6e8467..38dcd51d 100644
+--- a/implementation/service_discovery/src/service_discovery_impl.cpp
++++ b/implementation/service_discovery/src/service_discovery_impl.cpp
+@@ -2756,15 +2756,17 @@ service_discovery_impl::check_ipv4_address(
+             unicast_.to_v4().to_bytes();
+     const boost::asio::ip::address_v4::bytes_type endpoint_address =
+             its_address.to_v4().to_bytes();
++#if 0
+     static const boost::asio::ip::address_v4::bytes_type its_netmask =
+             configuration_->get_netmask().to_v4().to_bytes();
+-
++#endif
+     //same address as unicast address of DUT not allowed
+     if (its_unicast_address == endpoint_address) {
+         VSOMEIP_ERROR << "Subscriber's IP address is same as host's address! : "
+                 << its_address;
+         is_valid = false;
+     } else {
++#if 0
+         const std::uint32_t self = VSOMEIP_BYTES_TO_LONG(its_unicast_address[0],
+                 its_unicast_address[1], its_unicast_address[2], its_unicast_address[3]);
+         const std::uint32_t remote = VSOMEIP_BYTES_TO_LONG(endpoint_address[0],
+@@ -2776,6 +2778,7 @@ service_discovery_impl::check_ipv4_address(
+                     << its_address;
+             is_valid = false;
+         }
++#endif
+     }
+     return is_valid;
+ }
+-- 
+2.25.1
+
