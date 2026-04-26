@@ -1,0 +1,77 @@
+From f1879e3f1e85b0a7e2c48331c8060b098238b4f1 Mon Sep 17 00:00:00 2001
+From: Liang Yun <lianyun@qti.qualcomm.com>
+Date: Tue, 3 Jun 2025 14:59:45 +0800
+Subject: [PATCH] Fix the loss of availability event after doing 
+ release_service and request_service
+
+Signed-off-by: Liang Yun <lianyun@qti.qualcomm.com>
+---
+ .../routing/src/routing_manager_impl.cpp      | 35 ++++++++++---------
+ 1 file changed, 19 insertions(+), 16 deletions(-)
+
+diff --git a/implementation/routing/src/routing_manager_impl.cpp b/implementation/routing/src/routing_manager_impl.cpp
+index 79f4080..2bdf748 100644
+--- a/implementation/routing/src/routing_manager_impl.cpp
++++ b/implementation/routing/src/routing_manager_impl.cpp
+@@ -2474,19 +2474,21 @@ void routing_manager_impl::add_routing_info(
+         if (has_requester_unlocked(_service, _instance, _major, _minor)) {
+             std::shared_ptr<endpoint> ep = its_info->get_endpoint(true);
+             if (ep) {
+-                if (ep->is_established() &&
+-                    stub_ &&
+-                    !stub_->contained_in_routing_info(
+-                    VSOMEIP_ROUTING_CLIENT, _service, _instance,
+-                    its_info->get_major(),
+-                    its_info->get_minor())) {
++                if (ep->is_established()) {
+                     on_availability(_service, _instance,
+                             availability_state_e::AS_AVAILABLE,
+                             its_info->get_major(), its_info->get_minor());
+-                    stub_->on_offer_service(VSOMEIP_ROUTING_CLIENT,
+-                            _service, _instance,
++
++                    if (stub_ &&
++                            !stub_->contained_in_routing_info(
++                            VSOMEIP_ROUTING_CLIENT, _service, _instance,
+                             its_info->get_major(),
+-                            its_info->get_minor());
++                            its_info->get_minor())) {
++                        stub_->on_offer_service(VSOMEIP_ROUTING_CLIENT,
++                                _service, _instance,
++                                its_info->get_major(),
++                                its_info->get_minor());
++                    }
+                     if (discovery_) {
+                         discovery_->on_endpoint_connected(
+                                 _service, _instance, ep);
+@@ -2552,19 +2554,20 @@ void routing_manager_impl::add_routing_info(
+     } else if (_unreliable_port != ILLEGAL_PORT && is_unreliable_known) {
+         std::lock_guard<std::mutex> its_lock(requested_services_mutex_);
+         if (has_requester_unlocked(_service, _instance, _major, _minor)) {
+-            if (_reliable_port == ILLEGAL_PORT && !is_reliable_known &&
+-                    stub_ &&
+-                    !stub_->contained_in_routing_info(
+-                    VSOMEIP_ROUTING_CLIENT, _service, _instance,
+-                    its_info->get_major(),
+-                    its_info->get_minor())) {
++            if (_reliable_port == ILLEGAL_PORT && !is_reliable_known) {
+                 on_availability(_service, _instance,
+                         availability_state_e::AS_AVAILABLE,
+                         its_info->get_major(), its_info->get_minor());
+-                stub_->on_offer_service(VSOMEIP_ROUTING_CLIENT,
++                if (stub_ &&
++                        !stub_->contained_in_routing_info(
++                        VSOMEIP_ROUTING_CLIENT, _service, _instance,
++                        its_info->get_major(),
++                        its_info->get_minor())) {
++                    stub_->on_offer_service(VSOMEIP_ROUTING_CLIENT,
+                         _service, _instance,
+                         its_info->get_major(),
+                         its_info->get_minor());
++                }
+                 if (discovery_) {
+                     std::shared_ptr<endpoint> ep = its_info->get_endpoint(false);
+                     if (ep && ep->is_established()) {
+-- 
+2.17.1
+
