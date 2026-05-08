@@ -1,0 +1,89 @@
+From 213fc5cd74b10d0ab15bc9b0766f9798ac81335a Mon Sep 17 00:00:00 2001
+From: Sumit Kumar <sumkum@qti.qualcomm.com>
+Date: Tue, 29 Jul 2025 14:54:43 +0530
+Subject: [PATCH] 0007-Improve-req-resp-delay
+Issue: The delay between offer-subscribe message exceed max delay limit sometimes.
+Fix: Optimize the delay timer by starting on min value instead random value b/w min-max.
+
+Signed-off-by: Sumit Kumar <sumkum@qti.qualcomm.com>
+---
+ .../include/service_discovery.hpp             |  1 -
+ .../include/service_discovery_impl.hpp        |  1 -
+ .../src/service_discovery_impl.cpp            | 31 +------------------
+ 3 files changed, 1 insertion(+), 32 deletions(-)
+
+diff --git a/implementation/service_discovery/include/service_discovery.hpp b/implementation/service_discovery/include/service_discovery.hpp
+index e4a6d79..322827e 100644
+--- a/implementation/service_discovery/include/service_discovery.hpp
++++ b/implementation/service_discovery/include/service_discovery.hpp
+@@ -74,7 +74,6 @@ public:
+     virtual void register_reboot_notification_handler(
+             const reboot_notification_handler_t &_handler) = 0;
+     virtual std::recursive_mutex& get_subscribed_mutex() = 0;
+-    virtual std::chrono::milliseconds get_request_response_delay_random() const = 0;
+ };
+ 
+ } // namespace sd
+diff --git a/implementation/service_discovery/include/service_discovery_impl.hpp b/implementation/service_discovery/include/service_discovery_impl.hpp
+index 35c5798..ce6a186 100644
+--- a/implementation/service_discovery/include/service_discovery_impl.hpp
++++ b/implementation/service_discovery/include/service_discovery_impl.hpp
+@@ -120,7 +120,6 @@ public:
+ 
+     void on_async_send_pkt(std::shared_ptr<async::sender::async_packet_data>) override;
+ 
+-    std::chrono::milliseconds get_request_response_delay_random() const;
+ private:
+     std::pair<session_t, bool> get_session(const boost::asio::ip::address &_address);
+     void increment_session(const boost::asio::ip::address &_address);
+diff --git a/implementation/service_discovery/src/service_discovery_impl.cpp b/implementation/service_discovery/src/service_discovery_impl.cpp
+index 942a93c..463637e 100644
+--- a/implementation/service_discovery/src/service_discovery_impl.cpp
++++ b/implementation/service_discovery/src/service_discovery_impl.cpp
+@@ -3988,7 +3988,7 @@ void service_discovery_impl::prepare_async_send(time_point _ts,
+         serialize_and_send(_messages, _address);
+         return;
+     }
+-    time_point ts = _ts + get_request_response_delay_random();
++    time_point ts = _ts + std::chrono::milliseconds(request_response_delay_min_);
+     std::shared_ptr<async::sender::async_packet_data> _pkt = std::make_shared<async::sender::async_packet_data>();
+     _pkt->messages_ =_messages;
+     _pkt->address_ = _address;
+@@ -4058,34 +4058,5 @@ bool service_discovery_impl::check_if_async_msg_pending(service_t _s, instance_t
+     return ret;
+ }
+ 
+-std::chrono::milliseconds service_discovery_impl::get_request_response_delay_random() const {
+-    try {
+-        static std::random_device rd;
+-        static std::mt19937 gen(rd());
+-        static std::uniform_int_distribution<std::int32_t> distribution(
+-            request_response_delay_min_, request_response_delay_max_);
+-        return std::chrono::milliseconds(distribution(gen));
+-    }
+-    catch (const std::exception &e) {
+-        VSOMEIP_ERROR << "Failed to generate random request response delay" << e.what();
+-
+-        // Fallback to the Mersenne Twister engine
+-        const auto seed = static_cast<std::mt19937::result_type>(
+-            std::chrono::duration_cast<std::chrono::milliseconds>(
+-                std::chrono::high_resolution_clock::now().time_since_epoch())
+-                .count());
+-
+-        static std::mt19937 mtwister{seed};
+-
+-        // Interpolate between request_response_delay bounds
+-        return std::chrono::milliseconds(
+-            (request_response_delay_min_ +
+-             (static_cast<std::int64_t>(mtwister()) *
+-              static_cast<std::int64_t>(request_response_delay_max_ - request_response_delay_min_) /
+-              static_cast<std::int64_t>(std::mt19937::max() -
+-                                        std::mt19937::min()))));
+-    }
+-}
+-
+ }  // namespace sd
+ }  // namespace vsomeip_v3
+-- 
+2.17.1
+
