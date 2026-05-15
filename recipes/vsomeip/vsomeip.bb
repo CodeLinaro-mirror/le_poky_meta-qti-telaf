@@ -17,6 +17,12 @@ SRC_URI = "git://github.com/COVESA/vsomeip.git;protocol=https \
            file://0007-Improve-req-resp-delay.patch \
            file://0008-Fix-Multi-Routing-Managers-in-one-Process.patch \
            file://0009-Fix-ECONNRESET-case-state-not-set-to-DEREGISTERED.patch \
+           file://0010-event-use-memcmp-for-change-detection.patch \
+           file://0011-event-avoid-copy-before-early-reject.patch \
+           file://0012-event-reuse-change-result-in-filter-and-debounce.patch \
+           file://0013-routing-serialize-once-for-local-fanout.patch \
+           file://0014-event-use-vector-for-subscriber-list.patch \
+           file://0015-routing-fix-subscriber-query-double-call-UB.patch \
           "
 S = "${WORKDIR}/git"
 

@@ -1,0 +1,44 @@
+From d051167a60e0463f01db7e6f47c2956878224112 Mon Sep 17 00:00:00 2001
+From: Yunqiang Hu <yunhu@qti.qualcomm.com>
+Date: Thu, 14 May 2026 15:46:15 +0800
+Subject: [PATCH] event: avoid copy before early reject
+
+Description: Skip payload copy when content is unchanged to reduce memory allocation.
+Signed-off-by: Yunqiang Hu <yunhu@qti.qualcomm.com>
+---
+ implementation/routing/src/event.cpp | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/implementation/routing/src/event.cpp b/implementation/routing/src/event.cpp
+index 80c570bb..0ad37708 100644
+--- a/implementation/routing/src/event.cpp
++++ b/implementation/routing/src/event.cpp
+@@ -449,12 +449,7 @@ bool
+ event::prepare_update_payload_unlocked(
+         const std::shared_ptr<payload> &_payload, bool _force) {
+ 
+-    // Copy payload to avoid manipulation from the outside
+-    std::shared_ptr<payload> its_payload
+-        = runtime::get()->create_payload(
+-                _payload->get_data(), _payload->get_length());
+-
+-    bool is_change = has_changed(current_->get_payload(), its_payload);
++    bool is_change = has_changed(current_->get_payload(), _payload);
+ 
+     if (!_force
+             && type_ == event_type_e::ET_FIELD
+@@ -464,6 +459,11 @@ event::prepare_update_payload_unlocked(
+         return false;
+     }
+ 
++    // Copy payload to avoid manipulation from the outside
++    std::shared_ptr<payload> its_payload
++        = runtime::get()->create_payload(
++                _payload->get_data(), _payload->get_length());
++
+     update_->set_payload(its_payload);
+ 
+     if (!is_set_) {
+-- 
+2.34.1
+
