@@ -1,0 +1,56 @@
+From 8351a08ed42db844ba1ad4b9fa67791c1845644e Mon Sep 17 00:00:00 2001
+From: Liang Yun <lianyun@qti.qualcomm.com>
+Date: Thu, 24 Jul 2025 14:24:50 +0800
+Subject: [PATCH] Create new train to void duplicate messages
+
+Signed-off-by: Liang Yun <lianyun@qti.qualcomm.com>
+---
+ implementation/endpoints/src/client_endpoint_impl.cpp | 3 +--
+ implementation/endpoints/src/server_endpoint_impl.cpp | 3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/implementation/endpoints/src/client_endpoint_impl.cpp b/implementation/endpoints/src/client_endpoint_impl.cpp
+index 58041eca..74ff5a55 100644
+--- a/implementation/endpoints/src/client_endpoint_impl.cpp
++++ b/implementation/endpoints/src/client_endpoint_impl.cpp
+@@ -321,6 +321,7 @@ void client_endpoint_impl<Protocol>::send_segments(
+     // messages as we will send several now anyway.
+     if (!train_->passengers_.empty()) {
+         schedule_train();
++        train_ = std::make_shared<train>();
+         train_->departure_ = its_now + its_retention;
+     }
+ 
+@@ -330,8 +331,6 @@ void client_endpoint_impl<Protocol>::send_segments(
+     }
+ 
+     if (!is_sending_ && !queue_.empty()) { // no writing in progress
+-        // respect minimal debounce time
+-        schedule_train();
+         // ignore retention time and send immediately as the train is full anyway
+         auto its_entry = get_front();
+         if (its_entry.first) {
+diff --git a/implementation/endpoints/src/server_endpoint_impl.cpp b/implementation/endpoints/src/server_endpoint_impl.cpp
+index 12017536..3cb91ddc 100644
+--- a/implementation/endpoints/src/server_endpoint_impl.cpp
++++ b/implementation/endpoints/src/server_endpoint_impl.cpp
+@@ -409,6 +409,7 @@ void server_endpoint_impl<Protocol>::send_segments(
+     // messages as we will send several now anyway.
+     if (!its_data.train_->passengers_.empty()) {
+         schedule_train(its_data);
++        its_data.train_ = std::make_shared<train>();
+         its_data.train_->departure_ = its_now + its_retention;
+     }
+ 
+@@ -418,8 +419,6 @@ void server_endpoint_impl<Protocol>::send_segments(
+     }
+ 
+     if (!its_data.is_sending_ && !its_data.queue_.empty()) { // no writing in progress
+-        // respect minimal debounce time
+-        schedule_train(its_data);
+         // ignore retention time and send immediately as the train is full anyway
+         (void)send_queued(its_target_iterator);
+     }
+-- 
+2.17.1
+

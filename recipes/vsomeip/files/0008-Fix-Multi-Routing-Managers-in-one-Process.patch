@@ -1,0 +1,51 @@
+From b809adca71bd03366d6fd6a015b60fd8d7475954 Mon Sep 17 00:00:00 2001
+From: Liang Yun <lianyun@qti.qualcomm.com>
+Date: Tue, 2 Sep 2025 15:49:54 +0800
+Subject: [PATCH] Fix Multi-Routing-Managers in one Process
+Description: Enabling the invalid IP address check and removing statics (singletons) enables to run multiple routing Managers in one process.
+
+Signed-off-by: Liang Yun <lianyun@qti.qualcomm.com>
+---
+ .../service_discovery/src/service_discovery_impl.cpp     | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/implementation/service_discovery/src/service_discovery_impl.cpp b/implementation/service_discovery/src/service_discovery_impl.cpp
+index 93e3b4fe..087666ca 100644
+--- a/implementation/service_discovery/src/service_discovery_impl.cpp
++++ b/implementation/service_discovery/src/service_discovery_impl.cpp
+@@ -2835,21 +2835,19 @@ service_discovery_impl::check_ipv4_address(
+     //Check unallowed ipv4 address
+     bool is_valid = true;
+ 
+-    static const boost::asio::ip::address_v4::bytes_type its_unicast_address =
++    const boost::asio::ip::address_v4::bytes_type its_unicast_address =
+             unicast_.to_v4().to_bytes();
+     const boost::asio::ip::address_v4::bytes_type endpoint_address =
+             its_address.to_v4().to_bytes();
+-#if 0
+-    static const boost::asio::ip::address_v4::bytes_type its_netmask =
++    const boost::asio::ip::address_v4::bytes_type its_netmask =
+             configuration_->get_netmask().to_v4().to_bytes();
+-#endif
++
+     //same address as unicast address of DUT not allowed
+     if (its_unicast_address == endpoint_address) {
+         VSOMEIP_ERROR << "Subscriber's IP address is same as host's address! : "
+                 << its_address;
+         is_valid = false;
+     } else {
+-#if 0
+         const std::uint32_t self = VSOMEIP_BYTES_TO_LONG(its_unicast_address[0],
+                 its_unicast_address[1], its_unicast_address[2], its_unicast_address[3]);
+         const std::uint32_t remote = VSOMEIP_BYTES_TO_LONG(endpoint_address[0],
+@@ -2861,7 +2859,6 @@ service_discovery_impl::check_ipv4_address(
+                     << its_address;
+             is_valid = false;
+         }
+-#endif
+     }
+     return is_valid;
+ }
+-- 
+2.17.1
+
