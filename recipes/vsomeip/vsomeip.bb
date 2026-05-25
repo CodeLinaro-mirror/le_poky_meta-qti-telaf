@@ -23,11 +23,22 @@ SRC_URI = "git://github.com/COVESA/vsomeip.git;protocol=https \
            file://0013-routing-serialize-once-for-local-fanout.patch \
            file://0014-event-use-vector-for-subscriber-list.patch \
            file://0015-routing-fix-subscriber-query-double-call-UB.patch \
+           file://0016-fix_subscription_issue.patch \
+           file://vsomeip-tmpfiles.conf \
           "
 S = "${WORKDIR}/git"
 
 # enable multiple routing managers
 EXTRA_OECMAKE += "-DENABLE_MULTIPLE_ROUTING_MANAGERS=1"
 
+# put vsomeip socket files under /tmp/vsomeip/ directory
+EXTRA_OECMAKE += "-DBASE_PATH=/tmp/vsomeip/"
+
+do_install:append() {
+    install -d ${D}${sysconfdir}/tmpfiles.d
+    install -m 0644 ${WORKDIR}/vsomeip-tmpfiles.conf ${D}${sysconfdir}/tmpfiles.d/vsomeip.conf
+}
+
 BBCLASSEXTEND = "nativesdk"
 FILES:${PN} = "/usr/"
+FILES:${PN} += "${sysconfdir}/tmpfiles.d/vsomeip.conf"

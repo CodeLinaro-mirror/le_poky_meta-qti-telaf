@@ -24,6 +24,7 @@ PARALLEL_MAKE = ""
 RM_WORK_EXCLUDE += "telaf-build"
 
 set_environment_variables() {
+    export ENABLE_DLT_LOGGING=${ENABLE_DLT_LOGGING}
     export WORK_ROOT=${WORKDIR}
     export OECORE_TARGET_SYSROOT=${RECIPE_SYSROOT}
     if [ -f ${S}/VERSION ]; then
