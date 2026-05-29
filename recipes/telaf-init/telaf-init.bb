@@ -12,8 +12,8 @@ SRC_URI += "file://telaf.app.service"
 SRC_URI += "file://telaf.env"
 SRC_URI += "file://telaf-ubi-mount.sh"
 SRC_URI += "file://telaf.mount.service"
-# SRC_URI += "file://overlay_selinuxrw-workdir.sh"
-# SRC_URI += "file://overlay_selinuxrw-workdir.service"
+SRC_URI += "file://overlay_selinuxrw-workdir.sh"
+SRC_URI += "file://overlay_selinuxrw-workdir.service"
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
@@ -23,8 +23,7 @@ S = "${WORKDIR}"
 INITSCRIPT_NAME = "start_telaf.sh"
 INITSCRIPT_PARAMS = "start 99 2 3 4 5 . stop 1 0 1 6 ."
 
-# SYSTEMD_SERVICE:${PN} = "overlay_selinuxrw-workdir.service telaf.mount.service telaf.service telaf.app.service"
-SYSTEMD_SERVICE:${PN} = "telaf.mount.service telaf.service telaf.app.service"
+SYSTEMD_SERVICE:${PN} = "overlay_selinuxrw-workdir.service telaf.mount.service telaf.service telaf.app.service"
 
 dirs755:append = " /legato /mnt/legato /telaf_app"
 
@@ -59,6 +58,10 @@ do_install() {
         install -m 0755 -d ${D}${userfsdatadir}/ManagedServices
         install -m 0755 -d ${D}${userfsdatadir}/persist/telaf/config
 
+        # Create directory used by telaf diag Service to store database file
+        install -m 0755 -d ${D}${userfsdatadir}/diag
+        chown telaf.telaf ${D}${userfsdatadir}/diag
+
         # create directories with DAC permission for non root users
         install -m 0775 -d ${D}${userfsdatadir}/le_fs
         chown -h telaf.telaf ${D}${userfsdatadir}/le_fs
@@ -68,13 +71,13 @@ do_install() {
         chown -h telaf.telaf ${D}${userfsdatadir}/persist/tafKeyStoreSvc/internalKey
 
         # Install SELinux overlay service
-        # install -m 0640 ${WORKDIR}/overlay_selinuxrw-workdir.service ${D}${systemd_unitdir}/system/overlay_selinuxrw-workdir.service
-        # install -m 0555 ${WORKDIR}/overlay_selinuxrw-workdir.sh ${D}${sysconfdir}/initscripts/overlay_selinuxrw-workdir.sh
+        install -m 0640 ${WORKDIR}/overlay_selinuxrw-workdir.service ${D}${systemd_unitdir}/system/overlay_selinuxrw-workdir.service
+        install -m 0555 ${WORKDIR}/overlay_selinuxrw-workdir.sh ${D}${sysconfdir}/initscripts/overlay_selinuxrw-workdir.sh
     fi
 
 }
 
-FILES:${PN} += "${systemd_unitdir}/system/* /legato /mnt/legato /app ${userfsdatadir}/persist/* ${userfsdatadir}/le_fs ${userfsdatadir}/ManagedServices"
+FILES:${PN} += "${systemd_unitdir}/system/* /legato /mnt/legato /app ${userfsdatadir}/persist/* ${userfsdatadir}/le_fs ${userfsdatadir}/ManagedServices ${userfsdatadir}/diag"
 
 # Add default telaf users
 inherit useradd
@@ -116,7 +119,9 @@ USERADD_PARAM:${PN} += "-M -U tafvoicecallsvc;"
 # TelAF Reserved Users
 USERADD_PARAM:${PN} += "-M -U taftestapp;"
 USERADD_PARAM:${PN} += "-M -U tafsampleapp;"
+USERADD_PARAM:${PN} += "-M -U tafrefapp;"
 USERADD_PARAM:${PN} += "-M -U tafusr0;"
 USERADD_PARAM:${PN} += "-M -U tafusr1;"
 USERADD_PARAM:${PN} += "-M -U tafusr2;"
 USERADD_PARAM:${PN} += "-M -U tafusr3;"
+

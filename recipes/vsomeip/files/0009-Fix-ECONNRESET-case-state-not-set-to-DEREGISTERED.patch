@@ -1,0 +1,25 @@
+From 0c8652b20e90a144e313886f244699733f1e4e72 Mon Sep 17 00:00:00 2001
+From: Yunqiang Hu <yunhu@qti.qualcomm.com>
+Date: Wed, 11 Mar 2026 18:27:37 +0800
+Subject: [PATCH] Fix ECONNRESET case state not set to DEREGISTERED
+Description: Set state to DEREGISTERED in on_disconnect to resolve the issue where the proxy cannot recover the connection when receiving ECONNRESET.
+
+---
+ implementation/routing/src/routing_manager_client.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/implementation/routing/src/routing_manager_client.cpp b/implementation/routing/src/routing_manager_client.cpp
+index dbb2bd2e..c9f43222 100644
+--- a/implementation/routing/src/routing_manager_client.cpp
++++ b/implementation/routing/src/routing_manager_client.cpp
+@@ -993,6 +993,7 @@ void routing_manager_client::on_disconnect(const std::shared_ptr<endpoint>& _end
+         is_connected_ = !(_endpoint == sender_);
+     }
+     if (!is_connected_) {
++        state_ = inner_state_type_e::ST_DEREGISTERED;
+         VSOMEIP_INFO << "routing_manager_client::on_disconnect: Client 0x" << std::hex
+                 << get_client() << " calling host_->on_state "
+                 << "with DEREGISTERED";
+-- 
+2.34.1
+

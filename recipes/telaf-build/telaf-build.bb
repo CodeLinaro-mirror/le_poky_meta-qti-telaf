@@ -6,21 +6,17 @@ LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
 
 # Host dependencies
-DEPENDS += "ninja-native cmake-native coreutils-native squashfs-tools-native mtd-utils-native capicxx-core-native capicxx-someip-native telaf-pa-default-build"
+DEPENDS += "ninja-native cmake-native coreutils-native squashfs-tools-native mtd-utils-native capicxx-core-native capicxx-someip-native telaf-pa-default-build boost-native"
 
 # Target dependencies
-DEPENDS += "openssl libxml2 xmllib telux telux-lib vsomeip common-api-c++ common-api-c++-someip"
+DEPENDS += "openssl libxml2 xmllib telux telux-lib vsomeip common-api-c++ common-api-c++-someip refpolicy-mls-auto open-avb"
 
 FILESPATH =+ "${WORKSPACE}:"
-SRC_URI += "file://telaf/ \
-            file://legato/ \
-            file://telaf-pa/ \
-            file://telaf-pa-default/ \
-            file://external/wpa_supplicant_8/"
+SRC_URI += "file://telaf/ file://telaf-adv/ file://legato/ file://telaf-pa/ file://telaf-pa-default/ file://external/wpa_supplicant_8/"
 
 S = "${WORKDIR}/telaf"
 S_L = "${WORKDIR}/legato"
-# S_V = "${WORKDIR}/telaf-adv"
+S_V = "${WORKDIR}/telaf-adv"
 S_PA_DEF = "${WORKDIR}/telaf-pa-default"
 
 PARALLEL_MAKE = ""
@@ -45,16 +41,16 @@ do_compile() {
     set_environment_variables
 
     oe_runmake distclean
-    oe_runmake ${TELAF_MACHINE}
+    oe_runmake ${MACHINE}
 }
 
 do_install:append() {
     install -d ${D}/${libdir}/pkgconfig
 
-    # Replace "{TELAF_MACHINE}" with machine type
+    # Replace "{MACHINE}" with machine type
     TELAF_PC_FILE="${S}/telaf.pc"
     TELAF_PC_CONTENT=$(cat "${TELAF_PC_FILE}")
-    TELAF_PC_CONTENT=${TELAF_PC_CONTENT//\$\{TELAF_MACHINE\}/${TELAF_MACHINE}}
+    TELAF_PC_CONTENT=${TELAF_PC_CONTENT//\$\{MACHINE\}/${MACHINE}}
     echo "${TELAF_PC_CONTENT}" > "${D}/${libdir}/pkgconfig/telaf.pc"
 }
 
@@ -62,12 +58,18 @@ SYSROOT_PREPROCESS_FUNCS += "telaf_populate_sysroot"
 telaf_populate_sysroot() {
     sysroot_stage_dir ${S_L} ${SYSROOT_DESTDIR}/telaf/legato/
     sysroot_stage_dir ${S} ${SYSROOT_DESTDIR}/telaf/telaf/
-    # sysroot_stage_dir ${S_V} ${SYSROOT_DESTDIR}/telaf/telaf-adv/
+    sysroot_stage_dir ${S_V} ${SYSROOT_DESTDIR}/telaf/telaf-adv/
     sysroot_stage_dir ${S_PA_DEF} ${SYSROOT_DESTDIR}/telaf/telaf-pa-default/
+    sysroot_stage_dir ${S}/build/${MACHINE}/_staging_system.${MACHINE}.update_ro ${SYSROOT_DESTDIR}/telaf/staging/prod/
 }
 
-python __anonymous() {
-    machine = d.getVar('MACHINE')
-    telaf_machine = 'sa510m' if machine == 'sa510m-1g' else machine
-    d.setVar('TELAF_MACHINE', telaf_machine)
-}
+GCC_PREFIX = "${@bb.utils.contains('BASEMACHINE', 'sa525m', bb.utils.contains('MULTILIB_VARIANTS', 'lib32', 'arm-oemllib32-linux-gnueabi', 'aarch64-oe-linux', d), '', d)}"
+EXTRA_OEMAKE += "'GCC_PREFIX=${GCC_PREFIX}'"
+
+EXTRA_OEMAKE += " \
+  BUILD_CXX='${BUILD_CXX}' \
+  BUILD_CXXFLAGS='${BUILD_CXXFLAGS}' \
+  BUILD_LDFLAGS='${BUILD_LDFLAGS}' \
+  STAGING_INCDIR_NATIVE='${STAGING_INCDIR_NATIVE}' \
+  STAGING_LIBDIR_NATIVE='${STAGING_LIBDIR_NATIVE}' \
+"

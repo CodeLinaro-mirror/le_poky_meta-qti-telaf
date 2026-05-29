@@ -218,7 +218,7 @@ case "$1" in
         CleanTelafRunningProcess
 
         # Umount the path that was mounted by supervisor
-        umount -l /legato/systems/current/appsWriteable
+        umount -l /tmp/legato/appsWriteable
         umount_etc
         ;;
 
@@ -230,6 +230,10 @@ case "$1" in
     startGroup)
         echo "TelAf startGroup sequence" > /dev/kmsg
         app startGroup
+        if [ $? -ne 0 ] ; then
+            echo "TelAf run 'app startGroup' failed" > /dev/kmsg
+            exit ${TELAF_ERR}
+        fi
         ;;
 
     stopGroup)

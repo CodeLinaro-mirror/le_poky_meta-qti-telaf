@@ -10,34 +10,79 @@ SRC_URI += "file://0070-TelAF-Fix-Argument-list-too-long-issue.patch"
 FILESPATH =+ "${WORKSPACE}:"
 SRC_URI += "file://telaf/"
 
+
 do_compile:prepend() {
-    DST_DIR=${S}/policy/modules/device
-    POLICY_ROOT=${WORKDIR}/telaf/security/selinux/sepolicy
+    set -eu
+    export DST_DIR="${S}/policy/modules/device"
+    export POLICY_ROOT="${WORKDIR}/telaf/security/selinux/sepolicy"
+    export SDEF_FILE="${WORKDIR}/telaf/modules/${MACHINE}.sdef"
+    export TEST_APPS_SINC="${WORKDIR}/telaf/modules/testApps.sinc"
 
-    # import TelAF framework policy
-    cp -fr ${POLICY_ROOT}/sys/* ${DST_DIR}/
+    install -d "${DST_DIR}"
+    if [ -d "${POLICY_ROOT}/sys" ] && ls -1 "${POLICY_ROOT}/sys"/* >/dev/null 2>&1; then
+        cp -fr "${POLICY_ROOT}/sys/"* "${DST_DIR}/"
+    fi
 
-    # import TelAF application policy
-    SDEF_FILE=${WORKDIR}/telaf/modules/TelSdk/${TELAF_MACHINE}.sdef
-    APPS=$(cat ${SDEF_FILE} | awk '{print $1}' | grep "^\$TELAF_ROOT" | awk -F "/" '{print $NF}')
-    for APP in ${APPS}; do
-        APP_DIR=`find ${POLICY_ROOT} -type d -name ${APP} | tail -n 1`
-        if [ "$(ls -A ${APP_DIR}/component/*.te)" ]; then
-            cp -fr ${APP_DIR}/component/* ${DST_DIR}/
-        fi
-    done
+python3 - << 'PYCODE'
+import os
+import glob
+DST  = os.environ['DST_DIR']
+ROOT = os.environ['POLICY_ROOT']
+SDEF = os.environ['SDEF_FILE']
+SINC = os.environ['TEST_APPS_SINC']
+
+def read_apps(path):
+    if not path or not os.path.isfile(path):
+        return []
+    apps, in_block = [], False
+    with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+        for raw in f:
+            line = raw.strip()
+            if line.startswith('apps:'):
+                in_block = True
+                continue
+            if in_block and line.startswith('}'):
+                in_block = False
+                continue
+            if not in_block:
+                continue
+            if not line or line.startswith('//') or line.startswith('$LEGATO_ROOT'):
+                continue
+            if not line.startswith('$TELAF_ROOT/apps/'):
+                continue
+            token = line.split('#', 1)[0].strip()
+            last = token.split('/')[-1]
+            if last.endswith('.adef'):
+                last = last[:-5]
+            if last:
+                apps.append(last)
+    return apps
+
+apps = set(read_apps(SDEF) + read_apps(SINC))
+if not apps:
+    raise SystemExit(0)
+
+def copy_component_under_root(app_name):
+    for r, dnames, fnames in os.walk(ROOT):
+        if os.path.basename(r) != app_name:
+            continue
+        comp = os.path.join(r, 'component')
+        if os.path.isdir(comp) and glob.glob(os.path.join(comp, '*.te')):
+            for src in glob.glob(os.path.join(comp, '*')):
+                os.system(f'cp -fr "{src}" "{DST}/"')
+            return True
+    return False
+
+for app in sorted(apps):
+    copy_component_under_root(app)
+PYCODE
 }
 
-POLICY_CUSTOM_BUILDOPT:append = ""qti-nad-telaf sa510m-1g scarthgap""
+
+POLICY_CUSTOM_BUILDOPT:append = ""qti-nad-telaf sa525m kirkstone""
 
 do_install:append() {
     install -d ${TMPDIR}/work-shared
     cp -rf ${D}/usr/share/selinux ${TMPDIR}/work-shared/
-}
-
-python __anonymous() {
-    machine = d.getVar('MACHINE')
-    telaf_machine = 'sa510m' if machine == 'sa510m-1g' else machine
-    d.setVar('TELAF_MACHINE', telaf_machine)
 }
 

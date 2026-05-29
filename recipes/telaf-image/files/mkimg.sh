@@ -249,20 +249,33 @@ extract_pa_api_sets() {
 
   : > "$tmp_dm"
   while IFS= read -r sym; do
-    local dm sig base
+    local dm sig
     if [[ -x /usr/bin/c++filt ]]; then
       dm="$(/usr/bin/c++filt "$sym" 2>/dev/null || echo "$sym")"
     else
       dm="$sym"
     fi
-    sig="${dm%%(*}"
-    base="${sig##*::}"
+
+    sig="$(awk '
+      {
+        s=$0
+        while (match(s,/<[^<>]*>/)) {
+          s = substr(s,1,RSTART-1) "" substr(s,RSTART+RLENGTH)
+        }
+        print s
+      }
+    ' <<< "$dm")"
+
+    local func_name="${sig%%(*}"
+    func_name="${func_name##*::}"
 
     if [[ -n "${PA_API_PREFIX_REGEX:-}" ]]; then
-      [[ "$base" =~ $PA_API_PREFIX_REGEX ]] || continue
+      [[ "$func_name" =~ $PA_API_PREFIX_REGEX ]] || continue
+    else
+      [[ "$func_name" =~ ^taf_pa_ ]] || continue
     fi
 
-    printf '%s\n' "$dm" >> "$tmp_dm"
+    printf '%s\n' "$sig" >> "$tmp_dm"
   done < "$tmp_syms"
 
   LC_ALL=C sort -u "$tmp_dm" > "$out_set"
@@ -270,7 +283,6 @@ extract_pa_api_sets() {
 
   rm -f "$tmp_syms" "$tmp_dm"
 }
-
 
 verify_one_pair() {
   local strong="$1" weak="$2" base strong_set weak_set strong_dm weak_dm
@@ -304,6 +316,9 @@ verify_one_pair() {
   _strong_f="$(mktemp)" || die "[API-CHECK] mktemp failed"
   _weak_f="$(mktemp)"   || die "[API-CHECK] mktemp failed"
 
+  cp "$strong_dm" "$_strong_f"
+  cp "$weak_dm" "$_weak_f"
+
   local miss_in_weak extra_in_weak rc=0
   miss_in_weak="$(LC_ALL=C comm -23 "$_strong_f" "$_weak_f")"
   if [[ -n "$miss_in_weak" ]]; then
@@ -331,8 +346,8 @@ verify_pa_strong_vs_weak() {
   while IFS= read -r -d '' strong_so; do
     any_pair=1
     strong_base="$(basename "$strong_so")"
-    prefix="${strong_base%%.so*}"         # e.g. libtaf_pa_voicecall
-    weak_pattern="${prefix}Def.so*"       # e.g. libtaf_pa_voicecallDef.so*
+    prefix="${strong_base%%.so*}"                     # e.g. libComponent_taf_pa_voicecall
+    weak_pattern="${prefix}Def.so*"                   # e.g. libComponent_taf_pa_voicecallDef.so*
     weak_so="$(find "$DEFAULT_PA_BUILD_DIR" -type f -name "$weak_pattern" -print -quit)"
     if [[ -z "$weak_so" ]]; then
       die "[API-CHECK] missing weak library for strong: $strong_base (expect pattern: $weak_pattern under DEFAULT_PA_BUILD_DIR)"
@@ -340,9 +355,9 @@ verify_pa_strong_vs_weak() {
     if ! verify_one_pair "$strong_so" "$weak_so"; then
       rc_all=1
     fi
-  done < <(find "$TARGET_PA_BUILD_DIR" -maxdepth 2 -type f -name 'libtaf_pa_*.so*' -print0)
+  done < <(find "$TARGET_PA_BUILD_DIR" -maxdepth 2 -type f -name 'libComponent_taf_pa_*.so*' -print0)
 
-  if (( any_pair==0 )); then
+  if (( any_pair == 0 )); then
     warn "[API-CHECK] no strong PA libraries found under TARGET_PA_BUILD_DIR=$TARGET_PA_BUILD_DIR"
   fi
 
@@ -356,7 +371,7 @@ SELINUX_FILE_CONTEXTS="${TELAF}/security/selinux/sepolicy/files/file_contexts"
 if [[ ! -f "$SELINUX_FILE_CONTEXTS" ]]; then
   warn "SELINUX file_contexts missing, creating empty fallback"
   SELINUX_FILE_CONTEXTS="$OUTPUT/file_contexts.empty"
-  touch "$SELINUX_FILE_CONTEXTS"
+  install -d -m 0755 "$(dirname "$SELINUX_FILE_CONTEXTS")" && : > "$SELINUX_FILE_CONTEXTS"
 fi
 export SELINUX_FILE_CONTEXTS
 
@@ -384,8 +399,6 @@ verify_pa_strong_vs_weak
 info "API check passed"
 
 replace_libs_in_stage "PA"     "$PA_BUILD_DIR"     "$STAGE_DIR_COMBINED"
-replace_libs_in_stage "PROP"   "$PROP_BUILD_DIR"   "$STAGE_DIR_COMBINED"
-replace_libs_in_stage "NOSHIP" "$NOSHIP_BUILD_DIR" "$STAGE_DIR_COMBINED"
 # replace_libs_in_stage "PA_RW" "$TARGET_PA_BUILD_DIR" "$STAGE_DIR_COMBINED" # usually RW libs are new, not replace
 
 install_libs_to_runtime "PROP"   "$PROP_BUILD_DIR"    "$STAGE_DIR_COMBINED/systems/current/lib"
@@ -395,6 +408,10 @@ install_libs_to_runtime "VENDOR" "$VENDOR"            "$STAGE_DIR_COMBINED/syste
 # This ensures that when TARGET PA exists, it won't be overwritten by DEFAULT PA.
 install_libs_to_runtime "TARGET_PA"  "$TARGET_PA_BUILD_DIR"   "$STAGE_DIR_COMBINED/systems/current/lib"
 install_libs_to_runtime "DEFAULT_PA"  "$DEFAULT_PA_BUILD_DIR"   "$STAGE_DIR_COMBINED/systems/current/lib"
+
+replace_libs_in_stage "PROP"   "$PROP_BUILD_DIR"   "$STAGE_DIR_COMBINED"
+replace_libs_in_stage "NOSHIP" "$NOSHIP_BUILD_DIR" "$STAGE_DIR_COMBINED"
+
 info "install/replace done"
 
 build_image "$STAGE_DIR_COMBINED"

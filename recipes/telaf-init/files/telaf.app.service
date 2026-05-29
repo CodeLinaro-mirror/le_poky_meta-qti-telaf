@@ -9,12 +9,16 @@ After=telaf.service
 Conflicts=shutdown.target
 DefaultDependencies=no
 ConditionKernelCommandLine=systemd.setenv
+StartLimitBurst=5
+StartLimitIntervalSec=30
 
 [Service]
 Type=oneshot
 ExecStart=sh -c '/etc/initscripts/start_telaf.sh startGroup'
 ExecStop=sh -c '/etc/initscripts/start_telaf.sh stopGroup'
 RemainAfterExit=yes
+Restart=on-failure
+RestartSec=5s
 
 [Install]
 WantedBy=multi-user.target

@@ -195,8 +195,8 @@ SlotSwitchReboot () {
             /bin/sh -c 'reboot edl'
             exit 0
         fi
-        echo "RBM: Crashing for switching slots or EDL mode" > /dev/kmsg
-	echo c > /proc/sysrq-trigger
+        echo "RBM: Rebooting for switching slots or EDL mode" > /dev/kmsg
+        /bin/sh -c 'reboot system-abnormal'
     else
         echo "Cannot get TelAF volume , reboot to edl " > /dev/kmsg
         /bin/sh -c 'reboot edl'
@@ -233,7 +233,7 @@ FindAndMountUBI() {
     if [ $vol_status_a -eq 0 ] && [ $vol_status_b -eq 0 ] ; then
            echo "Both TelAF volumes are empty - Skipping. Continue Boot" > /dev/kmsg
            return 2
-    fi
+    fi 
     #volume not empty, continue boot and check for any corruption
     volid=$(GetVolumeID telaf${SLOT_SUFFIX})
     if [ "$volid" == "" ]; then
@@ -271,11 +271,11 @@ FindAndMountUBI() {
         if dd if=/dev/ubi0_$volid count=1 bs=4 2>/dev/null | grep 'hsqs' > /dev/null; then
             CERT_CA_PATH=/dev/ubiblock0_$volid
         else
-            CERT_CA_PATH=/dev/mapper/rootfs_dmcrypt
+            CERT_CA_PATH=/dev/mapper/system
         fi
         dm_verity_name=telaf
         dm_verity_device=/dev/mapper/${dm_verity_name}
-        verified-boot -n ${dm_verity_name} -d $block_device -s -p ${CERT_CA_PATH} > /dev/kmsg
+        verified-boot -n ${dm_verity_name} -d $block_device -p ${CERT_CA_PATH} > /dev/kmsg
         if [ $? -ne 0 ] ; then
             echo CERT_CA_PATH=${CERT_CA_PATH} > /dev/kmsg
             echo "Created dm-verity device ${dm_verity_device} failed." > /dev/kmsg
@@ -318,7 +318,7 @@ if [ "$telaf_mount_status" -ne 0 ] ; then
         /bin/sh -c 'reboot edl'
     else
         echo "GPIO disabled switch the slots or boot to EDL" > /dev/kmsg
-        # SlotSwitchReboot
+        SlotSwitchReboot
     fi
     exit 1
 fi
