@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-# Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
 export PATH=/legato/systems/current/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -18,6 +18,10 @@ function prepare_dirs_for_telaf()
 {
     mkdir -p /tmp/legato_logs
     mkdir -p /tmp/legato
+
+    # Create vsomeip socket directory
+    mkdir -p /tmp/vsomeip
+    chmod 1777 /tmp/vsomeip
 
     mkdir -p /data/le_fs
     chmod 0777 /data/le_fs

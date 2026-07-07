@@ -26,8 +26,8 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Changes from Qualcomm Innovation Center are provided under the following license:
-# Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+# Changes from Qualcomm Technologies, Inc. are provided under the following license:
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
 # Mount TelAf partition and run it
@@ -55,10 +55,47 @@ umount_telaf()
     return ${TELAF_OK}
 }
 
+# Get the last component after the final "/" in the cgroup v2 (hierarchy 0) path.
+# PVM TelAF process: 0::/system.slice/telaf.service -> "telaf.service"
+# LXC TelAF process: 0::/lxc.payload.telaflxc/.lxc -> ".lxc"
+GetCgroupV2Suffix()
+{
+    grep "^0::" /proc/$1/cgroup 2>/dev/null | sed 's|.*/||'
+}
+
+# Check whether the given PID belongs to PVM TelAF service.
+# This script only runs on PVM and must not operate LXC container processes.
+IsPvmTelafPid()
+{
+    [ "$(GetCgroupV2Suffix "$1")" = "telaf.service" ]
+}
+
+# Get PIDs of PVM processes matching the given process name.
+GetPvmProcessPids()
+{
+    local processName="$1"
+    ps -e -o pid=,comm= | awk -v name="$processName" '$2 == name {print $1}' | while read pid; do
+        if IsPvmTelafPid "$pid"; then
+            echo "$pid"
+        fi
+    done
+}
+
+# Get PIDs from ps aux output matching the given grep -E pattern and belonging to PVM TelAF service.
+GetPvmPidsFromPsAuxPattern()
+{
+    local pattern="$1"
+    ps aux | grep -E "$pattern" | grep -v "grep" | awk '{print $1}' | while read pid; do
+        if IsPvmTelafPid "$pid"; then
+            echo "$pid"
+        fi
+    done
+}
+
 IsProcessRunning()
 {
    local processName="$1"
-   ps -e -o comm= | grep -x "$processName" > /dev/null
+   [ -n "$(GetPvmProcessPids "$processName")" ]
 }
 
 WaitProcessToExit()
@@ -97,27 +134,38 @@ CleanTelafRunningProcess()
     then
         # Important: 'startSystem' needs to exit before 'watchdog', and the
         # 'watchdog' need to be killed with 'SIGTERM' to avoid watchdog bite.
-        killall -9 startSystem
+        # Kill only PVM processes; do not touch LXC container processes.
+        for pid in $(GetPvmProcessPids "startSystem"); do
+            kill -9 "$pid"
+        done
         WaitProcessToExit "startSystem" "10"
 
-        nice -n -5 killall -TERM watchdog
+        for pid in $(GetPvmProcessPids "watchdog"); do
+            nice -n -5 kill -TERM "$pid"
+        done
         WaitProcessToExit "watchdog" "5"
     fi
 
     if IsProcessRunning "supervisor";
     then
-        killall -9 supervisor
+        for pid in $(GetPvmProcessPids "supervisor"); do
+            kill -9 "$pid"
+        done
     fi
 
-    # Kill telaf service
-    ServiceList=$(ps -ef|grep telaf|grep taf |awk '{print $1}')
+    # Kill telaf service. Filter by cgroup v2 suffix to avoid killing LXC processes.
+    ServiceList=$(ps -ef | grep telaf | grep taf | grep -v "grep" | awk '{print $1}' | while read pid; do
+        if IsPvmTelafPid "$pid"; then
+            echo "$pid"
+        fi
+    done)
     if [ -n "$ServiceList" ]; then
         kill -9 ${ServiceList}
     fi
 
-    # Kill telaf core service
+    # Kill telaf core service. Filter by cgroup v2 suffix to avoid killing LXC processes.
     CoreSvcList="logCtrlDaemon|configTree|serviceDirectory|updateDaemon|deviceManager"
-    RemainCoreSvc=$(ps aux | grep -E "$CoreSvcList" | grep -v "grep" |awk '{print $1}')
+    RemainCoreSvc=$(GetPvmPidsFromPsAuxPattern "$CoreSvcList")
     if [ -n "$RemainCoreSvc" ]; then
         kill -9 $RemainCoreSvc
     fi
@@ -129,8 +177,13 @@ CleanTelafRunningProcess()
         echo StopCLientList=$StopCLientList  > /dev/kmsg
     fi
 
-    # Check if any pending service or not
-    SERVICES_LIST=$(ps -ef|grep telaf|grep taf |awk '{print $4}')
+    # Check if any pending service or not.
+    SERVICES_LIST=$(ps -ef | grep telaf | grep taf | grep -v "grep" | while read line; do
+        pid=$(echo "$line" | awk '{print $1}')
+        if IsPvmTelafPid "$pid"; then
+            echo "$line" | awk '{print $4}'
+        fi
+    done)
     if [ -n "$SERVICES_LIST" ]; then
         # Since the above was using hard kill (-9), so the systemd will wait
         # these services "$SERVICES_LIST" to exit, here don't need to wait.

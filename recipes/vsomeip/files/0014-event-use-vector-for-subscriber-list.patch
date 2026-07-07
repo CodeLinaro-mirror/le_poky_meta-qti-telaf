@@ -1,0 +1,205 @@
+From 99fa16b5f176708d4ad0c7ece98f0b3bdb553797 Mon Sep 17 00:00:00 2001
+From: Yunqiang Hu <yunhu@qti.qualcomm.com>
+Date: Thu, 14 May 2026 15:46:16 +0800
+Subject: [PATCH] event: use vector for subscriber list
+
+Description: Replace std::set with std::vector to improve cache efficiency.
+Signed-off-by: Yunqiang Hu <yunhu@qti.qualcomm.com>
+---
+ implementation/routing/include/event.hpp      | 10 +++--
+ .../routing/include/routing_manager.hpp       |  2 +-
+ .../routing/include/routing_manager_base.hpp  |  2 +-
+ implementation/routing/src/event.cpp          | 38 +++++++++++--------
+ .../routing/src/routing_manager_base.cpp      |  4 +-
+ .../routing/src/routing_manager_impl.cpp      |  2 +-
+ 6 files changed, 33 insertions(+), 25 deletions(-)
+
+diff --git a/implementation/routing/include/event.hpp b/implementation/routing/include/event.hpp
+index fd43638d..a414cf04 100644
+--- a/implementation/routing/include/event.hpp
++++ b/implementation/routing/include/event.hpp
+@@ -6,11 +6,13 @@
+ #ifndef VSOMEIP_V3_EVENT_IMPL_HPP_
+ #define VSOMEIP_V3_EVENT_IMPL_HPP_
+ 
++#include <algorithm>
+ #include <list>
+ #include <map>
+ #include <memory>
+ #include <mutex>
+ #include <set>
++#include <vector>
+ #include <atomic>
+ 
+ #include <boost/asio/ip/address.hpp>
+@@ -105,9 +107,9 @@ public:
+             client_t _client, bool _force);
+     void remove_subscriber(eventgroup_t _eventgroup, client_t _client);
+     bool has_subscriber(eventgroup_t _eventgroup, client_t _client);
+-    std::set<client_t> get_subscribers();
+-    std::set<client_t> get_filtered_subscribers(bool _force);
+-    std::set<client_t> update_and_get_filtered_subscribers(
++    std::vector<client_t> get_subscribers();
++    std::vector<client_t> get_filtered_subscribers(bool _force);
++    std::vector<client_t> update_and_get_filtered_subscribers(
+             const std::shared_ptr<payload> &_payload, bool _force);
+     VSOMEIP_EXPORT std::set<client_t> get_subscribers(eventgroup_t _eventgroup);
+     void clear_subscribers();
+@@ -149,7 +151,7 @@ private:
+             const std::shared_ptr<payload> &_payload, bool _force);
+     void update_payload_unlocked();
+ 
+-    void get_pending_updates(const std::set<client_t> &_clients);
++    void get_pending_updates(const std::vector<client_t> &_clients);
+ 
+ private:
+     routing_manager *routing_;
+diff --git a/implementation/routing/include/routing_manager.hpp b/implementation/routing/include/routing_manager.hpp
+index 3c19a9fe..1a2983f7 100644
+--- a/implementation/routing/include/routing_manager.hpp
++++ b/implementation/routing/include/routing_manager.hpp
+@@ -138,7 +138,7 @@ public:
+     virtual void debounce_timeout_update_cbk(const boost::system::error_code &_error, const std::shared_ptr<vsomeip_v3::event> &_event, client_t _client, const std::shared_ptr<debounce_filter_impl_t> &_filter) = 0;
+     virtual void register_debounce(const std::shared_ptr<debounce_filter_impl_t> &_filter, client_t _client, const std::shared_ptr<vsomeip_v3::event> &_event) = 0;
+     virtual void remove_debounce(client_t _client, event_t _event) = 0;
+-    virtual void update_debounce_clients(const std::set<client_t> &_clients, event_t _event) = 0;
++    virtual void update_debounce_clients(const std::vector<client_t> &_clients, event_t _event) = 0;
+ };
+ 
+ }  // namespace vsomeip_v3
+diff --git a/implementation/routing/include/routing_manager_base.hpp b/implementation/routing/include/routing_manager_base.hpp
+index a7ba0243..53fed473 100644
+--- a/implementation/routing/include/routing_manager_base.hpp
++++ b/implementation/routing/include/routing_manager_base.hpp
+@@ -62,7 +62,7 @@ public:
+     virtual void debounce_timeout_update_cbk(const boost::system::error_code &_error, const std::shared_ptr<vsomeip_v3::event> &_event, client_t _client, const std::shared_ptr<debounce_filter_impl_t> &_filter);
+     virtual void register_debounce(const std::shared_ptr<debounce_filter_impl_t> &_filter, client_t _client, const std::shared_ptr<vsomeip_v3::event> &_event);
+     virtual void remove_debounce(client_t _client, event_t _event);
+-    virtual void update_debounce_clients(const std::set<client_t> &_clients, event_t _event);
++    virtual void update_debounce_clients(const std::vector<client_t> &_clients, event_t _event);
+ 
+     virtual bool is_routing_manager() const;
+ 
+diff --git a/implementation/routing/src/event.cpp b/implementation/routing/src/event.cpp
+index d9ac4edd..0514dfa6 100644
+--- a/implementation/routing/src/event.cpp
++++ b/implementation/routing/src/event.cpp
+@@ -662,21 +662,31 @@ event::has_subscriber(eventgroup_t _eventgroup, client_t _client) {
+     return false;
+ }
+ 
+-std::set<client_t>
++std::vector<client_t>
+ event::get_subscribers() {
+ 
+-    std::set<client_t> its_subscribers;
++    std::vector<client_t> its_subscribers;
+     std::lock_guard<std::mutex> its_lock(eventgroups_mutex_);
++    std::size_t total(0);
+     for (const auto &e : eventgroups_)
+-        its_subscribers.insert(e.second.begin(), e.second.end());
++        total += e.second.size();
++    its_subscribers.reserve(total);
++    for (const auto &e : eventgroups_)
++        for (const auto c : e.second)
++            its_subscribers.push_back(c);
++    // Deduplicate: a client may subscribe via multiple eventgroups.
++    std::sort(its_subscribers.begin(), its_subscribers.end());
++    its_subscribers.erase(
++        std::unique(its_subscribers.begin(), its_subscribers.end()),
++        its_subscribers.end());
+     return its_subscribers;
+ }
+ 
+-std::set<client_t>
++std::vector<client_t>
+ event::get_filtered_subscribers(bool _force) {
+ 
+-    std::set<client_t> its_subscribers(get_subscribers());
+-    std::set<client_t> its_filtered_subscribers;
++    std::vector<client_t> its_subscribers(get_subscribers());
++    std::vector<client_t> its_filtered_subscribers;
+ 
+     std::shared_ptr<payload> its_payload, its_payload_update;
+     {
+@@ -693,7 +703,7 @@ event::get_filtered_subscribers(bool _force) {
+             return its_subscribers;
+ 
+     } else {
+-        byte_t is_allowed(0xff);
++        its_filtered_subscribers.reserve(its_subscribers.size());
+ 
+         std::lock_guard<std::mutex> its_lock(filters_mutex_);
+         for (const auto s : its_subscribers) {
+@@ -701,14 +711,10 @@ event::get_filtered_subscribers(bool _force) {
+             auto its_specific = filters_.find(s);
+             if (its_specific != filters_.end()) {
+                 if (its_specific->second(its_payload, its_payload_update))
+-                    its_filtered_subscribers.insert(s);
++                    its_filtered_subscribers.push_back(s);
+             } else {
+-                if (is_allowed == 0xff) {
+-                    is_allowed = (is_changed ? 0x01 : 0x00);
+-                }
+-
+-                if (is_allowed == 0x01)
+-                    its_filtered_subscribers.insert(s);
++                if (is_changed)
++                    its_filtered_subscribers.push_back(s);
+             }
+         }
+     }
+@@ -718,13 +724,13 @@ event::get_filtered_subscribers(bool _force) {
+ 
+ // Get the clients that have pending updates after debounce timeout
+ void 
+-event::get_pending_updates(const std::set<client_t> &_clients) {
++event::get_pending_updates(const std::vector<client_t> &_clients) {
+     if(has_changed(current_->get_payload(), update_->get_payload())) {
+         routing_->update_debounce_clients(_clients, get_event());
+     }
+ }
+ 
+-std::set<client_t>
++std::vector<client_t>
+ event::update_and_get_filtered_subscribers(
+         const std::shared_ptr<payload> &_payload, bool _is_from_remote) {
+ 
+diff --git a/implementation/routing/src/routing_manager_base.cpp b/implementation/routing/src/routing_manager_base.cpp
+index feefd92f..51370e7d 100644
+--- a/implementation/routing/src/routing_manager_base.cpp
++++ b/implementation/routing/src/routing_manager_base.cpp
+@@ -53,7 +53,7 @@ routing_manager_base::routing_manager_base(routing_manager_host *_host) :
+ void routing_manager_base::debounce_timeout_update_cbk(const boost::system::error_code &_error, const std::shared_ptr<vsomeip_v3::event> &_event, client_t _client, const std::shared_ptr<debounce_filter_impl_t> &_filter) {
+     if (!_error) {
+         std::lock_guard<std::mutex> its_lock(debounce_mutex_);
+-        if (_event && (_event->get_subscribers().find(_client) != _event->get_subscribers().end()) && _filter) {
++        if (_event && (std::find(_event->get_subscribers().begin(), _event->get_subscribers().end(), _client) != _event->get_subscribers().end()) && _filter) {
+             bool is_elapsed{false};
+             auto its_current = std::chrono::steady_clock::now();
+ 
+@@ -118,7 +118,7 @@ void routing_manager_base::remove_debounce(client_t _client, event_t _event) {
+     }
+ }
+ 
+-void routing_manager_base::update_debounce_clients(const std::set<client_t> &_clients, event_t _event) {
++void routing_manager_base::update_debounce_clients(const std::vector<client_t> &_clients, event_t _event) {
+     std::lock_guard<std::mutex> its_lock(debounce_mutex_);
+     for (auto& debounce_client : debounce_clients_) {
+         if (_event == std::get<3>(debounce_client.second)) {
+diff --git a/implementation/routing/src/routing_manager_impl.cpp b/implementation/routing/src/routing_manager_impl.cpp
+index f359b50f..bd429930 100644
+--- a/implementation/routing/src/routing_manager_impl.cpp
++++ b/implementation/routing/src/routing_manager_impl.cpp
+@@ -2140,7 +2140,7 @@ bool routing_manager_impl::deliver_notification(
+             if (its_client_id == VSOMEIP_ROUTING_CLIENT)
+                 its_client_id = get_client();
+ 
+-            if (its_subscribers.find(its_client_id) != its_subscribers.end()) {
++            if (std::find(its_subscribers.begin(), its_subscribers.end(), its_client_id) != its_subscribers.end()) {
+                 if (its_client_id == host_->get_client()) {
+                     deliver_message(_data, _length, _instance, _reliable,
+                             _bound_client, _sec_client, _status_check, _is_from_remote);
+-- 
+2.34.1
+
