@@ -24,6 +24,7 @@ SRC_URI = "git://github.com/COVESA/vsomeip.git;protocol=https \
            file://0014-event-use-vector-for-subscriber-list.patch \
            file://0015-routing-fix-subscriber-query-double-call-UB.patch \
            file://0016-fix_subscription_issue.patch \
+           file://0017-Fix-session-ID-conflict-in-multicast-OfferService.patch \
            file://vsomeip-tmpfiles.conf \
           "
 S = "${WORKDIR}/git"
