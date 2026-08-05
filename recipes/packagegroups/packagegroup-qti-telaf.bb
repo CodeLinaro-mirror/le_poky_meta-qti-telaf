@@ -27,5 +27,8 @@ RDEPENDS:${PN} += "\
     telaf-init \
     "
 
-RDEPENDS:${PN}:append = " ${@bb.utils.contains('BUILD_VARIANT', 'full', 'telaf-mod-build', '', d)}"
+# telaf-mod-build's do_install:append hardcodes an aarch64-oe-linux strip path
+# for module signing, which doesn't exist for sa510m's armv7 toolchain. Drop it
+# from RDEPENDS so bitbake doesn't try to build it for sa510m.
+#RDEPENDS:${PN}:append = " ${@bb.utils.contains('BUILD_VARIANT', 'full', 'telaf-mod-build', '', d)}"
 

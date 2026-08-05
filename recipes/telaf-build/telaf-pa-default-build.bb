@@ -12,8 +12,22 @@ SRC_DIR = "${WORKSPACE}/telaf-pa-default/"
 
 S = "${WORKDIR}/telaf-pa-default"
 
-# do not pack the libraries to rootfs
-PACKAGES = ""
+# Allow empty main package to avoid packaging errors
+ALLOW_EMPTY:${PN} = "1"
+
+# Include all installed shared libraries in the package
+# Package layout
+FILES:${PN} = "/telaf/default-pa/lib/*.so.*"
+FILES:${PN}-dev += "/telaf/default-pa/lib/*.so"
+FILES:${PN}-dbg += "/telaf/default-pa/.build-id"
+INSANE_SKIP:${PN}-dbg += "buildpaths"
+
+# The CMake build (split_debug_symbols_strip_binaries) already strips these
+# libraries and stores debug info under .build-id/, so skip bitbake's own
+# split/strip QA for the main package.
+INSANE_SKIP:${PN} += "already-stripped"
+INHIBIT_PACKAGE_STRIP = "1"
+INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 
 SYSROOT_DIRS:append = " /telaf"
 

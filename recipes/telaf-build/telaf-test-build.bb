@@ -40,16 +40,20 @@ python __anonymous() {
         d.appendVar('DEPENDS', ' telaf-prop-build')
     if d.getVar('HAS_TELAF_NOSHIP', True) == 'true':
         d.appendVar('DEPENDS', ' telaf-noship-build')
+
+    machine = d.getVar('MACHINE')
+    telaf_machine = 'sa510m' if machine == 'sa510m-1g' else machine
+    d.setVar('TELAF_MACHINE', telaf_machine)
 }
 
 FILESPATH =+ "${WORKSPACE}:"
-SRC_URI += "file://telaf/ file://telaf-adv/ file://legato/ file://telaf-pa/ file://telaf-pa-default/ file://external/wpa_supplicant_8/"
+SRC_URI += "file://telaf/ file://legato/ file://telaf-pa/ file://telaf-pa-default/ file://external/wpa_supplicant_8/"
 S = "${WORKDIR}/telaf"
 
 PARALLEL_MAKE = ""
 RM_WORK_EXCLUDE += "${PN}"
 
-TELAF_TARGET_STAGE_DIR = "${WORKDIR}/legato/legato-af/build/${MACHINE}/_staging_system.${MACHINE}.update_ro"
+TELAF_TARGET_STAGE_DIR = "${WORKDIR}/legato/legato-af/build/${TELAF_MACHINE}/_staging_system.${TELAF_MACHINE}.update_ro"
 
 do_configure[noexec] = "1"
 
@@ -78,7 +82,7 @@ export_common_env() {
 
 build_telaf_image() {
     oe_runmake distclean
-    oe_runmake ${MACHINE}
+    oe_runmake ${TELAF_MACHINE}
 }
 
 build_testapps() {
@@ -91,7 +95,7 @@ build_testapps() {
 
     S_L="${RECIPE_SYSROOT}/telaf/legato/legato-af"
 
-    cmake -DLEGATO_TARGET=${MACHINE} -DLEGATO_ROOT="${S_L}" -H"${S}/testapp_build/" -B"${S}/testapp_build/build"
+    cmake -DLEGATO_TARGET=${TELAF_MACHINE} -DLEGATO_ROOT="${S_L}" -H"${S}/testapp_build/" -B"${S}/testapp_build/build"
     cmake -E env CFLAGS="-O" CC="${CC} -O" CXX="${CXX} -O" cmake --build "${S}/testapp_build/build"
 }
 
@@ -114,7 +118,7 @@ do_install[noexec] = "1"
 SYSROOT_PREPROCESS_FUNCS += "telaf_populate_sysroot"
 telaf_populate_sysroot() {
     sysroot_stage_dir ${S}                                                         ${SYSROOT_DESTDIR}/telaf/telaf-test/
-    sysroot_stage_dir ${S}/build/${MACHINE}/_staging_system.${MACHINE}.update_ro   ${SYSROOT_DESTDIR}/telaf/staging/test/
+    sysroot_stage_dir ${S}/build/${TELAF_MACHINE}/_staging_system.${TELAF_MACHINE}.update_ro   ${SYSROOT_DESTDIR}/telaf/staging/test/
 }
 
 do_deploy() {

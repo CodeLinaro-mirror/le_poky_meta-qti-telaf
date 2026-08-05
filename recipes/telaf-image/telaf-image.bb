@@ -87,7 +87,7 @@ do_compile () {
 
     env OBJCOPY="${OBJCOPY}" STRIP="${STRIP}" \
         "${WORKDIR}/mkimg.sh" \
-            -t "${MACHINE}" \
+            -t "${TELAF_MACHINE}" \
             -o "${TELAF_IMAGE_OUTPUT_PROD}" \
             -r "${TELAF_ROOT}" \
             -s "${TELAF_IMAGE_BASIC_STAGING_PROD}" \
@@ -100,7 +100,7 @@ do_compile () {
 
     env OBJCOPY="${OBJCOPY}" STRIP="${STRIP}" \
         "${WORKDIR}/mkimg.sh" \
-            -t "${MACHINE}" \
+            -t "${TELAF_MACHINE}" \
             -o "${TELAF_IMAGE_OUTPUT_TEST}" \
             -r "${TELAF_TEST_ROOT}" \
             -s "${TELAF_IMAGE_BASIC_STAGING_TEST}" \
@@ -112,7 +112,7 @@ do_compile () {
             -v "${VENDOR_ROOT}"
 
     if [ -x "${TELAF_ROOT}/bin/createsdk" ]; then
-        "${TELAF_ROOT}/bin/createsdk" "${MACHINE}" "${S}"
+        "${TELAF_ROOT}/bin/createsdk" "${TELAF_MACHINE}" "${S}"
     fi
 }
 
@@ -159,7 +159,7 @@ do_deploy () {
         bbnote "DISTRO_FEATURES lacks selinux; skipping SELinux contexts deployment."
     fi
 
-    SDK_GLOB="${S}/telaf/build/${MACHINE}/telaf-sdk*"
+    SDK_GLOB="${S}/telaf/build/${TELAF_MACHINE}/telaf-sdk*"
     set +e
     ls ${SDK_GLOB} >/dev/null 2>&1
     found=$?
@@ -172,7 +172,7 @@ do_deploy () {
 
     install -d "${DEPLOYDIR}/telaf-images/debug_files/build-id"
     declare -A BUILD_ID_DIRS=(
-        ["SERVICE_BUILD_ID_DIR"]="${S}/telaf/build/${MACHINE}/debug/.build-id"
+        ["SERVICE_BUILD_ID_DIR"]="${S}/telaf/build/${TELAF_MACHINE}/debug/.build-id"
         ["TARGET_PA_BUILD_ID_DIR"]="${S}/target-pa/.build-id"
         ["DEFAULT_PA_BUILD_ID_DIR"]="${S}/default-pa/.build-id"
         ["NOSHIP_PA_BUILD_ID_DIR"]="${S}/telaf-noship/.build-id"
@@ -217,3 +217,9 @@ do_deploy () {
 }
 
 addtask deploy after do_compile before do_build
+
+python __anonymous() {
+    machine = d.getVar('MACHINE')
+    telaf_machine = 'sa510m' if machine == 'sa510m-1g' else machine
+    d.setVar('TELAF_MACHINE', telaf_machine)
+}

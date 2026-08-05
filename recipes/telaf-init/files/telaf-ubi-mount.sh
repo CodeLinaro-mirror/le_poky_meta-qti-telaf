@@ -275,7 +275,7 @@ FindAndMountUBI() {
         fi
         dm_verity_name=telaf
         dm_verity_device=/dev/mapper/${dm_verity_name}
-        verified-boot -n ${dm_verity_name} -d $block_device -p ${CERT_CA_PATH} > /dev/kmsg
+        verified-boot -n ${dm_verity_name} -d $block_device -s -p ${CERT_CA_PATH} > /dev/kmsg
         if [ $? -ne 0 ] ; then
             echo CERT_CA_PATH=${CERT_CA_PATH} > /dev/kmsg
             echo "Created dm-verity device ${dm_verity_device} failed." > /dev/kmsg
