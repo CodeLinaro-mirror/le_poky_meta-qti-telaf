@@ -123,15 +123,13 @@ telaf_populate_sysroot() {
 
 do_deploy() {
     if ${@bb.utils.contains('PACKAGECONFIG', 'testapps', 'true', 'false', d)}; then
-        install -d ${DEPLOYDIR}/telaf-images/testapps/Unit_testapp
-        install -d ${DEPLOYDIR}/telaf-images/testapps/Integration_testapp
-        install -d ${DEPLOYDIR}/telaf-images/testapps/Console_testapp
-        cp -rf ${S}/testapp_build/build/TestApps/Unit_testapp/* \
-            ${DEPLOYDIR}/telaf-images/testapps/Unit_testapp/
-        cp -rf ${S}/testapp_build/build/TestApps/Integration_testapp/* \
-            ${DEPLOYDIR}/telaf-images/testapps/Integration_testapp/
-        cp -rf ${S}/testapp_build/build/TestApps/Console_testapp/* \
-            ${DEPLOYDIR}/telaf-images/testapps/Console_testapp/
+        for app in Unit_testapp Integration_testapp Console_testapp; do
+            install -d ${DEPLOYDIR}/telaf-images/testapps/${app}
+            if [ -n "$(ls -A ${S}/testapp_build/build/TestApps/${app}/ 2>/dev/null)" ]; then
+                cp -rf ${S}/testapp_build/build/TestApps/${app}/* \
+                    ${DEPLOYDIR}/telaf-images/testapps/${app}/
+            fi
+        done
     fi
 }
 addtask deploy after do_compile before do_build
