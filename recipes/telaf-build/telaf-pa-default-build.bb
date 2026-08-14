@@ -14,6 +14,7 @@ S = "${WORKDIR}/telaf-pa-default"
 
 # do not pack the libraries to rootfs
 PACKAGES = ""
+inherit nopackages
 
 # Prevent debug symbol files (.build-id/*.debug) from being stripped
 # when staged into the sysroot, otherwise the deployed debug_files
