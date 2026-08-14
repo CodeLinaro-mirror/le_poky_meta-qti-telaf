@@ -14,6 +14,7 @@ S = "${WORKDIR}/telaf-pa-default"
 
 # do not pack the libraries to rootfs
 PACKAGES = ""
+inherit nopackages
 
 SYSROOT_DIRS:append = " /telaf"
 
