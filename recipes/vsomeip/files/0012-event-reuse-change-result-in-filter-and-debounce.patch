@@ -1,0 +1,45 @@
+From b52e7fa953cd150d6060e65661a8f257a4b73888 Mon Sep 17 00:00:00 2001
+From: Yunqiang Hu <yunhu@qti.qualcomm.com>
+Date: Thu, 14 May 2026 15:46:15 +0800
+Subject: [PATCH] event: reuse change result in filter and debounce
+
+Description: Cache change detection result to avoid redundant comparisons.
+Signed-off-by: Yunqiang Hu <yunhu@qti.qualcomm.com>
+---
+ implementation/routing/src/event.cpp | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/implementation/routing/src/event.cpp b/implementation/routing/src/event.cpp
+index 0ad37708..d9ac4edd 100644
+--- a/implementation/routing/src/event.cpp
++++ b/implementation/routing/src/event.cpp
+@@ -684,11 +684,12 @@ event::get_filtered_subscribers(bool _force) {
+         its_payload_update = update_->get_payload();
+     }
+ 
+-    if (filters_.empty()) {
++    // Compute change result once and reuse for all subscribers.
++    const bool is_changed = _force || epsilon_change_func_(its_payload, its_payload_update);
+ 
+-        bool must_forward = _force || epsilon_change_func_(its_payload, its_payload_update);
++    if (filters_.empty()) {
+ 
+-        if (must_forward)
++        if (is_changed)
+             return its_subscribers;
+ 
+     } else {
+@@ -703,9 +704,7 @@ event::get_filtered_subscribers(bool _force) {
+                     its_filtered_subscribers.insert(s);
+             } else {
+                 if (is_allowed == 0xff) {
+-                    is_allowed = (_force
+-                        || epsilon_change_func_(its_payload, its_payload_update)
+-                        ? 0x01 : 0x00);
++                    is_allowed = (is_changed ? 0x01 : 0x00);
+                 }
+ 
+                 if (is_allowed == 0x01)
+-- 
+2.34.1
+

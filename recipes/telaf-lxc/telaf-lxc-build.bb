@@ -33,6 +33,8 @@ TELAF_TARGET_STAGE_DIR = "${S_L}/legato-af/build/${MACHINE}/_staging_system.${MA
 do_compile[nostamp]  = "1"
 
 do_compile() {
+    export ENABLE_PVM_LXC_RPC_LATENCY_TEST=${ENABLE_PVM_LXC_RPC_LATENCY_TEST}
+    export ENABLE_PVM_LXC_RPC_OVER_TCP=${ENABLE_PVM_LXC_RPC_OVER_TCP}
     export WORK_ROOT=${WORKDIR}
     export OECORE_TARGET_SYSROOT=${RECIPE_SYSROOT}
     if [ -f ${S}/VERSION ]; then
