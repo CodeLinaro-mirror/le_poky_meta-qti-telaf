@@ -57,7 +57,12 @@ umount_telaf()
 
 # Get the last component after the final "/" in the cgroup v2 (hierarchy 0) path.
 # PVM TelAF process: 0::/system.slice/telaf.service -> "telaf.service"
-# LXC TelAF process: 0::/lxc.payload.telaflxc/.lxc -> ".lxc"
+# LXC TelAF process started by the container init:
+#                    0::/lxc.payload.telaflxc -> "lxc.payload.telaflxc"
+# LXC TelAF process started from an lxc-attach session, whose cgroup the
+# supervisor inherits:
+#                    0::/lxc.payload.telaflxc/.lxc -> ".lxc"
+# Neither LXC form equals "telaf.service", which is all IsPvmTelafPid() needs.
 GetCgroupV2Suffix()
 {
     grep "^0::" /proc/$1/cgroup 2>/dev/null | sed 's|.*/||'
