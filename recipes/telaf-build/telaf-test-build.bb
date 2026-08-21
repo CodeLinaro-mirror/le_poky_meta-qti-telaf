@@ -54,6 +54,8 @@ TELAF_TARGET_STAGE_DIR = "${WORKDIR}/legato/legato-af/build/${MACHINE}/_staging_
 do_configure[noexec] = "1"
 
 export_common_env() {
+    export ENABLE_DLT_LOGGING=${ENABLE_DLT_LOGGING}
+    export ENABLE_PVM_LXC_RPC_LATENCY_TEST=${ENABLE_PVM_LXC_RPC_LATENCY_TEST}
     export WORK_ROOT="${WORKDIR}"
     export OECORE_TARGET_SYSROOT="${RECIPE_SYSROOT}"
 
