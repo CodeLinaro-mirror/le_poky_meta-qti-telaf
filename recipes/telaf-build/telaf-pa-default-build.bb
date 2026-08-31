@@ -15,6 +15,11 @@ S = "${WORKDIR}/telaf-pa-default"
 # do not pack the libraries to rootfs
 PACKAGES = ""
 
+# Prevent debug symbol files (.build-id/*.debug) from being stripped
+# when staged into the sysroot, otherwise the deployed debug_files
+# will lose their symbol tables.
+INHIBIT_SYSROOT_STRIP = "1"
+
 SYSROOT_DIRS:append = " /telaf"
 
 do_compile:prepend() {
