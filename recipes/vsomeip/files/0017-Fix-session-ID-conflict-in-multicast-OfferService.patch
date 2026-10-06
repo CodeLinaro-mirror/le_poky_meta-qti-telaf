@@ -1,0 +1,32 @@
+From c9d8204a6b77134aab53f8dcb43677c25ece579b Mon Sep 17 00:00:00 2001
+From: Yunqiang Hu <yunhu@qti.qualcomm.com>
+Date: Mon, 13 Jul 2026 17:01:58 +0800
+Subject: [PATCH] Fix session ID conflict in multicast OfferService
+
+Description: Use sd_multicast_address_ as session key in send() to align with send_multicast_offer_service(), avoiding session ID conflict.
+Signed-off-by: Yunqiang Hu <yunhu@qti.qualcomm.com>
+---
+ .../service_discovery/src/service_discovery_impl.cpp          | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/implementation/service_discovery/src/service_discovery_impl.cpp b/implementation/service_discovery/src/service_discovery_impl.cpp
+index 087666ca..87ae9ef4 100644
+--- a/implementation/service_discovery/src/service_discovery_impl.cpp
++++ b/implementation/service_discovery/src/service_discovery_impl.cpp
+@@ -2667,11 +2667,11 @@ service_discovery_impl::send(
+     std::lock_guard<std::mutex> its_lock(serialize_mutex_);
+     for (const auto &m : _messages) {
+         if (m->has_entry()) {
+-            std::pair<session_t, bool> its_session = get_session(unicast_);
++            std::pair<session_t, bool> its_session = get_session(sd_multicast_address_);
+             m->set_session(its_session.first);
+             m->set_reboot_flag(its_session.second);
+             if (host_->send(VSOMEIP_SD_CLIENT, m, true)) {
+-                increment_session(unicast_);
++                increment_session(sd_multicast_address_);
+             }
+         } else {
+             its_result = false;
+-- 
+2.34.1
+
