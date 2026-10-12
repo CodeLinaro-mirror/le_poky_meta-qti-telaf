@@ -31,6 +31,9 @@ S = "${WORKDIR}/git"
 # enable multiple routing managers
 EXTRA_OECMAKE += "-DENABLE_MULTIPLE_ROUTING_MANAGERS=1"
 
+BBCLASSEXTEND = "nativesdk"
+FILES:${PN} = "/usr/"
+
 # put vsomeip socket files under /tmp/vsomeip/ directory
 EXTRA_OECMAKE += "-DBASE_PATH=/tmp/vsomeip/"
 
