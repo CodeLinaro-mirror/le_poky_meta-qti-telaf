@@ -46,6 +46,11 @@ do_install() {
         install -m 0644 ${S}/telaf.env -D ${D}${sysconfdir}/telaf.env
         install -m 0555 ${S}/start_telaf.sh -D ${D}${sysconfdir}/initscripts/start_telaf.sh
 
+        # Avoid the file under "/tmp/legato" and "/tmp/vsomeip" being deleted by systemd.
+        install -d ${D}${sysconfdir}/tmpfiles.d
+        echo "x /tmp/legato"   > ${D}${sysconfdir}/tmpfiles.d/telaf.conf
+        echo "x /tmp/vsomeip" >> ${D}${sysconfdir}/tmpfiles.d/telaf.conf
+
         # create the directories which are used by telaf
         install -m 0755 -d ${D}/legato
         install -m 0755 -d ${D}/mnt/legato
@@ -78,6 +83,7 @@ do_install() {
 }
 
 FILES:${PN} += "${systemd_unitdir}/system/* /legato /mnt/legato /app ${userfsdatadir}/persist/* ${userfsdatadir}/le_fs ${userfsdatadir}/ManagedServices ${userfsdatadir}/diag"
+FILES:${PN} += "${sysconfdir}/tmpfiles.d"
 
 # Add default telaf users
 inherit useradd
